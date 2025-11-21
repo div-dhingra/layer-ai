@@ -1,0 +1,19 @@
+{
+  "name": "layer-ai",
+  "version": "0.1.0",
+  "description": "Official Layer SDK for Node.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["ai", "llm", "openai", "anthropic", "proxy"],
+  "author": "micah-layer",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
