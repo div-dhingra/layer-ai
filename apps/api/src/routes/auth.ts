@@ -16,17 +16,13 @@ router.post('/signup', async (req: Request, res: Response) => {
       return;
     }
 
-    // check if user exists
     const existing = await db.getUserByEmail(email);
     if (existing) {
       res.status(409).json({ error: 'conflict', message: 'Email already registered'});
       return;
     }
 
-    // hash password
     const passwordHash = await bcrypt.hash(password, 10);
-
-    // create the user 
     const user = await db.createUser(email, passwordHash);
 
     res.status(201).json({ id: user.id, email: user.email });
@@ -46,21 +42,18 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
-    // Get user 
     const user = await db.getUserByEmail(email);
     if (!user) {
       res.status(401).json({ error: 'unauthorized', message: 'Invalid credentials' });
       return; 
     }
 
-    // Verify password
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       res.status(401).json({ error: 'unauthorized', message: 'Invalid credentials' });
       return; 
     }
 
-    // return user (Next auth expects the id and email)
     res.json({ id: user.id, email: user.email });
   } catch (error) {
     console.error('Login error', error);
@@ -78,29 +71,24 @@ router.post('/token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Get user
     const user = await db.getUserByEmail(email);
     if(!user) {
       res.status(401).json({ error: 'unauthorized', message: 'Invalid credentials' });
       return;
     }
 
-    // Verify password
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       res.status(401).json({ error: 'unauthorized', message: 'Invalid credentials'});
-      return
+      return;
     }
 
-    // Generate new key
     const rawKey = `layer_${crypto.randomBytes(32).toString('hex')}`;
     const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
     const keyPrefix = rawKey.substring(0, 12); // "layer_xxxxxx"
 
-    // store in db
     await db.createApiKey(user.id, keyHash, keyPrefix, 'CLI');
 
-    // return raw key (only time this key is visible)
     res.status(201).json({ apiKey: rawKey });
   } catch (error) {
     console.error('api key creation error', error);

@@ -21,26 +21,22 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, model, systemPrompt, temperature, maxTokens, topP } = req.body as CreateGateRequest;
 
-    // Validate required fields
     if (!name || !model) {
       res.status(400).json({ error: 'bad_request', message: 'Missing required fields: name and model' });
       return;
     }
 
-    // Validate model is supported
     if (!MODEL_REGISTRY[model]) {
       res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
       return;
     }
 
-    // Check if gate name already exists for this user
     const existing = await db.getGateByUserAndName(req.userId, name);
     if (existing) {
       res.status(409).json({ error: 'conflict', message: `Gate "${name}" already exists` });
       return;
     }
 
-    // Create the gate
     const gate = await db.createGate(req.userId, {
       name, 
       model,
@@ -88,7 +84,6 @@ router.get('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    // Verify ownership
     if (gate.userId !== req.userId) {
       res.status(404).json({ error: 'not_found', message: 'Gate not found' });
       return;
@@ -111,7 +106,6 @@ router.patch('/:id', async (req: Request, res: Response) => {
   try {
     const { model, systemPrompt, temperature, maxTokens, topP } = req.body as UpdateGateRequest;
 
-    // Get existing gate
     const existing = await db.getGateById(req.params.id);
 
     if (!existing) {
@@ -119,19 +113,16 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    // Verify ownership
     if (existing.userId !== req.userId) {
       res.status(404).json({ error: 'not_found', message: 'Gate not found' });
       return;
     }
 
-    // Validate model if provided
     if (model && !MODEL_REGISTRY[model]) {
       res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
       return;
     }
 
-    // Update gate
     const updated = await db.updateGate(req.params.id, {
       model,
       systemPrompt,
@@ -140,7 +131,6 @@ router.patch('/:id', async (req: Request, res: Response) => {
       topP,
     });
 
-    // Invalidate cache
     await cache.invalidateGate(req.userId, existing.name);
 
     res.json(updated);
@@ -158,7 +148,6 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    // Get existing gate
     const existing = await db.getGateById(req.params.id);
 
     if (!existing) {
@@ -166,16 +155,12 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    // Verify ownership
     if (existing.userId !== req.userId) {
       res.status(404).json({ error: 'not_found', message: 'Gate not found' });
       return;
     }
 
-    // Delete gate
     await db.deleteGate(req.params.id);
-
-    // Invalidate cache
     await cache.invalidateGate(req.userId, existing.name);
 
     res.status(204).send();

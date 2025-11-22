@@ -47,8 +47,6 @@ export const cache = {
       }
 
       const gate = JSON.parse(cached); 
-
-      // convert date strings back to date objs
       gate.createdAt = new Date(gate.createdAt);
       gate.updatedAt = new Date(gate.updatedAt);
 

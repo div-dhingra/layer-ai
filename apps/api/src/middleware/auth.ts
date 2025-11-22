@@ -44,7 +44,6 @@ export async function authenticate(
       return
     }
 
-    // Extract api key
     const apiKey = authHeader.substring(7); // Remove "Bearer "
 
     if (!apiKey || !apiKey.startsWith('layer_')) {
@@ -55,13 +54,11 @@ export async function authenticate(
       return;
     }
 
-    // hash the api key 
     const keyHash = crypto 
     .createHash('sha256')
     .update(apiKey)
     .digest('hex');
 
-    // Look up API key in database
     const apiKeyRecord = await db.getApiKeyByHash(keyHash); 
 
     if (!apiKeyRecord) {
@@ -72,7 +69,6 @@ export async function authenticate(
       return;
     }
 
-    // check if key is active
     if (!apiKeyRecord.isActive) {
       res.status(401).json({
         error: 'unauthorized', 
@@ -90,7 +86,6 @@ export async function authenticate(
       console.error('Failed to update API key last_used_at:', err);
     });
 
-    // Proceed to next route handler
     next(); 
   } catch(error) {
     console.error('Authentication error:', error); 

@@ -13,7 +13,6 @@ router.get('/overview', async (req: Request, res: Response) => {
   try {
     const userId = req.userId!;
 
-    // Get all metrics in parallel
     const [statsResult, gatesResult, recentRequestsResult] = await Promise.all([
       // Get aggregate stats
       db.query(

@@ -41,19 +41,17 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    // Generate key
     const key = generateApiKey();
     const keyHash = hashApiKey(key);
     const keyPrefix = key.substring(0, 12);
 
-    // Store in database
     const apiKey = await db.createApiKey(req.userId!, keyHash, keyPrefix, name);
 
     // Return full key only once
     res.status(201).json({
       id: apiKey.id,
       name: apiKey.name,
-      key: key, // Only returned on creation
+      key: key,
       keyPrefix: apiKey.keyPrefix,
       createdAt: apiKey.createdAt,
     });

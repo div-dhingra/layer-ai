@@ -23,7 +23,6 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   try {
     const { gate: gateName, messages, temperature, maxTokens, topP } = req.body as CompletionRequest;
 
-    // validate required fields 
     if (!gateName) {
       res.status(400).json({ error: 'bad_request', message: 'Missing required field: gate'});
       return;
@@ -33,7 +32,6 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       return;
     }
 
-    // look up gate (try cache first, then db)
     let gateConfig = await cache.getGate(userId, gateName);
 
     if (!gateConfig) {
@@ -44,15 +42,12 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         return;
       }
 
-      // cache for the next time
       await cache.setGate(userId, gateName, gateConfig);
     }
 
-    // determine provider and call appropriate client
     const provider = MODEL_REGISTRY[gateConfig.model as SupportedModel].provider;
     let result: openai.ProviderResponse; 
 
-    // merge gate config with request overrides
     const finalParams = {
       model: gateConfig.model, 
       messages,
@@ -88,7 +83,6 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       ipAddress: req.ip || null,
     }).catch(err => console.error('Failed to log request:', err));
 
-    // return response
     const response: CompletionResponse = {
       content: result?.content,
       model: gateConfig.model,
