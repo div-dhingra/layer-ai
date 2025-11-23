@@ -32,6 +32,8 @@ CREATE TABLE gates (
   name VARCHAR(100) NOT NULL,
   model VARCHAR(50) NOT NULL,
   system_prompt TEXT,
+  messages JSONB,
+  allow_overrides JSONB DEFAULT 'true',
   temperature DECIMAL(3,2),
   max_tokens INTEGER,
   top_p DECIMAL(3,2),

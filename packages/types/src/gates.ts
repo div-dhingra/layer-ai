@@ -1,3 +1,5 @@
+import { GateMessage, OverrideConfig } from "./models";
+
 // Centralized model registry - single source of truth
 export const MODEL_REGISTRY = {
   // OpenAI models
@@ -57,6 +59,8 @@ export interface CreateGateRequest {
   temperature?: number; 
   maxTokens?: number; 
   topP?: number;
+  messages?: GateMessage[];
+  allowOverrides?: boolean | OverrideConfig;
 }
 
 // Gate update request
@@ -66,6 +70,8 @@ export interface UpdateGateRequest {
   temperature?: number; 
   maxTokens?: number; 
   topP?: number;
+  messages?: GateMessage[];
+  allowOverrides?: boolean | OverrideConfig;
 }
 
 // Gate with analytics
