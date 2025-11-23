@@ -59,13 +59,19 @@ export async function authenticate(
     .update(apiKey)
     .digest('hex');
 
-    const apiKeyRecord = await db.getApiKeyByHash(keyHash); 
+    const apiKeyRecord = await db.getApiKeyByHash(keyHash);
 
     if (!apiKeyRecord) {
-      res.status(401).json({
-        error: 'unauthorized',
-        message: 'Invalid api key',
-      });
+      // Not an API key (it's potentially a session key)
+      const sessionKey = await db.getSessionKeyByHash(keyHash);
+
+      if (!sessionKey) {
+        res.status(401).json({ error: 'unauthorized', message: 'Invalid API key'});
+        return;
+      }
+
+      req.userId = sessionKey.userId; 
+      next(); 
       return;
     }
 

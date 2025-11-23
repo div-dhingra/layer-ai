@@ -190,6 +190,15 @@ export const db = {
         data.errorMessage, data.userAgent, data.ipAddress
       ]
     )
+  },
+
+  // Session Keys
+  async getSessionKeyByHash(keyHash: string): Promise<{ userId: string; expiresAt: Date } | null> {
+    const result = await getPool().query(
+      'SELECT user_id, expires_at FROM session_keys WHERE key_hash = $1 AND expires_at > NOW()',
+      [keyHash]
+    );
+    return result.rows[0] ? toCamelCase(result.rows[0]) : null;
   }
 }; 
 
