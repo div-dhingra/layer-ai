@@ -14,7 +14,7 @@
   "author": "micah-layer",
   "license": "MIT",
   "dependencies": {
-    "@layer/types": "workspace:*"
+    "@layer-ai/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

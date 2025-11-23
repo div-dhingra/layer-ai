@@ -1,5 +1,5 @@
 {
-  "name": "@layer/types",
+  "name": "@layer-ai/types",
   "version": "0.1.0",
   "private": true,
   "type": "module",

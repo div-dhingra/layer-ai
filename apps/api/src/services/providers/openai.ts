@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import type { Message, SupportedModel } from '@layer/types';
-import { MODEL_REGISTRY } from '@layer/types';
+import type { Message, SupportedModel } from '@layer-ai/types';
+import { MODEL_REGISTRY } from '@layer-ai/types';
 
 // Lazy-initialize OpenAI client
 let openai: OpenAI | null = null;

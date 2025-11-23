@@ -1,5 +1,5 @@
 import type { Layer } from '../client.js';
-import type { Gate, CreateGateRequest, UpdateGateRequest } from '@layer/types';
+import type { Gate, CreateGateRequest, UpdateGateRequest } from '@layer-ai/types';
 
 export class GatesResource {
   constructor(private client: Layer) {}

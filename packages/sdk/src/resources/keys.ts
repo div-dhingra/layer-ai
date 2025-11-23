@@ -1,5 +1,5 @@
 import type { Layer } from '../client.js';
-import type { ApiKey, CreateKeyRequest, CreateKeyResponse } from '@layer/types';
+import type { ApiKey, CreateKeyRequest, CreateKeyResponse } from '@layer-ai/types';
 
 export class KeysResource {
   constructor(private client: Layer) {}

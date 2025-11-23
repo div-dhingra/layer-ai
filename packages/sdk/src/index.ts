@@ -11,4 +11,4 @@ export type {
   ApiKey,
   CreateKeyRequest,
   CreateKeyResponse,
-} from '@layer/types';
+} from '@layer-ai/types';

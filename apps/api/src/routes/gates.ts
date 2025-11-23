@@ -3,8 +3,8 @@ import type { Router as RouterType } from 'express';
 import { db } from '../lib/db/postgres.js';
 import { cache } from '../lib/db/redis.js';
 import { authenticate } from '../middleware/auth.js';
-import type { CreateGateRequest, UpdateGateRequest } from '@layer/types';
-import { MODEL_REGISTRY } from '@layer/types';
+import type { CreateGateRequest, UpdateGateRequest } from '@layer-ai/types';
+import { MODEL_REGISTRY } from '@layer-ai/types';
 
 const router: RouterType = Router(); 
 
