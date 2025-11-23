@@ -1,9 +1,14 @@
 import type { LayerConfig, RequestOptions } from './types.js';
-import type { ErrorResponse } from '@layer/types';
+import type { ErrorResponse, CompletionRequest, CompletionResponse } from '@layer/types';
+import { GatesResource } from './resources/gates.js';
+import { KeysResource } from './resources/keys.js';
 
 export class Layer {
   private apiKey: string; 
   private baseUrl: string;
+
+  public gates: GatesResource;
+  public keys: KeysResource;
 
   constructor(config: LayerConfig) {
     if (!config.apiKey) {
@@ -11,9 +16,12 @@ export class Layer {
     }
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl || 'http://localhost:3001';
+
+    this.gates = new GatesResource(this);
+    this.keys = new KeysResource(this);
   }
 
-  protected async request<T>(options: RequestOptions): Promise<T> {
+  public async request<T>(options: RequestOptions): Promise<T> {
     const { method, path, body } = options;
     const url = `${this.baseUrl}${path}`;
 
@@ -34,5 +42,13 @@ export class Layer {
     }
 
     return data as T;
+  }
+
+  async complete(params: CompletionRequest): Promise<CompletionResponse> {
+    return this.request<CompletionResponse>({
+      method: 'POST', 
+      path: '/v1/complete',
+      body: params,
+    })
   }
 }
