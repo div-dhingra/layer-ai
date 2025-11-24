@@ -26,12 +26,14 @@ export interface Gate {
   id: string;
   userId: string;
   name: string;
+  description?: string;
   model: SupportedModel; // requiring model at time of creation to prevent issues where model is empty and no responses can go through. of course this can be overriden at runtime
   systemPrompt?: string;
   allowOverrides?: boolean | OverrideConfig;
   temperature?: number;
   maxTokens?: number;
   topP?: number;
+  tags?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

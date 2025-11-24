@@ -137,9 +137,9 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, model, system_prompt, allow_overrides, temperature, max_tokens, top_p)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-       [userId, data.name, data.model, data.systemPrompt, JSON.stringify(data.allowOverrides), data.temperature, data.maxTokens, data.topP]
+      `INSERT INTO gates (user_id, name, description, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+       [userId, data.name, data.description, data.model, data.systemPrompt, JSON.stringify(data.allowOverrides), data.temperature, data.maxTokens, data.topP, JSON.stringify(data.tags || [])]
     );
     return toCamelCase(result.rows[0]);
   },
@@ -155,15 +155,17 @@ export const db = {
   async updateGate(id: string, data: any): Promise<Gate | null> {
     const result = await getPool().query(
       `UPDATE gates SET
-        model = COALESCE($2, model),
-        system_prompt = COALESCE($3, system_prompt),
-        allow_overrides = COALESCE($4, allow_overrides),
-        temperature = COALESCE($5, temperature),
-        max_tokens = COALESCE($6, max_tokens),
-        top_p = COALESCE($7, top_p),
+        description = COALESCE($2, description),
+        model = COALESCE($3, model),
+        system_prompt = COALESCE($4, system_prompt),
+        allow_overrides = COALESCE($5, allow_overrides),
+        temperature = COALESCE($6, temperature),
+        max_tokens = COALESCE($7, max_tokens),
+        top_p = COALESCE($8, top_p),
+        tags = COALESCE($9, tags),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
-      [id, data.model, data.systemPrompt, JSON.stringify(data.allowOverrides), data.temperature, data.maxTokens, data.topP]
+      [id, data.description, data.model, data.systemPrompt, JSON.stringify(data.allowOverrides), data.temperature, data.maxTokens, data.topP, data.tags ? JSON.stringify(data.tags) : null]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
   },

@@ -19,7 +19,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
-    const { name, model, systemPrompt, allowOverrides, temperature, maxTokens, topP } = req.body as CreateGateRequest;
+    const { name, description, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags } = req.body as CreateGateRequest;
 
     if (!name || !model) {
       res.status(400).json({ error: 'bad_request', message: 'Missing required fields: name and model' });
@@ -39,12 +39,14 @@ router.post('/', async (req: Request, res: Response) => {
 
     const gate = await db.createGate(req.userId, {
       name,
+      description,
       model,
       systemPrompt,
       allowOverrides,
       temperature,
       maxTokens,
       topP,
+      tags,
     });
 
     res.status(201).json(gate);
@@ -105,7 +107,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const { model, systemPrompt, allowOverrides, temperature, maxTokens, topP } = req.body as UpdateGateRequest;
+    const { description, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateById(req.params.id);
 
@@ -125,12 +127,14 @@ router.patch('/:id', async (req: Request, res: Response) => {
     }
 
     const updated = await db.updateGate(req.params.id, {
+      description,
       model,
       systemPrompt,
       allowOverrides,
       temperature,
       maxTokens,
       topP,
+      tags,
     });
 
     await cache.invalidateGate(req.userId, existing.name);

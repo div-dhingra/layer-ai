@@ -69,22 +69,26 @@ export type Provider = typeof MODEL_REGISTRY[SupportedModel]['provider'];
 // Gate creation request
 export interface CreateGateRequest {
   name: string;
+  description?: string;
   model: SupportedModel;
   systemPrompt?: string;
   allowOverrides?: boolean | OverrideConfig;
   temperature?: number;
   maxTokens?: number;
   topP?: number;
+  tags?: string[];
 }
 
 // Gate update request
 export interface UpdateGateRequest {
+  description?: string;
   model: SupportedModel;
   systemPrompt?: string;
   allowOverrides?: boolean | OverrideConfig;
   temperature?: number;
   maxTokens?: number;
   topP?: number;
+  tags?: string[];
 }
 
 // Gate with analytics
