@@ -1,4 +1,5 @@
 import type { SupportedModel } from "./gates";
+import { TaskAnalysis } from "./smart-routing";
 
 // User 
 export interface User {
@@ -22,12 +23,13 @@ export interface ApiKey {
 }
 
 // Gate
-export interface Gate {
-  id: string;
-  userId: string;
+export interface GateBase {
+  // Required fields
   name: string;
+  model: SupportedModel;
+
+  // Optional public fields
   description?: string;
-  model: SupportedModel; // requiring model at time of creation to prevent issues where model is empty and no responses can go through. of course this can be overriden at runtime
   systemPrompt?: string;
   allowOverrides?: boolean | OverrideConfig;
   temperature?: number;
@@ -36,7 +38,21 @@ export interface Gate {
   tags?: string[];
   routingStrategy?: 'single' | 'fallback' | 'round-robin';
   fallbackModels?: SupportedModel[];
-  createdAt: Date;
+
+  // Internal fields (layer-ai-internal)
+  // These features require a Layer account and only work with Layer-hosted API
+  costWeight?: number;
+  latencyWeight?: number;
+  qualityWeight?: number;
+  maxCostPer1kTokens?: number;
+  maxLatencyMs?: number;
+  taskAnalysis?: TaskAnalysis;
+}
+
+export interface Gate extends GateBase {
+  id: string;
+  userId: string;
+  createdAt: Date; 
   updatedAt: Date;
 }
 

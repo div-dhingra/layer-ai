@@ -1,38 +1,21 @@
-import { OverrideConfig } from "./models";
+import { OverrideConfig, type GateBase } from "./models";
 import { MODEL_REGISTRY, type SupportedModel, type Provider } from "./model-registry";
 
 // Re-export for backwards compatibility
 export { MODEL_REGISTRY };
 export type { SupportedModel, Provider };
 
-// Gate creation request
-export interface CreateGateRequest {
-  name: string;
-  description?: string;
-  model: SupportedModel;
-  systemPrompt?: string;
-  allowOverrides?: boolean | OverrideConfig;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  tags?: string[];
-  routingStrategy?: 'single' | 'fallback' | 'round-robin';
-  fallbackModels?: SupportedModel[];
-}
+/**
+ * Gate creation request
+ * Uses all fields from GateBase (name and model required, rest optional)
+ */
+export type CreateGateRequest = GateBase;
 
-// Gate update request
-export interface UpdateGateRequest {
-  description?: string;
-  model?: SupportedModel;
-  systemPrompt?: string;
-  allowOverrides?: boolean | OverrideConfig;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  tags?: string[];
-  routingStrategy?: 'single' | 'fallback' | 'round-robin';
-  fallbackModels?: SupportedModel[];
-}
+/**
+ * Gate update request
+ * All fields optional for partial updates (except can't change name)
+ */
+export type UpdateGateRequest = Partial<GateBase>;
 
 // Gate with analytics
 export interface GateWithAnalytics {

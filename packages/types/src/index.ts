@@ -6,3 +6,4 @@ export * from './api';
 export * from './keys';
 export * from './logs';
 export * from './smart-routing';
+export * from './config';
