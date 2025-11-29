@@ -1,0 +1,29 @@
+{
+  "name": "@layer-ai/config",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Configuration file parser and validator for Layer AI",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@layer-ai/types": "workspace:*",
+    "yaml": "^2.3.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "5.3.3"
+  }
+}
