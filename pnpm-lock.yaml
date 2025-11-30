@@ -64,7 +64,7 @@ importers:
         version: 5.1.6
       openai:
         specifier: ^4.24.0
-        version: 4.104.0(ws@8.18.3)
+        version: 4.104.0(ws@8.18.3)(zod@3.25.76)
       pg:
         specifier: ^8.11.3
         version: 8.16.3
@@ -90,6 +90,25 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/config:
+    dependencies:
+      '@layer-ai/types':
+        specifier: workspace:*
+        version: link:../types
+      yaml:
+        specifier: ^2.3.4
+        version: 2.8.1
+      zod:
+        specifier: ^3.22.4
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.25
+      typescript:
+        specifier: 5.3.3
+        version: 5.3.3
 
   packages/sdk:
     dependencies:
@@ -1034,6 +1053,11 @@ packages:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
 
+  typescript@5.3.3:
+    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
@@ -1099,6 +1123,14 @@ packages:
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
+
+  yaml@2.8.1:
+    resolution: {integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
 snapshots:
 
@@ -1790,7 +1822,7 @@ snapshots:
     dependencies:
       ee-first: 1.1.1
 
-  openai@4.104.0(ws@8.18.3):
+  openai@4.104.0(ws@8.18.3)(zod@3.25.76):
     dependencies:
       '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
@@ -1801,6 +1833,7 @@ snapshots:
       node-fetch: 2.7.0
     optionalDependencies:
       ws: 8.18.3
+      zod: 3.25.76
     transitivePeerDependencies:
       - encoding
 
@@ -2032,6 +2065,8 @@ snapshots:
       media-typer: 0.3.0
       mime-types: 2.1.35
 
+  typescript@5.3.3: {}
+
   typescript@5.9.3: {}
 
   undici-types@5.26.5: {}
@@ -2074,3 +2109,7 @@ snapshots:
   ws@8.18.3: {}
 
   xtend@4.0.2: {}
+
+  yaml@2.8.1: {}
+
+  zod@3.25.76: {}
