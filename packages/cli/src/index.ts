@@ -9,6 +9,8 @@ import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
 import { gateCommand } from './commands/gate.js';
 import { keyCommand } from './commands/key.js';
+import { pullCommand } from './commands/pull.js';
+import { pushCommand } from './commands/push.js';
 
 // Get package.json for version
 const __filename = fileURLToPath(import.meta.url);
@@ -30,5 +32,7 @@ program.addCommand(initCommand);
 program.addCommand(loginCommand);
 program.addCommand(gateCommand);
 program.addCommand(keyCommand);
+program.addCommand(pullCommand);
+program.addCommand(pushCommand);
 
 program.parse();
