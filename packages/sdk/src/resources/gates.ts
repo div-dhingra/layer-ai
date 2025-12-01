@@ -37,10 +37,10 @@ export class GatesResource {
    * Gets a specific gate by name
    * No admin mode required.
    */
-  async get(id: string): Promise<Gate> {
+  async get(name: string): Promise<Gate> {
     return this.client.request<Gate>({
       method: 'GET',
-      path: `/v1/gates/${id}`,
+      path: `/v1/gates/name/${name}`,
     })
   }
 
@@ -52,11 +52,11 @@ export class GatesResource {
    * @throws Error if adminMode is not enabled
    * @see https://docs.uselayer.ai/sdk/admin-mode
    */
-  async update(id: string, data: UpdateGateRequest): Promise<Gate> {
+  async update(name: string, data: UpdateGateRequest): Promise<Gate> {
     this.client.checkAdminMode();
     return this.client.request<Gate>({
       method: 'PATCH',
-      path: `/v1/gates/${id}`,
+      path: `/v1/gates/name/${name}`,
       body: data,
     })
   }
@@ -69,11 +69,11 @@ export class GatesResource {
    * @throws Error if adminMode is not enabled
    * @see https://docs.uselayer.ai/sdk/admin-mode
    */
-  async delete(id: string): Promise<void> {
+  async delete(name: string): Promise<void> {
     this.client.checkAdminMode();
     await this.client.request<void>({
       method: 'DELETE',
-      path: `/v1/gates/${id}`,
+      path: `/v1/gates/name/${name}`,
     })
   }
 

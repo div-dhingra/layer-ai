@@ -108,6 +108,9 @@ importers:
       inquirer:
         specifier: ^13.0.1
         version: 13.0.1(@types/node@20.19.25)
+      layer-ai:
+        specifier: workspace:*
+        version: link:../sdk
       ora:
         specifier: ^8.0.1
         version: 8.2.0

@@ -7,6 +7,7 @@ import { dirname, join } from 'path';
 import { validateCommand } from './commands/validate.js';
 import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
+import { gateCommand } from './commands/gate.js';
 
 // Get package.json for version
 const __filename = fileURLToPath(import.meta.url);
@@ -26,5 +27,6 @@ program
 program.addCommand(validateCommand);
 program.addCommand(initCommand);
 program.addCommand(loginCommand);
+program.addCommand(gateCommand);
 
 program.parse();
