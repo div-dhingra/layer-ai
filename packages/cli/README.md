@@ -125,7 +125,7 @@ layer gates delete my-gate
 
 #### `layer gates suggestions <name>`
 
-Get AI-powered model recommendations for a gate (premium feature).
+Get AI-powered model recommendations for a gate (internal feature).
 
 ```bash
 layer gates suggestions my-gate

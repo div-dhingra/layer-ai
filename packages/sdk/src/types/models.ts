@@ -47,6 +47,7 @@ export interface GateBase {
   maxCostPer1kTokens?: number;
   maxLatencyMs?: number;
   taskAnalysis?: TaskAnalysis;
+  reanalysisPeriod?: 'daily' | 'weekly' | 'monthly' | 'never';
 }
 
 export interface Gate extends GateBase {
