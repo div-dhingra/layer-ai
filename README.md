@@ -90,15 +90,13 @@ gates:
 - **Fallback** - Try backup models if primary fails
 - **Round-robin** - Distribute requests across multiple models
 
-## Self-Hosting
-
-Layer is designed to be self-hosted. See the deployment guide for instructions on running Layer on your own infrastructure.
-
 ## Documentation
 
-- [SDK Documentation](packages/sdk/README.md)
-- [CLI Documentation](packages/cli/README.md)
-- [Configuration Guide](docs/CONFIG.md)
+- [Configuration Guide](CONFIG.md) - Gate configuration and best practices
+- [SDK Documentation](packages/sdk/README.md) - TypeScript SDK reference
+- [CLI Documentation](packages/cli/README.md) - CLI commands and workflows
+- [Development Guide](DEVELOPMENT.md) - Local development setup
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute
 
 ## Development
 
