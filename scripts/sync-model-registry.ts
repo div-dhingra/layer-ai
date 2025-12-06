@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, readFileSync } from 'fs';
-import { MODEL_REGISTRY, ModelEntry } from '../packages/types/src/model-registry';
+import { MODEL_REGISTRY, ModelEntry } from '../packages/sdk/src/types/model-registry';
 
 // TODO: Use a gate for our AI model registry analysis
 // TODO: Update ANTHROPIC_API_KEY to use new gate key when we implement gates
@@ -137,7 +137,7 @@ async function syncModelRegistry() {
   console.log(`   Preserved: ${preservedCount} | Updated: ${aaUpdatedCount} | Enriched: ${orEnrichedCount}\n`);
 
   console.log('📝 Writing updated MODEL_REGISTRY to file...');
-  const registryPath = './packages/types/src/model-registry.ts';
+  const registryPath = './packages/sdk/src/types/model-registry.ts';
   const updatedFileContent = generateRegistryFile(transformedEntries);
   writeFileSync(registryPath, updatedFileContent, 'utf-8');
 
@@ -146,7 +146,7 @@ async function syncModelRegistry() {
 }
 
 function generateRegistryFile(entries: Record<string, Partial<ModelEntry>>): string {
-  const currentFile = readFileSync('./packages/types/src/model-registry.ts', 'utf-8');
+  const currentFile = readFileSync('./packages/sdk/src/types/model-registry.ts', 'utf-8');
   const headerMatch = currentFile.match(/^(\/\/.*\n)+/);
   const header = headerMatch ? headerMatch[0] : '';
 
