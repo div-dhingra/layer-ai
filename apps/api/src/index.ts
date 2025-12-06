@@ -29,10 +29,8 @@ const requestLogger = (req: express.Request, res: express.Response, next: expres
   // Log request
   console.log(`\n[${timestamp}] ${req.method} ${req.url}`);
   if (req.body && Object.keys(req.body).length > 0) {
-    const sanitizedBody = { ...req.body };
-    if (sanitizedBody.password) sanitizedBody.password = '***';
-    if (sanitizedBody.apiKey) sanitizedBody.apiKey = '***';
-    console.log('   Body:', JSON.stringify(sanitizedBody));
+    const fieldNames = Object.keys(req.body).join(', ');
+    console.log(`Body fields: ${fieldNames}`);
   }
 
   // Log response when finished
