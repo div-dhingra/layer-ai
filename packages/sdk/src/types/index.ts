@@ -3,6 +3,7 @@ export * from './models.js';
 export * from './model-registry.js';
 export * from './gates.js';
 export * from './api.js';
+export * from './api-v2.js';
 export * from './keys.js';
 export * from './logs.js';
 export * from './smart-routing.js';
