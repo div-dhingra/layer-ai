@@ -238,6 +238,28 @@ export const db = {
       [keyHash]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
+  },
+
+  async createSessionKey(userId: string): Promise<string> {
+    const crypto = await import('crypto');
+    const rawKey = `layer_${crypto.randomBytes(32).toString('hex')}`;
+    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await getPool().query(
+      'INSERT INTO session_keys (user_id, key_hash, expires_at) VALUES ($1, $2, $3)',
+      [userId, keyHash, expiresAt]
+    );
+
+    return rawKey;
+  },
+
+  async deleteSessionKeysForUser(userId: string): Promise<void> {
+    await getPool().query(
+      'DELETE FROM session_keys WHERE user_id = $1',
+      [userId]
+    );
   }
 }; 
 

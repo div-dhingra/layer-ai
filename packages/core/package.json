@@ -1,6 +1,6 @@
 {
   "name": "@layer-ai/core",
-  "version": "0.1.1",
+  "version": "0.1.6",
   "description": "Core API routes and services for Layer AI",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,17 +23,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/layer-ai.git",
+    "url": "https://github.com/micah-nettey/layer-ai.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/layer-ai/issues"
+    "url": "https://github.com/micah-nettey/layer-ai/issues"
   },
   "homepage": "https://uselayer.ai",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^1.30.0",
-    "@layer-ai/sdk": "^0.1.3",
+    "@layer-ai/sdk": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.2",
     "ioredis": "^5.3.2",
