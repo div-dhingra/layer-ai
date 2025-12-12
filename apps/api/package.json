@@ -12,6 +12,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^1.30.0",
+    "@layer-ai/core": "workspace:*",
     "@layer-ai/sdk": "workspace:*",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

@@ -7,6 +7,7 @@ Layer sits between your application and AI providers (OpenAI, Anthropic, Google)
 ## Features
 
 - **Unified API** - One interface for OpenAI, Anthropic, and Google models
+- **Smart Routing** - AI-powered model recommendations based on your task description
 - **Fallback Support** - Automatic failover when primary models are unavailable
 - **Load Balancing** - Distribute requests across multiple models with round-robin
 - **Request Logging** - Track all requests, costs, and performance metrics
@@ -41,6 +42,21 @@ const response = await layer.complete({
 
 console.log(response.text);
 ```
+
+### Smart Routing
+
+Get AI-powered model recommendations for your gates:
+
+```typescript
+// Get model suggestions based on task description
+const suggestions = await layer.gates.suggestions('my-gate');
+
+console.log(suggestions.primary); // Best model for this task
+console.log(suggestions.alternatives); // Other good options
+console.log(suggestions.reasoning); // Why these models were chosen
+```
+
+Smart routing analyzes your gate's task description and user preferences (cost, latency, quality weights) to recommend the best models from the registry.
 
 ### CLI Usage
 

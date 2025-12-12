@@ -79,8 +79,9 @@ export class GatesResource {
 
   /**
    * Get AI-powered model suggestions for a gate.
-   * 
-   * Layer-AI Internal Feature - returns a 404 on self-hosted public API
+   *
+   * Analyzes the gate's task description and returns suggested models
+   * with confidence scores based on the task requirements.
    */
   async suggestions(gateName: string): Promise<TaskAnalysis> {
     return this.client.request<TaskAnalysis>({

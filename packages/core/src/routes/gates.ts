@@ -271,4 +271,42 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// GET /:name/suggestions - Get AI-powered model suggestions for a gate
+router.get('/:name/suggestions', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const { name } = req.params;
+
+    const gate = await db.getGateByUserAndName(req.userId, name);
+
+    if (!gate) {
+      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+      return;
+    }
+
+    if (!gate.description) {
+      res.status(400).json({ error: 'bad_request', message: 'Gate must have a description for AI recommendations' });
+      return;
+    }
+
+    const userPreferences = {
+      costWeight: gate.costWeight,
+      latencyWeight: gate.latencyWeight,
+      qualityWeight: gate.qualityWeight
+    };
+
+    const { analyzeTask } = await import('../services/task-analysis.js');
+    const suggestions = await analyzeTask(gate.description, userPreferences);
+
+    res.json(suggestions);
+  } catch (error) {
+    console.error('Get suggestions error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to fetch suggestions' });
+  }
+});
+
 export default router;

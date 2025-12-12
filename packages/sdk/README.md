@@ -154,6 +154,20 @@ Delete a gate.
 await layer.gates.delete('my-gate');
 ```
 
+#### `layer.gates.suggestions(gateName)`
+
+Get AI-powered model recommendations for a gate based on its task description.
+
+```typescript
+const suggestions = await layer.gates.suggestions('my-gate');
+
+console.log(suggestions.primary);       // "gpt-4o"
+console.log(suggestions.alternatives);  // ["claude-sonnet-4", "gemini-2.5-flash"]
+console.log(suggestions.reasoning);     // "Based on your task description..."
+```
+
+Smart routing analyzes your gate's description and user preferences (cost, latency, quality weights) to recommend the best models from the registry.
+
 ### API Keys
 
 #### `layer.keys.list()`
