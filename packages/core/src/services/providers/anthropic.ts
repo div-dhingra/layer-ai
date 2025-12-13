@@ -49,13 +49,15 @@ export async function createCompletion(params: AnthropicCompletionParams): Promi
   }));
 
   // Call anthropic api
+  // Note: Anthropic doesn't allow both temperature and top_p
+  // If both are set, prioritize temperature
   const response = await getAnthropicClient().messages.create({
     model: params.model,
     max_tokens: params.maxTokens || 1024,
     messages: anthropicMessages,
     ...(systemPrompt && { system: systemPrompt }),
     ...(params.temperature != null && { temperature: params.temperature }),
-    ...(params.topP != null && { top_p: params.topP }),
+    ...(params.topP != null && params.temperature == null && { top_p: params.topP }),
   });
 
   // Extract response content
