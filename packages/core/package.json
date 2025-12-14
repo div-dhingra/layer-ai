@@ -1,6 +1,6 @@
 {
   "name": "@layer-ai/core",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Core API routes and services for Layer AI",
   "type": "module",
   "main": "./dist/index.js",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^1.30.0",
-    "@layer-ai/sdk": "^0.1.4",
+    "@layer-ai/sdk": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.2",
     "ioredis": "^5.3.2",
