@@ -1,6 +1,6 @@
 {
   "name": "@layer-ai/cli",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "type": "module",
   "description": "Command-line interface for Layer AI - Manage gates, API keys, and configuration",
   "main": "./dist/index.js",

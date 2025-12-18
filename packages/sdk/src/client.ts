@@ -1,5 +1,5 @@
 import type { LayerConfig, RequestOptions } from './types.js';
-import type { ErrorResponse, CompletionRequest, CompletionResponse } from './types/index.js';
+import type { ErrorResponse, CompletionRequest, CompletionResponse, LayerRequest, LayerResponse } from './types/index.js';
 import { GatesResource } from './resources/gates.js';
 import { KeysResource } from './resources/keys.js';
 import { LogsResource } from './resources/logs.js';
@@ -73,9 +73,17 @@ export class Layer {
 
   async complete(params: CompletionRequest): Promise<CompletionResponse> {
     return this.request<CompletionResponse>({
-      method: 'POST', 
+      method: 'POST',
       path: '/v1/complete',
       body: params,
+    })
+  }
+
+  async completeV2(request: LayerRequest): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v2/complete',
+      body: request,
     })
   }
 }
