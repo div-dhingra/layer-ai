@@ -4,8 +4,8 @@ import { db } from '../lib/db/postgres.js';
 import { cache } from '../lib/db/redis.js';
 import { authenticate } from '../middleware/auth.js';
 import { OpenAIAdapter } from '../services/providers/openai-adapter.js';
+import { AnthropicAdapter } from '../services/providers/anthropic-adapter.js';
 import * as openai from '../services/providers/openai.js';
-import * as anthropic from '../services/providers/anthropic.js';
 import * as google from '../services/providers/google.js';
 import type { CompletionRequest, CompletionResponse, Gate, SupportedModel, OverrideConfig, BaseCompletionParams } from '@layer-ai/sdk';
 import { MODEL_REGISTRY, OverrideField } from '@layer-ai/sdk';
@@ -82,7 +82,7 @@ function resolveFinalParams(
 
 /**
  * MIGRATION IN PROGRESS: Moving to normalized adapter pattern.
- * OpenAI now uses the new adapter. Other providers will follow.
+ * OpenAI and Anthropic now use the new adapter. Other providers will follow.
  * This temporary conversion layer will be removed after all providers are migrated.
  */
 async function callProvider(params: CompletionParams): Promise<openai.ProviderResponse> {
@@ -112,8 +112,29 @@ async function callProvider(params: CompletionParams): Promise<openai.ProviderRe
         costUsd: layerResponse.cost || 0,
       };
     }
-    case 'anthropic':
-      return await anthropic.createCompletion(params);
+    case 'anthropic': {
+      const adapter = new AnthropicAdapter();
+      const layerResponse = await adapter.call({
+        gate: 'internal',
+        model: params.model,
+        type: 'chat',
+        data: {
+          messages: params.messages,
+          systemPrompt: params.systemPrompt,
+          temperature: params.temperature,
+          maxTokens: params.maxTokens,
+          topP: params.topP,
+        },
+      });
+
+      return {
+        content: layerResponse.content || '',
+        promptTokens: layerResponse.usage?.promptTokens || 0,
+        completionTokens: layerResponse.usage?.completionTokens || 0,
+        totalTokens: layerResponse.usage?.totalTokens || 0,
+        costUsd: layerResponse.cost || 0,
+      };
+    }
     case 'google':
       return await google.createCompletion(params);
     default:

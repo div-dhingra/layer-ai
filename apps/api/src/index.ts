@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { completeRouter, gatesRouter, keysRouter, authRouter, logsRouter } from '@layer-ai/core';
+import { completeRouter, completeV2Router, gatesRouter, keysRouter, authRouter, logsRouter } from '@layer-ai/core';
 
 const app = express()
 const PORT = process.env.PORT || 3001;
@@ -55,6 +55,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/v1/complete', completeRouter);
+app.use('/v2/complete', completeV2Router);
 app.use('/v1/gates', gatesRouter);
 app.use('/v1/keys', keysRouter);
 app.use('/auth', authRouter);

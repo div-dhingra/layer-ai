@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { ProviderAdapter } from './base-adapter.js';
+import { BaseProviderAdapter } from './base-adapter.js';
 import {
   LayerRequest,
   LayerResponse,
@@ -24,7 +24,7 @@ function getOpenAIClient(): OpenAI {
   return openai;
 }
 
-export class OpenAIAdapter extends ProviderAdapter {
+export class OpenAIAdapter extends BaseProviderAdapter {
   protected provider = 'openai';
 
   protected roleMappings: Record<Role, string> = {
@@ -97,7 +97,7 @@ export class OpenAIAdapter extends ProviderAdapter {
       case 'tts':
         return this.handleTextToSpeech(request);
       case 'video':
-        throw new Error('Video generation not yet supported by OpenAI');
+        throw new Error('Video generation not yet supported by LayerAI');
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
     }
@@ -107,6 +107,10 @@ export class OpenAIAdapter extends ProviderAdapter {
     const startTime = Date.now();
     const client = getOpenAIClient();
     const { data: chat, model } = request;
+
+    if (!model) {
+      throw new Error('Model is required for chat completion');
+    }
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
 
@@ -158,7 +162,7 @@ export class OpenAIAdapter extends ProviderAdapter {
     }
 
     const openaiRequest: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
-      model: model!,
+      model: model,
       messages,
       stream: false,
       ...(chat.temperature !== undefined && { temperature: chat.temperature }),
@@ -180,7 +184,7 @@ export class OpenAIAdapter extends ProviderAdapter {
     const promptTokens = response.usage?.prompt_tokens || 0;
     const completionTokens = response.usage?.completion_tokens || 0;
     const totalTokens = response.usage?.total_tokens || 0;
-    const cost = this.calculateCost(model!, promptTokens, completionTokens);
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
 
     return {
       content: choice.message.content || undefined,
@@ -204,8 +208,12 @@ export class OpenAIAdapter extends ProviderAdapter {
     const client = getOpenAIClient();
     const { data: image, model } = request;
 
+    if (!model) {
+      throw new Error('Model is required for image generation');
+    }
+
     const response = await client.images.generate({
-      model: model!,
+      model: model,
       prompt: image.prompt,
       ...(image.size && { size: this.mapImageSize(image.size) as '256x256' | '512x512' | '1024x1024' | '1792x1024' | '1024x1792' }),
       ...(image.quality && { quality: this.mapImageQuality(image.quality) as 'standard' | 'hd' }),
@@ -218,7 +226,7 @@ export class OpenAIAdapter extends ProviderAdapter {
         url: img.url,
         revisedPrompt: img.revised_prompt,
       })),
-      model: model!,
+      model: model,
       latencyMs: Date.now() - startTime,
       raw: response,
     };
@@ -229,15 +237,19 @@ export class OpenAIAdapter extends ProviderAdapter {
     const client = getOpenAIClient();
     const { data: embedding, model } = request;
 
+    if (!model) {
+      throw new Error('Model is required for embeddings');
+    }
+
     const response = await client.embeddings.create({
-      model: model!,
+      model: model,
       input: embedding.input,
       ...(embedding.dimensions && { dimensions: embedding.dimensions }),
       ...(embedding.encodingFormat && { encoding_format: embedding.encodingFormat as 'float' | 'base64' }),
     });
 
     const promptTokens = response.usage?.prompt_tokens || 0;
-    const cost = this.calculateCost(model!, promptTokens, 0);
+    const cost = this.calculateCost(model, promptTokens, 0);
 
     return {
       embeddings: response.data.map(d => d.embedding),
@@ -258,8 +270,12 @@ export class OpenAIAdapter extends ProviderAdapter {
     const client = getOpenAIClient();
     const { data: tts, model } = request;
 
+    if (!model) {
+      throw new Error('Model is required for tts');
+    }
+
     const response = await client.audio.speech.create({
-      model: model!,
+      model: model,
       input: tts.input,
       voice: (tts.voice || 'alloy') as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
       ...(tts.speed !== undefined && { speed: tts.speed }),
@@ -274,7 +290,7 @@ export class OpenAIAdapter extends ProviderAdapter {
         base64,
         format: tts.responseFormat || 'mp3',
       },
-      model: model!,
+      model: model,
       latencyMs: Date.now() - startTime,
     };
   }
