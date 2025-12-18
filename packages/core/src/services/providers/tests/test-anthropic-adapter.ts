@@ -1,14 +1,14 @@
-import { OpenAIAdapter } from './openai-adapter.js';
+import { AnthropicAdapter } from '../anthropic-adapter.js';
 import type { LayerRequest } from '@layer-ai/sdk';
 
-const adapter = new OpenAIAdapter();
+const adapter = new AnthropicAdapter();
 
 async function testChatCompletion() {
   console.log('Testing chat completion...');
 
   const request: LayerRequest = {
     gate: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
       messages: [
@@ -33,7 +33,7 @@ async function testChatWithVision() {
 
   const request: LayerRequest = {
     gate: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
       messages: [
@@ -42,7 +42,6 @@ async function testChatWithVision() {
           content: 'What color is the sky in this image?',
           images: [{
             url: 'https://images.unsplash.com/photo-1765202659641-9ad9facfe5cf?q=80&w=1364&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            detail: 'high'
           }]
         }
       ],
@@ -56,78 +55,57 @@ async function testChatWithVision() {
   console.log('✅ Vision test passed\n');
 }
 
-async function testImageGeneration() {
-  console.log('Testing image generation...');
+async function testToolCalls() {
+  console.log('Testing tool calls...');
 
   const request: LayerRequest = {
     gate: 'test-gate',
-    model: 'dall-e-3',
-    type: 'image',
+    model: 'claude-sonnet-4-5-20250929',
+    type: 'chat',
     data: {
-      prompt: 'A cute cat playing with a ball of yarn',
-      size: '1024x1024',
-      quality: 'standard',
-      count: 1,
+      messages: [
+        { role: 'user', content: 'What is the weather in San Francisco?' }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get the current weather for a location',
+            parameters: {
+              type: 'object',
+              properties: {
+                location: {
+                  type: 'string',
+                  description: 'The city and state, e.g. San Francisco, CA',
+                },
+              },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+      maxTokens: 100,
     }
   };
 
   const response = await adapter.call(request);
-  console.log('Generated images:', response.images?.length);
-  console.log('Image URL:', response.images?.[0]?.url);
-  console.log('Revised prompt:', response.images?.[0]?.revisedPrompt);
-  console.log('✅ Image generation test passed\n');
-}
+  console.log('Response:', response.content);
+  console.log('Tool calls:', response.toolCalls);
+  console.log('Finish reason:', response.finishReason);
 
-async function testEmbeddings() {
-  console.log('Testing embeddings...');
-
-  const request: LayerRequest = {
-    gate: 'test-gate',
-    model: 'text-embedding-3-small',
-    type: 'embeddings',
-    data: {
-      input: 'Hello world',
-    }
-  };
-
-  const response = await adapter.call(request);
-  console.log('Embeddings dimensions:', response.embeddings?.[0]?.length);
-  console.log('Tokens:', response.usage);
-  console.log('Cost:', response.cost);
-  console.log('✅ Embeddings test passed\n');
-}
-
-async function testTextToSpeech() {
-  console.log('Testing text-to-speech...');
-
-  const request: LayerRequest = {
-    gate: 'test-gate',
-    model: 'tts-1',
-    type: 'tts',
-    data: {
-      input: 'Hello, this is a test.',
-      voice: 'alloy',
-      speed: 1.0,
-      responseFormat: 'mp3',
-    }
-  };
-
-  const response = await adapter.call(request);
-  console.log('Audio format:', response.audio?.format);
-  console.log('Audio base64 length:', response.audio?.base64?.length);
-  console.log('✅ Text-to-speech test passed\n');
+  if (response.toolCalls && response.toolCalls.length > 0) {
+    console.log('✅ Tool calls test passed\n');
+  } else {
+    throw new Error('Expected tool calls but got none');
+  }
 }
 
 async function runTests() {
   try {
     await testChatCompletion();
-
-    console.log('Testing vision...');
     await testChatWithVision();
-
-    await testImageGeneration();
-    await testEmbeddings();
-    await testTextToSpeech();
+    await testToolCalls();
 
     console.log('✅ All tests passed!');
   } catch (error) {

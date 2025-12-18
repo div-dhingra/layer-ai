@@ -20,7 +20,7 @@ import {
 
 export { ADAPTER_HANDLED };
 
-export abstract class ProviderAdapter {
+export abstract class BaseProviderAdapter {
   protected abstract provider: string;
 
   protected roleMappings?: Record<Role, string>;
