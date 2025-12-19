@@ -64,13 +64,13 @@ export class AnthropicAdapter extends BaseProviderAdapter {
       case 'chat':
         return this.handleChat(request);
       case 'image':
-        throw new Error('image generation not yet supported by LayerAI');
+        throw new Error('Image generation not yet supported by Anthropic');
       case 'embeddings':
-        throw new Error('embeddings not yet supported by LayerAI');
+        throw new Error('Embeddings not yet supported by Anthropic');
       case 'tts':
-        throw new Error('tts generation not yet supported by LayerAI');
+        throw new Error('TTS generation not yet supported by Anthropic');
       case 'video':
-        throw new Error('Video generation not yet supported by LayerAI');
+        throw new Error('Video generation not yet supported by Anthropic');
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
     }

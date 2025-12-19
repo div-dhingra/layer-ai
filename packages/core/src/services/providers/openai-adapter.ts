@@ -97,7 +97,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       case 'tts':
         return this.handleTextToSpeech(request);
       case 'video':
-        throw new Error('Video generation not yet supported by LayerAI');
+        throw new Error('Video generation not yet supported by OpenAI');
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
     }
