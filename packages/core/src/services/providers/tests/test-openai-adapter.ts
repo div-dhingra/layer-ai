@@ -118,12 +118,139 @@ async function testTextToSpeech() {
   console.log('✅ Text-to-speech test passed\n');
 }
 
+async function testToolCalling() {
+  console.log('Testing tool calling...');
+
+  // Step 1: Initial request with tool available
+  const request: LayerRequest = {
+    gate: 'test-gate',
+    model: 'gpt-4o-mini',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'What is the weather in San Francisco?' }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get the current weather for a location',
+            parameters: {
+              type: 'object',
+              properties: {
+                location: {
+                  type: 'string',
+                  description: 'The city and state, e.g. San Francisco, CA',
+                },
+              },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+      maxTokens: 100,
+    }
+  };
+
+  const response = await adapter.call(request);
+  console.log('Response content:', response.content);
+  console.log('Tool calls:', response.toolCalls);
+  console.log('Finish reason:', response.finishReason);
+
+  if (!response.toolCalls || response.toolCalls.length === 0) {
+    throw new Error('Expected tool calls but got none');
+  }
+
+  const toolCall = response.toolCalls[0];
+  console.log('Function called:', toolCall.function.name);
+  console.log('Function arguments:', toolCall.function.arguments);
+
+  // Step 2: Send tool response back
+  const toolResponseRequest: LayerRequest = {
+    gate: 'test-gate',
+    model: 'gpt-4o-mini',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'What is the weather in San Francisco?' },
+        {
+          role: 'assistant',
+          content: response.content,
+          toolCalls: response.toolCalls,
+        },
+        {
+          role: 'tool',
+          toolCallId: toolCall.id,
+          content: JSON.stringify({ temperature: 72, condition: 'sunny' }),
+        },
+      ],
+      tools: request.data.tools,
+    }
+  };
+
+  const finalResponse = await adapter.call(toolResponseRequest);
+  console.log('Final response:', finalResponse.content);
+  console.log('✅ Tool calling test passed\n');
+}
+
+async function testContentAndToolCalls() {
+  console.log('Testing content + tool calls in same message...');
+
+  // This tests the fix we made - assistant messages can have BOTH content and toolCalls
+  const request: LayerRequest = {
+    gate: 'test-gate',
+    model: 'gpt-4o-mini',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Calculate 5 + 3 and explain why' },
+        {
+          role: 'assistant',
+          content: 'Let me calculate that for you.',
+          toolCalls: [
+            {
+              id: 'call_test_123',
+              type: 'function',
+              function: {
+                name: 'calculate',
+                arguments: JSON.stringify({ operation: 'add', a: 5, b: 3 }),
+              },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          toolCallId: 'call_test_123',
+          content: JSON.stringify({ result: 8 }),
+        },
+      ],
+      maxTokens: 100,
+    }
+  };
+
+  const response = await adapter.call(request);
+  console.log('Response:', response.content);
+
+  if (!response.content) {
+    throw new Error('Expected content in response');
+  }
+
+  console.log('✅ Content + tool calls test passed\n');
+}
+
 async function runTests() {
   try {
     await testChatCompletion();
 
     console.log('Testing vision...');
     await testChatWithVision();
+
+    console.log('Testing tool calling...');
+    await testToolCalling();
+
+    console.log('Testing content + tool calls...');
+    await testContentAndToolCalls();
 
     await testImageGeneration();
     await testEmbeddings();

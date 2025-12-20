@@ -58,6 +58,7 @@ async function testChatWithVision() {
 async function testToolCalls() {
   console.log('Testing tool calls...');
 
+  // Step 1: Initial request with tool available
   const request: LayerRequest = {
     gate: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
@@ -85,20 +86,51 @@ async function testToolCalls() {
           },
         },
       ],
-      maxTokens: 100,
+      maxTokens: 200,
     }
   };
 
   const response = await adapter.call(request);
-  console.log('Response:', response.content);
+  console.log('Response content:', response.content);
   console.log('Tool calls:', response.toolCalls);
   console.log('Finish reason:', response.finishReason);
 
-  if (response.toolCalls && response.toolCalls.length > 0) {
-    console.log('✅ Tool calls test passed\n');
-  } else {
+  if (!response.toolCalls || response.toolCalls.length === 0) {
     throw new Error('Expected tool calls but got none');
   }
+
+  const toolCall = response.toolCalls[0];
+  console.log('Function called:', toolCall.function.name);
+  console.log('Function arguments:', toolCall.function.arguments);
+
+  // Step 2: Send tool response back
+  const toolResponseRequest: LayerRequest = {
+    gate: 'test-gate',
+    model: 'claude-sonnet-4-5-20250929',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'What is the weather in San Francisco?' },
+        {
+          role: 'assistant',
+          content: response.content,
+          toolCalls: response.toolCalls,
+        },
+        {
+          role: 'tool',
+          toolCallId: toolCall.id,
+          name: toolCall.function.name,
+          content: JSON.stringify({ temperature: 72, condition: 'sunny', humidity: 65 }),
+        },
+      ],
+      tools: request.data.tools,
+      maxTokens: 200,
+    }
+  };
+
+  const finalResponse = await adapter.call(toolResponseRequest);
+  console.log('Final response:', finalResponse.content);
+  console.log('✅ Tool calls test passed\n');
 }
 
 async function runTests() {

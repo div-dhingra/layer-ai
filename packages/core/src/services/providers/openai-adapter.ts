@@ -121,6 +121,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
     for (const msg of chat.messages) {
       const role = this.mapRole(msg.role) as OpenAI.Chat.ChatCompletionMessageParam['role'];
 
+      // Handle vision messages (content + images)
       if (msg.images && msg.images.length > 0) {
         const content: OpenAI.Chat.ChatCompletionContentPart[] = [];
 
@@ -140,19 +141,25 @@ export class OpenAIAdapter extends BaseProviderAdapter {
         }
 
         messages.push({ role: role as 'user', content });
-      } else if (msg.toolCalls) {
-        messages.push({
-          role: 'assistant',
-          content: msg.content || null,
-          tool_calls: msg.toolCalls as unknown as OpenAI.Chat.ChatCompletionMessageToolCall[],
-        });
-      } else if (msg.toolCallId) {
+      }
+      // Handle tool responses (mutually exclusive)
+      else if (msg.toolCallId) {
         messages.push({
           role: 'tool',
           content: msg.content || '',
           tool_call_id: msg.toolCallId,
         });
-      } else {
+      }
+      // Handle assistant messages with tool calls (can have content + tool_calls)
+      else if (msg.toolCalls) {
+        messages.push({
+          role: 'assistant',
+          content: msg.content || null,
+          tool_calls: msg.toolCalls as unknown as OpenAI.Chat.ChatCompletionMessageToolCall[],
+        });
+      }
+      // Handle regular text messages
+      else {
         messages.push({
           role,
           content: msg.content || '',
