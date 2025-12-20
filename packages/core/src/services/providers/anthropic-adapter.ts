@@ -92,58 +92,10 @@ export class AnthropicAdapter extends BaseProviderAdapter {
       // Skip system messages - they're handled via the system parameter
       if (msg.role === 'system') continue;
 
-      const role = this.mapRole(msg.role); 
-      
-      if (msg.images && msg.images.length > 0) {
-        const content: Anthropic.MessageParam['content'] = [];
+      const role = this.mapRole(msg.role);
 
-        if (msg.content) {
-          content.push({ type: 'text', text: msg.content });
-        }
-
-        for (const image of msg.images) {
-          if (image.url) {
-            content.push({
-              type: 'image',
-              source: {
-                type: 'url',
-                url: image.url,
-              }
-            });
-          } else if (image.base64) {
-            content.push({
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: image.mimeType || 'image/jpeg',
-                data: image.base64
-              }
-            });
-          }
-        }
-
-        messages.push({ role: role as 'user', content });
-      }
-
-      else if (msg.toolCalls) {
-        const content: Anthropic.MessageParam['content'] = [];
-
-        if (msg.content) {
-          content.push({ type: 'text', text: msg.content });
-        }
-
-        for (const toolCall of msg.toolCalls) {
-          content.push({
-            type: 'tool_use',
-            id: toolCall.id,
-            name: toolCall.function.name,
-            input: JSON.parse(toolCall.function.arguments),
-          })
-        }
-        messages.push({ role: 'assistant', content });
-      }
-
-      else if (msg.toolCallId) {
+      // Handle tool responses (mutually exclusive with other content types)
+      if (msg.toolCallId) {
         messages.push({
           role: 'user',
           content: [{
@@ -153,7 +105,56 @@ export class AnthropicAdapter extends BaseProviderAdapter {
           }],
         });
       }
+      // Handle messages with images and/or tool calls
+      else if (msg.images?.length || msg.toolCalls?.length) {
+        const content: Anthropic.MessageParam['content'] = [];
 
+        // Add text content if present
+        if (msg.content) {
+          content.push({ type: 'text', text: msg.content });
+        }
+
+        // Add images if present
+        if (msg.images) {
+          for (const image of msg.images) {
+            if (image.url) {
+              content.push({
+                type: 'image',
+                source: {
+                  type: 'url',
+                  url: image.url,
+                }
+              });
+            } else if (image.base64) {
+              content.push({
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: image.mimeType || 'image/jpeg',
+                  data: image.base64
+                }
+              });
+            }
+          }
+        }
+
+        // Add tool calls if present
+        if (msg.toolCalls) {
+          for (const toolCall of msg.toolCalls) {
+            content.push({
+              type: 'tool_use',
+              id: toolCall.id,
+              name: toolCall.function.name,
+              input: JSON.parse(toolCall.function.arguments),
+            })
+          }
+        }
+
+        // Determine role based on content
+        const messageRole = msg.images?.length ? 'user' : (msg.toolCalls?.length ? 'assistant' : role as 'user' | 'assistant');
+        messages.push({ role: messageRole, content });
+      }
+      // Handle regular text messages
       else {
         messages.push({
           role: role as 'user' | 'assistant',
