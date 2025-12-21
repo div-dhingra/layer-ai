@@ -183,12 +183,31 @@ export interface ImageGenerationRequest {
 
 // ====== VIDEO GENERATION REQUEST ======
 
+export type VideoReferenceType = 'subject' | 'style' | 'asset';
+
+export interface VideoReferenceImage {
+  url?: string;
+  base64?: string;
+  referenceType?: VideoReferenceType;
+}
+
+export interface VideoImageInput {
+  url?: string;
+  base64?: string;
+}
+
 export interface VideoGenerationRequest {
   prompt: string;
   duration?: number | string;
   size?: VideoSize;
   fps?: number;
   seed?: number;
+  negativePrompt?: string;
+  numberOfVideos?: number;
+  personGeneration?: string;
+  image?: VideoImageInput;
+  lastFrame?: VideoImageInput;
+  referenceImages?: VideoReferenceImage[];
 }
 
 // ====== EMBEDDINGS REQUEST ======
