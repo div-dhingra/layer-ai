@@ -1,5 +1,12 @@
 // ====== NORMALIZED TYPES (BASED ON OPENAI) ======
 
+// Error response
+export interface ErrorResponse {
+  error: string;
+  message: string;
+  details?: any;
+}
+
 export type Role =
   | 'system'
   | 'user'

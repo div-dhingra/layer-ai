@@ -1,6 +1,6 @@
 {
   "name": "@layer-ai/core",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Core API routes and services for Layer AI",
   "type": "module",
   "main": "./dist/index.js",
