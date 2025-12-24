@@ -39,10 +39,10 @@ importers:
         specifier: ^1.30.0
         version: 1.30.0
       '@layer-ai/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/core
       '@layer-ai/sdk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/sdk
       bcryptjs:
         specifier: ^2.4.3
@@ -97,7 +97,7 @@ importers:
   packages/cli:
     dependencies:
       '@layer-ai/sdk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../sdk
       chalk:
         specifier: ^5.3.0
@@ -131,8 +131,11 @@ importers:
         specifier: ^1.30.0
         version: 1.30.0
       '@layer-ai/sdk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../sdk
+      '@mistralai/mistralai':
+        specifier: ^1.11.0
+        version: 1.11.0
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -503,6 +506,9 @@ packages:
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
+
+  '@mistralai/mistralai@1.11.0':
+    resolution: {integrity: sha512-6/BVj2mcaggYbpMzNSxtqtM2Tv/Jb5845XFd2CMYFO+O5VBkX70iLjtkBBTI4JFhh1l9vTCIMYXBVOjLoBVHGQ==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -1466,6 +1472,11 @@ packages:
     resolution: {integrity: sha512-8aAvwVUSHpfEqTQ4w/KMlf3HcRdt50E5ODIQJBw1fQ5RL34xabzxtUlzTXVqc4rkZsPbvrXKWnABCD7kWSmocA==}
     engines: {node: '>= 14'}
 
+  zod-to-json-schema@3.25.0:
+    resolution: {integrity: sha512-HvWtU2UG41LALjajJrML6uQejQhNJx+JBO9IflpSja4R03iNWfKXrj6W2h7ljuLyc1nKS+9yDyL/9tD1U/yBnQ==}
+    peerDependencies:
+      zod: ^3.25 || ^4
+
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -1711,6 +1722,11 @@ snapshots:
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
+
+  '@mistralai/mistralai@1.11.0':
+    dependencies:
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -2700,5 +2716,9 @@ snapshots:
   xtend@4.0.2: {}
 
   yaml@2.3.4: {}
+
+  zod-to-json-schema@3.25.0(zod@3.25.76):
+    dependencies:
+      zod: 3.25.76
 
   zod@3.25.76: {}

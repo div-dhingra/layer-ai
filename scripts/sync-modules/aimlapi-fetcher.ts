@@ -49,6 +49,7 @@ function normalizeProviderName(developer: string): string | null {
   if (lowerDev.includes('open') && lowerDev.includes('ai')) return 'openai';
   if (lowerDev.includes('anthropic')) return 'anthropic';
   if (lowerDev.includes('google')) return 'google';
+  if (lowerDev.includes('mistral')) return 'mistral';
 
   return null;
 }

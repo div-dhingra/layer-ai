@@ -7,7 +7,8 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string; 
-      apiKeyHash?: string; 
+      apiKeyId?: string;
+      apiKeyHash?: string;
     }
   }
 }
@@ -74,6 +75,7 @@ export async function authenticate(
 
       // Attach userId to request for downstream handlers
       req.userId = apiKeyRecord.userId;
+      req.apiKeyId = apiKeyRecord.id;
       req.apiKeyHash = tokenHash;
 
       // Update last_used_at timestamp (async, dont await)

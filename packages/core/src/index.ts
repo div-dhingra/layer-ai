@@ -7,6 +7,7 @@ export { default as completeRouter } from './routes/v2/complete.js';
 
 // Middleware
 export { authenticate } from './middleware/auth.js';
+export type {} from './middleware/auth.js';
 
 // Database
 export { db } from './lib/db/postgres.js';
