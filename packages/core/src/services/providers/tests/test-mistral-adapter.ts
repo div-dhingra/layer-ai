@@ -305,7 +305,6 @@ async function testMultiTurn() {
 async function testOCR() {
   console.log('--- Testing OCR Capability ---');
 
-  // Test with a sample PDF URL
   const request: LayerRequest = {
     gate: 'test-gate',
     type: 'ocr',

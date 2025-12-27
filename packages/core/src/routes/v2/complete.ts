@@ -22,6 +22,22 @@ interface RoutingResult {
 
 // MARK:- Helper Functions
 
+function normalizeModelId(modelId: string): SupportedModel {
+  if (MODEL_REGISTRY[modelId as SupportedModel]) {
+    return modelId as SupportedModel;
+  }
+
+  const providers = ['openai', 'anthropic', 'google', 'mistral'];
+  for (const provider of providers) {
+    const fullId = `${provider}/${modelId}`;
+    if (MODEL_REGISTRY[fullId as SupportedModel]) {
+      return fullId as SupportedModel;
+    }
+  }
+
+  throw new Error(`invalid model ID: "${modelId}" not found in registry`);
+}
+
 function isOverrideAllowed(allowOverrides: boolean | OverrideConfig | undefined | null, field: keyof OverrideConfig): boolean {
   if (allowOverrides === undefined || allowOverrides === null || allowOverrides === true) return true;
   if (allowOverrides === false) return false;
@@ -48,10 +64,14 @@ function resolveFinalRequest(
   const finalRequest = { ...request };
   let finalModel = gateConfig.model;
 
-  if (request.model && isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Model) && MODEL_REGISTRY[request.model as SupportedModel]) {
-    finalModel = request.model as SupportedModel;
+  if (request.model && isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Model)) {
+    try {
+      finalModel = normalizeModelId(request.model);
+    } catch {
+      finalModel = gateConfig.model;
+    }
   }
-  finalRequest.model = finalModel;
+  finalRequest.model = normalizeModelId(finalModel);
 
   if (request.type === 'chat') {
     const chatData = { ...request.data };
@@ -85,7 +105,8 @@ function resolveFinalRequest(
 }
 
 async function callProvider(request: LayerRequest): Promise<LayerResponse> {
-  const provider = MODEL_REGISTRY[request.model as SupportedModel].provider;
+  const normalizedModel = normalizeModelId(request.model as string);
+  const provider = MODEL_REGISTRY[normalizedModel].provider;
 
   switch (provider) {
     case 'openai': {

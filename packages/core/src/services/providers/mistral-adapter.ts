@@ -302,10 +302,8 @@ export class MistralAdapter extends BaseProviderAdapter {
     const mistral = getMistralClient();
     const { data: ocr, model } = request;
 
-    // Default to mistral-ocr-latest if no model specified
     const ocrModel = model || 'mistral-ocr-latest';
 
-    // Build the document object based on input type
     let document: { type: string; documentUrl?: string; imageUrl?: string };
 
     if (ocr.documentUrl) {
@@ -319,10 +317,9 @@ export class MistralAdapter extends BaseProviderAdapter {
         imageUrl: ocr.imageUrl,
       };
     } else if (ocr.base64) {
-      // For base64, determine if it's a document or image based on mimeType
       const mimeType = ocr.mimeType || 'application/pdf';
       const isImage = mimeType.startsWith('image/');
-      
+
       if (isImage) {
         document = {
           type: 'image_url',
@@ -338,7 +335,6 @@ export class MistralAdapter extends BaseProviderAdapter {
       throw new Error('OCR requires either documentUrl, imageUrl, or base64 input');
     }
 
-    // Call Mistral OCR API
     const response = await (mistral as any).ocr.process({
       model: ocrModel,
       document,
@@ -348,7 +344,6 @@ export class MistralAdapter extends BaseProviderAdapter {
       ...(ocr.extractFooter !== undefined && { extractFooter: ocr.extractFooter }),
     });
 
-    // Transform response to normalized format
     const pages = response.pages?.map((page: any) => ({
       index: page.index,
       markdown: page.markdown,
@@ -360,7 +355,6 @@ export class MistralAdapter extends BaseProviderAdapter {
       dimensions: page.dimensions,
     })) || [];
 
-    // Combine all markdown content for the content field
     const combinedMarkdown = pages.map((p: any) => p.markdown).join('\n\n---\n\n');
 
     return {
