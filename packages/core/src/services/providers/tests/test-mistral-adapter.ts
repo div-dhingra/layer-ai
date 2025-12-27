@@ -302,30 +302,29 @@ async function testMultiTurn() {
   console.log();
 }
 
-async function testOCR() {
-  console.log('--- Testing OCR Capability ---');
+// async function testOCR() {
+//   console.log('--- Testing OCR Capability ---');
 
-  // Test with a sample PDF URL
-  const request: LayerRequest = {
-    gate: 'test-gate',
-    type: 'ocr',
-    model: 'mistral-ocr-latest',
-    data: {
-      documentUrl: 'https://arxiv.org/pdf/2201.04234',
-    },
-  };
+//   const request: LayerRequest = {
+//     gate: 'test-gate',
+//     type: 'ocr',
+//     model: 'mistral-ocr-latest',
+//     data: {
+//       documentUrl: 'https://arxiv.org/pdf/2201.04234',
+//     },
+//   };
 
-  try {
-    const response = await adapter.call(request);
-    console.log('OCR Response (first 500 chars):', response.content?.substring(0, 500));
-    console.log('Model:', response.model);
-    console.log('Pages extracted:', response.ocr?.pages?.length || 0);
-    console.log('Latency:', response.latencyMs, 'ms');
-  } catch (error) {
-    console.log('Test failed:', (error as Error).message);
-  }
-  console.log();
-}
+//   try {
+//     const response = await adapter.call(request);
+//     console.log('OCR Response (first 500 chars):', response.content?.substring(0, 500));
+//     console.log('Model:', response.model);
+//     console.log('Pages extracted:', response.ocr?.pages?.length || 0);
+//     console.log('Latency:', response.latencyMs, 'ms');
+//   } catch (error) {
+//     console.log('Test failed:', (error as Error).message);
+//   }
+//   console.log();
+// }
 
 async function testUnsupportedModality() {
   console.log('--- Testing Unsupported Modality (Image Generation) ---');
@@ -358,7 +357,7 @@ async function runAllTests() {
     await testToolResponse();
     await testEmbeddings();
     await testVisionCapability();
-    await testOCR();
+    // await testOCR();
     await testResponseFormat();
     await testMultiTurn();
     await testUnsupportedModality();

@@ -53,8 +53,8 @@ export class MistralAdapter extends BaseProviderAdapter {
         return this.handleChat(request);
       case 'embeddings':
         return this.handleEmbeddings(request);
-      case 'ocr':
-        return this.handleOCR(request);
+      // case 'ocr':
+      //   return this.handleOCR(request);
       case 'image':
         throw new Error('Image generation not supported by Mistral');
       case 'tts':
@@ -295,85 +295,79 @@ export class MistralAdapter extends BaseProviderAdapter {
     };
   }
 
-  private async handleOCR(
-    request: Extract<LayerRequest, { type: 'ocr' }>
-  ): Promise<LayerResponse> {
-    const startTime = Date.now();
-    const mistral = getMistralClient();
-    const { data: ocr, model } = request;
+  // private async handleOCR(
+  //   request: Extract<LayerRequest, { type: 'ocr' }>
+  // ): Promise<LayerResponse> {
+  //   const startTime = Date.now();
+  //   const mistral = getMistralClient();
+  //   const { data: ocr, model } = request;
 
-    // Default to mistral-ocr-latest if no model specified
-    const ocrModel = model || 'mistral-ocr-latest';
+  //   const ocrModel = model || 'mistral-ocr-latest';
 
-    // Build the document object based on input type
-    let document: { type: string; documentUrl?: string; imageUrl?: string };
+  //   let document: { type: string; documentUrl?: string; imageUrl?: string };
 
-    if (ocr.documentUrl) {
-      document = {
-        type: 'document_url',
-        documentUrl: ocr.documentUrl,
-      };
-    } else if (ocr.imageUrl) {
-      document = {
-        type: 'image_url',
-        imageUrl: ocr.imageUrl,
-      };
-    } else if (ocr.base64) {
-      // For base64, determine if it's a document or image based on mimeType
-      const mimeType = ocr.mimeType || 'application/pdf';
-      const isImage = mimeType.startsWith('image/');
-      
-      if (isImage) {
-        document = {
-          type: 'image_url',
-          imageUrl: `data:${mimeType};base64,${ocr.base64}`,
-        };
-      } else {
-        document = {
-          type: 'document_url',
-          documentUrl: `data:${mimeType};base64,${ocr.base64}`,
-        };
-      }
-    } else {
-      throw new Error('OCR requires either documentUrl, imageUrl, or base64 input');
-    }
+  //   if (ocr.documentUrl) {
+  //     document = {
+  //       type: 'document_url',
+  //       documentUrl: ocr.documentUrl,
+  //     };
+  //   } else if (ocr.imageUrl) {
+  //     document = {
+  //       type: 'image_url',
+  //       imageUrl: ocr.imageUrl,
+  //     };
+  //   } else if (ocr.base64) {
+  //     const mimeType = ocr.mimeType || 'application/pdf';
+  //     const isImage = mimeType.startsWith('image/');
 
-    // Call Mistral OCR API
-    const response = await (mistral as any).ocr.process({
-      model: ocrModel,
-      document,
-      ...(ocr.tableFormat && { tableFormat: ocr.tableFormat }),
-      ...(ocr.includeImageBase64 !== undefined && { includeImageBase64: ocr.includeImageBase64 }),
-      ...(ocr.extractHeader !== undefined && { extractHeader: ocr.extractHeader }),
-      ...(ocr.extractFooter !== undefined && { extractFooter: ocr.extractFooter }),
-    });
+  //     if (isImage) {
+  //       document = {
+  //         type: 'image_url',
+  //         imageUrl: `data:${mimeType};base64,${ocr.base64}`,
+  //       };
+  //     } else {
+  //       document = {
+  //         type: 'document_url',
+  //         documentUrl: `data:${mimeType};base64,${ocr.base64}`,
+  //       };
+  //     }
+  //   } else {
+  //     throw new Error('OCR requires either documentUrl, imageUrl, or base64 input');
+  //   }
 
-    // Transform response to normalized format
-    const pages = response.pages?.map((page: any) => ({
-      index: page.index,
-      markdown: page.markdown,
-      images: page.images,
-      tables: page.tables,
-      hyperlinks: page.hyperlinks,
-      header: page.header,
-      footer: page.footer,
-      dimensions: page.dimensions,
-    })) || [];
+  //   const response = await (mistral as any).ocr.process({
+  //     model: ocrModel,
+  //     document,
+  //     ...(ocr.tableFormat && { tableFormat: ocr.tableFormat }),
+  //     ...(ocr.includeImageBase64 !== undefined && { includeImageBase64: ocr.includeImageBase64 }),
+  //     ...(ocr.extractHeader !== undefined && { extractHeader: ocr.extractHeader }),
+  //     ...(ocr.extractFooter !== undefined && { extractFooter: ocr.extractFooter }),
+  //   });
 
-    // Combine all markdown content for the content field
-    const combinedMarkdown = pages.map((p: any) => p.markdown).join('\n\n---\n\n');
+  //   const pages = response.pages?.map((page: any) => ({
+  //     index: page.index,
+  //     markdown: page.markdown,
+  //     images: page.images,
+  //     tables: page.tables,
+  //     hyperlinks: page.hyperlinks,
+  //     header: page.header,
+  //     footer: page.footer,
+  //     dimensions: page.dimensions,
+  //   })) || [];
 
-    return {
-      content: combinedMarkdown,
-      ocr: {
-        pages,
-        model: response.model || ocrModel,
-        documentAnnotation: response.documentAnnotation,
-        usageInfo: response.usageInfo,
-      },
-      model: response.model || ocrModel,
-      latencyMs: Date.now() - startTime,
-      raw: response,
-    };
-  }
+  //   const combinedMarkdown = pages.map((p: any) => p.markdown).join('\n\n---\n\n');
+
+  //   return {
+  //     content: combinedMarkdown,
+  //     ocr: {
+  //       pages,
+  //       model: response.model || ocrModel,
+  //       documentAnnotation: response.documentAnnotation,
+  //       usageInfo: response.usageInfo,
+  //     },
+  //     model: response.model || ocrModel,
+  //     latencyMs: Date.now() - startTime,
+  //     raw: response,
+  //   };
+  // }
 }
