@@ -108,7 +108,8 @@ export type LayerRequest =
   | (BaseRequest & { type: 'image'; data: ImageGenerationRequest })
   | (BaseRequest & { type: 'video'; data: VideoGenerationRequest })
   | (BaseRequest & { type: 'embeddings'; data: EmbeddingsRequest })
-  | (BaseRequest & { type: 'tts'; data: TextToSpeechRequest });
+  | (BaseRequest & { type: 'tts'; data: TextToSpeechRequest })
+  | (BaseRequest & { type: 'ocr'; data: OCRRequest });
 
 // ====== CHAT/COMPLETION REQUEST ======
 
@@ -234,6 +235,62 @@ export interface TextToSpeechRequest {
   responseFormat?: AudioFormat;
 }
 
+// ====== OCR REQUEST ======
+
+export type OCRDocumentType = 'document_url' | 'image_url' | 'base64';
+export type OCRTableFormat = 'markdown' | 'html';
+
+export interface OCRRequest {
+  documentUrl?: string;
+  imageUrl?: string;
+  base64?: string;
+  mimeType?: string;
+  tableFormat?: OCRTableFormat;
+  includeImageBase64?: boolean;
+  extractHeader?: boolean;
+  extractFooter?: boolean;
+}
+
+// ====== OCR RESPONSE ======
+
+export interface OCRPage {
+  index: number;
+  markdown: string;
+  images?: Array<{
+    id: string;
+    base64?: string;
+    topLeftX?: number;
+    topLeftY?: number;
+    bottomRightX?: number;
+    bottomRightY?: number;
+  }>;
+  tables?: Array<{
+    id: string;
+    html?: string;
+  }>;
+  hyperlinks?: Array<{
+    text: string;
+    url: string;
+  }>;
+  header?: string | null;
+  footer?: string | null;
+  dimensions?: {
+    width: number;
+    height: number;
+    dpi?: number;
+  };
+}
+
+export interface OCROutput {
+  pages: OCRPage[];
+  model: string;
+  documentAnnotation?: Record<string, unknown> | null;
+  usageInfo?: {
+    pagesProcessed?: number;
+    docSizeBytes?: number;
+  };
+}
+
 // ====== LAYER RESPONSE ======
 
 export interface LayerResponse {
@@ -244,6 +301,7 @@ export interface LayerResponse {
   videos?: VideoOutput[];
   audio?: AudioOutput;
   embeddings?: number[][];
+  ocr?: OCROutput;
   toolCalls?: ToolCall[];
   model?: string;
   finishReason?: FinishReason;
