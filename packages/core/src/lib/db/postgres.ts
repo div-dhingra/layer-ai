@@ -147,8 +147,8 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, reanalysis_period)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, reanalysis_period, task_analysis)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
        [
          userId,
          data.name,
@@ -166,7 +166,8 @@ export const db = {
          data.costWeight ?? 0.33,
          data.latencyWeight ?? 0.33,
          data.qualityWeight ?? 0.34,
-         data.reanalysisPeriod || 'never'
+         data.reanalysisPeriod || 'never',
+         data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null
        ]
     );
     return toCamelCase(result.rows[0]);
@@ -198,6 +199,7 @@ export const db = {
         latency_weight = COALESCE($14, latency_weight),
         quality_weight = COALESCE($15, quality_weight),
         reanalysis_period = COALESCE($16, reanalysis_period),
+        task_analysis = COALESCE($17, task_analysis),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
       [
@@ -217,6 +219,7 @@ export const db = {
         data.latencyWeight,
         data.qualityWeight,
         data.reanalysisPeriod,
+        data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
       ]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
