@@ -14,9 +14,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "type-check": "turbo run type-check",
-    "sync:models": "tsx scripts/sync-model-registry.ts",
-    "validate:models": "tsx scripts/validate-models.ts",
-    "cleanup:models": "tsx scripts/cleanup-invalid-models.ts"
+    "sync:registry": "tsx scripts/sync-registry.ts"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

@@ -1,18 +1,13 @@
-// Centralized model registry - single source of truth
-// Only includes models from supported providers (openai, anthropic, google)
+// AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
+// Generated at: 2026-01-02T09:52:55.923Z
+// Source: Internal Model Registry API
+// To update: Run `pnpm sync:registry`
 //
-// Data sources:
-// - AIMLAPI: model discovery, categorization, context lengths (all model types)
-// - Artificial Analysis API: pricing, benchmarks, performance metrics (chat models only)
-//
-// To update: Run `pnpm run sync:models` (requires AIMLAPI_API_KEY and ARTIFICIAL_ANALYSIS_API_KEY in .env)
-// APIs:
-// - https://api.aimlapi.com/models
-// - https://artificialanalysis.ai/api/v2/data/llms/models
-// Data attribution: https://aimlapi.com, https://artificialanalysis.ai/
+// Registry version: 2026-01-02
+// Last sync: 2026-01-02T09:52:55.918Z
+// Total models: 103
 
 // Providers we support with adapters
-
 export const SUPPORTED_PROVIDERS = ['openai', 'anthropic', 'google', 'mistral'] as const;
 export type SupportedProvider = typeof SUPPORTED_PROVIDERS[number];
 
@@ -128,1479 +123,2981 @@ export type ModelEntry =
   | DocumentModelEntry;
 
 export const MODEL_REGISTRY = {
-  // Openai models
-  'openai/gpt-4o': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4o',
-    pricing: { input: 0.0025, output: 0.01 },
-    benchmarks: {
-      intelligence: 27,
-      coding: 24,
-      math: 6,
-      mmluPro: 0.748,
-      gpqa: 0.543,
-    },
-    performance: {
-      outputTokenPerSecond: 235.657,
-      timeTofirstToken: 0.323,
-      intelligenceScore: 27,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-2024-08-06': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4o 2024-08-06',
-    pricing: { input: 0.0025, output: 0.01 },
-    benchmarks: {
-      intelligence: 29,
-      gpqa: 0.521,
-    },
-    performance: {
-      outputTokenPerSecond: 123.952,
-      timeTofirstToken: 0.436,
-      intelligenceScore: 29,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-2024-05-13': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4o 2024-05-13',
-    pricing: { input: 0.005, output: 0.015 },
-    benchmarks: {
-      intelligence: 26.3,
-      coding: 24.2,
-      mmluPro: 0.74,
-      gpqa: 0.526,
-    },
-    performance: {
-      outputTokenPerSecond: 118.509,
-      timeTofirstToken: 0.483,
-      intelligenceScore: 26.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-mini': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4o mini',
-    pricing: { input: 0.00015, output: 0.0006 },
-    benchmarks: {
-      intelligence: 21.2,
-      math: 14.7,
-      mmluPro: 0.648,
-      gpqa: 0.426,
-    },
-    performance: {
-      outputTokenPerSecond: 47.79,
-      timeTofirstToken: 0.58,
-      intelligenceScore: 21.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-mini-2024-07-18': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4o mini 2024-07-18',
-    pricing: { input: 0.00015, output: 0.0006 },
-    benchmarks: {
-      intelligence: 21.2,
-      math: 14.7,
-      mmluPro: 0.648,
-      gpqa: 0.426,
-    },
-    performance: {
-      outputTokenPerSecond: 47.79,
-      timeTofirstToken: 0.58,
-      intelligenceScore: 21.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'chatgpt-4o-latest': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'ChatGPT 4o latest',
-    pricing: { input: 0.005, output: 0.015 },
-    benchmarks: {
-      intelligence: 25.3,
-      mmluPro: 0.773,
-      gpqa: 0.511,
-    },
-    performance: {
-      outputTokenPerSecond: 244.456,
-      timeTofirstToken: 0.925,
-      intelligenceScore: 25.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4-turbo': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4 turbo',
-    pricing: { input: 0.01, output: 0.03 },
-    benchmarks: {
-      intelligence: 24.2,
-      coding: 21.5,
-      mmluPro: 0.694,
-    },
-    performance: {
-      outputTokenPerSecond: 40.254,
-      timeTofirstToken: 0.847,
-      intelligenceScore: 24.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4-turbo-2024-04-09': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4 turbo 2024-04-09',
-    pricing: { input: 0.01, output: 0.03 },
-    benchmarks: {
-      intelligence: 24.2,
-      coding: 21.5,
-      mmluPro: 0.694,
-    },
-    performance: {
-      outputTokenPerSecond: 40.254,
-      timeTofirstToken: 0.847,
-      intelligenceScore: 24.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4',
-    pricing: { input: 0.03, output: 0.06 },
-    benchmarks: {
-      intelligence: 21.5,
-      coding: 13.1,
-    },
-    performance: {
-      outputTokenPerSecond: 29.898,
-      timeTofirstToken: 0.781,
-      intelligenceScore: 21.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4-0125-preview': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4 0125 preview',
-    pricing: { input: 0.03, output: 0.06 },
-    benchmarks: {
-      intelligence: 21.5,
-      coding: 13.1,
-    },
-    performance: {
-      outputTokenPerSecond: 29.898,
-      timeTofirstToken: 0.781,
-      intelligenceScore: 21.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4-1106-preview': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 4 1106 preview',
-    pricing: { input: 0.03, output: 0.06 },
-    benchmarks: {
-      intelligence: 21.5,
-      coding: 13.1,
-    },
-    performance: {
-      outputTokenPerSecond: 29.898,
-      timeTofirstToken: 0.781,
-      intelligenceScore: 21.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-3.5-turbo': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 3.5 turbo',
-    pricing: { input: 0.0005, output: 0.0015 },
-    benchmarks: {
-      intelligence: 8.3,
-      coding: 10.7,
-      mmluPro: 0.462,
-      gpqa: 0.297,
-    },
-    performance: {
-      outputTokenPerSecond: 129.872,
-      timeTofirstToken: 0.68,
-      intelligenceScore: 8.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-3.5-turbo-0125': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 3.5 turbo 0125',
-    pricing: { input: 0.0005, output: 0.0015 },
-    benchmarks: {
-      intelligence: 8.3,
-      coding: 10.7,
-      mmluPro: 0.462,
-      gpqa: 0.297,
-    },
-    performance: {
-      outputTokenPerSecond: 129.872,
-      timeTofirstToken: 0.68,
-      intelligenceScore: 8.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-3.5-turbo-1106': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 3.5 turbo 1106',
-    pricing: { input: 0.0005, output: 0.0015 },
-    benchmarks: {
-      intelligence: 8.3,
-      coding: 10.7,
-      mmluPro: 0.462,
-      gpqa: 0.297,
-    },
-    performance: {
-      outputTokenPerSecond: 129.872,
-      timeTofirstToken: 0.68,
-      intelligenceScore: 8.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'o3-mini': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'o3 mini',
-    pricing: { input: 0.0011, output: 0.0044 },
-    benchmarks: {
-      intelligence: 48.1,
-      coding: 39.4,
-      mmluPro: 0.791,
-      gpqa: 0.748,
-    },
-    performance: {
-      outputTokenPerSecond: 160.235,
-      timeTofirstToken: 15.449,
-      intelligenceScore: 48.1,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-audio-preview': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4o audio preview',
-    pricing: { input: 0.0025, output: 0.01 },
-    benchmarks: {
-      intelligence: 27,
-      coding: 24,
-      math: 6,
-      mmluPro: 0.748,
-      gpqa: 0.543,
-    },
-    performance: {
-      outputTokenPerSecond: 235.657,
-      timeTofirstToken: 0.323,
-      intelligenceScore: 27,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-mini-audio-preview': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4o mini audio preview',
-    pricing: { input: 0.00015, output: 0.0006 },
-    benchmarks: {
-      intelligence: 21.2,
-      math: 14.7,
-      mmluPro: 0.648,
-      gpqa: 0.426,
-    },
-    performance: {
-      outputTokenPerSecond: 47.79,
-      timeTofirstToken: 0.58,
-      intelligenceScore: 21.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-audio': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT audio',
-    pricing: { input: 0.0025, output: 0.01 },
-    benchmarks: {
-      intelligence: 27,
-      coding: 24,
-      math: 6,
-      mmluPro: 0.748,
-      gpqa: 0.543,
-    },
-    performance: {
-      outputTokenPerSecond: 235.657,
-      timeTofirstToken: 0.323,
-      intelligenceScore: 27,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-audio-mini': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT mini audio',
-    pricing: { input: 0.00015, output: 0.0006 },
-    benchmarks: {
-      intelligence: 21.2,
-      math: 14.7,
-      mmluPro: 0.648,
-      gpqa: 0.426,
-    },
-    performance: {
-      outputTokenPerSecond: 47.79,
-      timeTofirstToken: 0.58,
-      intelligenceScore: 21.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-search-preview': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4o search preview',
-    pricing: { input: 0.0025, output: 0.01 },
-    benchmarks: {
-      intelligence: 27,
-      coding: 24,
-      math: 6,
-      mmluPro: 0.748,
-      gpqa: 0.543,
-    },
-    performance: {
-      outputTokenPerSecond: 235.657,
-      timeTofirstToken: 0.323,
-      intelligenceScore: 27,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-4o-mini-search-preview': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4o mini search preview',
-    pricing: { input: 0.00015, output: 0.0006 },
-    benchmarks: {
-      intelligence: 21.2,
-      math: 14.7,
-      mmluPro: 0.648,
-      gpqa: 0.426,
-    },
-    performance: {
-      outputTokenPerSecond: 47.79,
-      timeTofirstToken: 0.58,
-      intelligenceScore: 21.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-4.1-2025-04-14': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4.1',
-    pricing: { input: 0.002, output: 0.008 },
-    benchmarks: {
-      intelligence: 43.4,
-      coding: 32.2,
-      math: 34.7,
-      mmluPro: 0.806,
-      gpqa: 0.666,
-    },
-    performance: {
-      outputTokenPerSecond: 109.93,
-      timeTofirstToken: 0.694,
-      intelligenceScore: 43.4,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-4.1-mini-2025-04-14': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4.1 mini',
-    pricing: { input: 0.0004, output: 0.0016 },
-    benchmarks: {
-      intelligence: 42.5,
-      coding: 31.9,
-      math: 46.3,
-      mmluPro: 0.781,
-      gpqa: 0.664,
-    },
-    performance: {
-      outputTokenPerSecond: 80.606,
-      timeTofirstToken: 0.505,
-      intelligenceScore: 42.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-4.1-nano-2025-04-14': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'Chat GPT 4.1 nano',
-    pricing: { input: 0.0001, output: 0.0004 },
-    benchmarks: {
-      intelligence: 27.3,
-      coding: 20.7,
-      math: 24,
-      mmluPro: 0.657,
-      gpqa: 0.512,
-    },
-    performance: {
-      outputTokenPerSecond: 171.016,
-      timeTofirstToken: 0.446,
-      intelligenceScore: 27.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/o4-mini-2025-04-16': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'o4-mini',
-    pricing: { input: 0.0011, output: 0.0044 },
-    benchmarks: {
-      intelligence: 59.6,
-      coding: 48.9,
-      math: 90.7,
-      mmluPro: 0.832,
-      gpqa: 0.784,
-    },
-    performance: {
-      outputTokenPerSecond: 169.795,
-      timeTofirstToken: 33.795,
-      intelligenceScore: 59.6,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/o3-2025-04-16': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'o3',
-    pricing: { input: 0.002, output: 0.008 },
-    benchmarks: {
-      intelligence: 65.5,
-      coding: 52.2,
-      math: 88.3,
-      mmluPro: 0.853,
-      gpqa: 0.827,
-    },
-    performance: {
-      outputTokenPerSecond: 359.632,
-      timeTofirstToken: 8.936,
-      intelligenceScore: 65.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'o1': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'o1',
-    pricing: { input: 0.015, output: 0.06 },
-    benchmarks: {
-      intelligence: 47.2,
-      coding: 38.6,
-      mmluPro: 0.841,
-      gpqa: 0.747,
-    },
-    performance: {
-      outputTokenPerSecond: 200.717,
-      timeTofirstToken: 15.318,
-      intelligenceScore: 47.2,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-2025-08-07': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5',
-    pricing: { input: 0.00125, output: 0.01 },
-    benchmarks: {
-      intelligence: 68.5,
-      coding: 52.7,
-      math: 94.3,
-      mmluPro: 0.871,
-      gpqa: 0.854,
-    },
-    performance: {
-      outputTokenPerSecond: 147.254,
-      timeTofirstToken: 80.387,
-      intelligenceScore: 68.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-mini-2025-08-07': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5 mini',
-    pricing: { input: 0.00025, output: 0.002 },
-    benchmarks: {
-      intelligence: 64.3,
-      coding: 51.4,
-      math: 90.7,
-      mmluPro: 0.837,
-      gpqa: 0.828,
-    },
-    performance: {
-      outputTokenPerSecond: 86.714,
-      timeTofirstToken: 92.447,
-      intelligenceScore: 64.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-nano-2025-08-07': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5 nano',
-    pricing: { input: 0.00005, output: 0.0004 },
-    benchmarks: {
-      intelligence: 51,
-      coding: 42.3,
-      math: 83.7,
-      mmluPro: 0.78,
-      gpqa: 0.676,
-    },
-    performance: {
-      outputTokenPerSecond: 157.197,
-      timeTofirstToken: 102.322,
-      intelligenceScore: 51,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-chat-latest': {
-    type: 'chat' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5 Chat',
-    pricing: { input: 0.00125, output: 0.01 },
-    benchmarks: {
-      intelligence: 41.8,
-      coding: 34.7,
-      math: 48.3,
-      mmluPro: 0.82,
-      gpqa: 0.686,
-    },
-    performance: {
-      outputTokenPerSecond: 192.431,
-      timeTofirstToken: 0.677,
-      intelligenceScore: 41.8,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/o3-pro': {
-    type: 'responses' as const,
-    provider: 'openai' as const,
-    displayName: 'o3-pro',
-    pricing: { input: 0.02, output: 0.08 },
-    benchmarks: {
-      intelligence: 65.3,
-      gpqa: 0.845,
-    },
-    performance: {
-      outputTokenPerSecond: 53.281,
-      timeTofirstToken: 58.458,
-      intelligenceScore: 65.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-pro': {
-    type: 'responses' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT 5 Pro',
-    pricing: { input: 0.00125, output: 0.01 },
-    benchmarks: {
-      intelligence: 68.5,
-      coding: 52.7,
-      math: 94.3,
-      mmluPro: 0.871,
-      gpqa: 0.854,
-    },
-    performance: {
-      outputTokenPerSecond: 147.254,
-      timeTofirstToken: 80.387,
-      intelligenceScore: 68.5,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-1-codex': {
-    type: 'responses' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5.1 Codex',
-    pricing: { input: 0.00125, output: 0.01 },
-    benchmarks: {
-      intelligence: 66.9,
-      coding: 52.5,
-      math: 95.7,
-      mmluPro: 0.86,
-      gpqa: 0.86,
-    },
-    performance: {
-      outputTokenPerSecond: 264.603,
-      timeTofirstToken: 12.24,
-      intelligenceScore: 66.9,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-1-codex-mini': {
-    type: 'responses' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5.1 Codex Mini',
-    pricing: { input: 0.00025, output: 0.002 },
-    benchmarks: {
-      intelligence: 62.3,
-      coding: 52.5,
-      math: 91.7,
-      mmluPro: 0.82,
-      gpqa: 0.813,
-    },
-    performance: {
-      outputTokenPerSecond: 146.418,
-      timeTofirstToken: 15.16,
-      intelligenceScore: 62.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-5-2-pro': {
-    type: 'responses' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-5.2 Pro',
-    pricing: { input: 0.00175, output: 0.014 },
-    benchmarks: {
-      intelligence: 72.6,
-      coding: 61.8,
-      math: 98.7,
-      mmluPro: 0.874,
-      gpqa: 0.903,
-    },
-    performance: {
-      outputTokenPerSecond: 112.643,
-      timeTofirstToken: 45.724,
-      intelligenceScore: 72.6,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'dall-e-3': {
-    type: 'image' as const,
-    provider: 'openai' as const,
-    displayName: 'DALL-E 3',
-    lastUpdated: '2025-12-24',
-  },
-  'dall-e-2': {
-    type: 'image' as const,
-    provider: 'openai' as const,
-    displayName: 'DALL-E 2',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-image-1': {
-    type: 'image' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT Image 1',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-image-1-mini': {
-    type: 'image' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT Image 1 Mini',
-    lastUpdated: '2025-12-24',
-  },
-  'text-embedding-3-small': {
-    type: 'embeddings' as const,
-    provider: 'openai' as const,
-    displayName: 'Text embedding 3 small',
-    contextLength: 8000,
-    lastUpdated: '2025-12-24',
-  },
-  'text-embedding-3-large': {
-    type: 'embeddings' as const,
-    provider: 'openai' as const,
-    displayName: 'Text embedding 3 large',
-    contextLength: 8000,
-    lastUpdated: '2025-12-24',
-  },
-  'text-embedding-ada-002': {
-    type: 'embeddings' as const,
-    provider: 'openai' as const,
-    displayName: 'Text embedding ada 002',
-    contextLength: 8000,
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-4o-transcribe': {
-    type: 'stt' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-4o Transcribe',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-4o-mini-transcribe': {
-    type: 'stt' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-4o Mini Transcribe',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/gpt-4o-mini-tts': {
-    type: 'tts' as const,
-    provider: 'openai' as const,
-    displayName: 'GPT-4o mini TTS',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/tts-1': {
-    type: 'tts' as const,
-    provider: 'openai' as const,
-    displayName: 'TTS-1',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/tts-1-hd': {
-    type: 'tts' as const,
-    provider: 'openai' as const,
-    displayName: 'TTS-1 HD',
-    lastUpdated: '2025-12-24',
-  },
-  'gpt-3.5-turbo-instruct': {
-    type: 'language-completion' as const,
-    provider: 'openai' as const,
-    displayName: 'Gpt 3.5 turbo instruct',
-    pricing: { input: 0.0005, output: 0.0015 },
-    benchmarks: {
-      intelligence: 8.3,
-      coding: 10.7,
-      mmluPro: 0.462,
-      gpqa: 0.297,
-    },
-    performance: {
-      outputTokenPerSecond: 129.872,
-      timeTofirstToken: 0.68,
-      intelligenceScore: 8.3,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'openai/sora-2-t2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Text to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/sora-2-i2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Image to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/sora-2-pro-i2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Pro Image to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'openai/sora-2-pro-t2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Pro Text to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'fallback-openai/sora-2-t2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Text to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'fallback-openai/sora-2-i2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Image to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'fallback-openai/sora-2-pro-i2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Pro Image to Video',
-    lastUpdated: '2025-12-24',
-  },
-  'fallback-openai/sora-2-pro-t2v': {
-    type: 'video' as const,
-    provider: 'openai' as const,
-    displayName: 'Sora 2 Pro Text to Video',
-    lastUpdated: '2025-12-24',
-  },
-
-  // Anthropic models
-  'claude-3-opus-20240229': {
+  'claude-3-7-sonnet-20250219': {
     type: 'chat' as const,
     provider: 'anthropic' as const,
-    displayName: 'Claude 3 Opus 2024-02-29',
-    pricing: { input: 0.015, output: 0.075 },
+    displayName: 'Claude Sonnet 3.7',
+    description: 'Legacy fast model with extended thinking support',
+    pricing: { input: 3, output: 15 },
     benchmarks: {
-      intelligence: 20.6,
-      coding: 19.5,
-      mmluPro: 0.696,
-      gpqa: 0.489,
+      intelligence: 49.9,
+      coding: 35.8,
+      math: 56.3,
+      mmluPro: 0.84,
+      gpqa: 0.77,
     },
     performance: {
-      outputTokenPerSecond: 0,
-      timeTofirstToken: 0,
-      intelligenceScore: 20.6,
+      intelligenceScore: 49.9,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
   'claude-3-haiku-20240307': {
     type: 'chat' as const,
     provider: 'anthropic' as const,
-    displayName: 'Claude 3 Haiku 2024-03-07',
-    pricing: { input: 0.00025, output: 0.00125 },
+    displayName: 'Claude Haiku 3',
+    description: 'Legacy fast model with 4K token output',
+    pricing: { input: 0.25, output: 1.25 },
     benchmarks: {
-      intelligence: 9.6,
+      intelligence: 1,
+      coding: 7.8,
+      mmluPro: 0.43,
+      gpqa: 0.33,
     },
     performance: {
-      outputTokenPerSecond: 122.944,
-      timeTofirstToken: 0.405,
-      intelligenceScore: 9.6,
+      intelligenceScore: 1,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'claude-3-5-haiku-20241022': {
+  'claude-haiku-4-5-20251001': {
     type: 'chat' as const,
     provider: 'anthropic' as const,
-    displayName: 'Claude 3.5 Haiku 2024-10-22',
-    pricing: { input: 0.0008, output: 0.004 },
+    displayName: 'Claude Haiku 4.5',
+    description: 'Our fastest model with near-frontier intelligence',
+    pricing: { input: 1, output: 5 },
     benchmarks: {
       intelligence: 20.2,
-      mmluPro: 0.634,
-      gpqa: 0.408,
+      mmluPro: 0.63,
+      gpqa: 0.41,
     },
     performance: {
-      outputTokenPerSecond: 47.836,
-      timeTofirstToken: 0.667,
       intelligenceScore: 20.2,
     },
-    lastUpdated: '2025-12-24',
-  },
-  'claude-3-7-sonnet-20250219': {
-    type: 'chat' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Claude 3.7 Sonnet',
-    pricing: { input: 0.003, output: 0.015 },
-    benchmarks: {
-      intelligence: 41.1,
-      coding: 32.3,
-      math: 21,
-      mmluPro: 0.803,
-      gpqa: 0.656,
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
     },
-    performance: {
-      outputTokenPerSecond: 0,
-      timeTofirstToken: 0,
-      intelligenceScore: 41.1,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'claude-sonnet-4-20250514': {
-    type: 'chat' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Claude 4 Sonnet',
-    pricing: { input: 0.003, output: 0.015 },
-    benchmarks: {
-      intelligence: 44.4,
-      coding: 35.9,
-      math: 38,
-      mmluPro: 0.837,
-      gpqa: 0.683,
-    },
-    performance: {
-      outputTokenPerSecond: 59.339,
-      timeTofirstToken: 1.181,
-      intelligenceScore: 44.4,
-    },
-    lastUpdated: '2025-12-24',
-  },
-  'claude-opus-4-20250514': {
-    type: 'chat' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Claude 4 Opus',
-    pricing: { input: 0.015, output: 0.075 },
-    benchmarks: {
-      intelligence: 42.3,
-      math: 36.3,
-      mmluPro: 0.86,
-      gpqa: 0.701,
-    },
-    performance: {
-      outputTokenPerSecond: 40.647,
-      timeTofirstToken: 1.319,
-      intelligenceScore: 42.3,
-    },
-    lastUpdated: '2025-12-24',
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
   'claude-opus-4-1-20250805': {
     type: 'chat' as const,
     provider: 'anthropic' as const,
-    displayName: 'Claude 4.1 Opus',
-    pricing: { input: 0.015, output: 0.075 },
+    displayName: 'Claude Opus 4.1',
+    description: 'Legacy premium model with moderate latency',
+    pricing: { input: 15, output: 75 },
     benchmarks: {
-      intelligence: 44.6,
+      intelligence: 59.3,
+      coding: 46.1,
+      math: 80.3,
+      mmluPro: 0.88,
+      gpqa: 0.81,
     },
     performance: {
-      outputTokenPerSecond: 39.197,
-      timeTofirstToken: 1.41,
-      intelligenceScore: 44.6,
+      intelligenceScore: 59.3,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'claude-opus-4-5-20251101': {
+    type: 'chat' as const,
+    provider: 'anthropic' as const,
+    displayName: 'Claude Opus 4.5',
+    description: 'Premium model combining maximum intelligence with practical performance',
+    pricing: { input: 5, output: 25 },
+    benchmarks: {
+      intelligence: 9.7,
+      coding: 14,
+      mmluPro: 0.5,
+      gpqa: 0.32,
+    },
+    performance: {
+      intelligenceScore: 9.7,
+    },
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'claude-sonnet-4-20250514': {
+    type: 'chat' as const,
+    provider: 'anthropic' as const,
+    displayName: 'Claude Sonnet 4',
+    description: 'Legacy fast model with extended thinking support',
+    pricing: { input: 3, output: 15 },
+    benchmarks: {
+      intelligence: 44.4,
+      coding: 35.9,
+      math: 38,
+      mmluPro: 0.84,
+      gpqa: 0.68,
+    },
+    performance: {
+      intelligenceScore: 44.4,
+    },
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
   'claude-sonnet-4-5-20250929': {
     type: 'chat' as const,
     provider: 'anthropic' as const,
-    displayName: 'Claude 4.5 Sonnet',
-    pricing: { input: 0.003, output: 0.015 },
+    displayName: 'Claude Sonnet 4.5',
+    description: 'Our smart model for complex agents and coding',
+    pricing: { input: 3, output: 15 },
     benchmarks: {
       intelligence: 49.6,
       coding: 42.9,
       math: 37,
       mmluPro: 0.86,
-      gpqa: 0.727,
+      gpqa: 0.73,
     },
     performance: {
-      outputTokenPerSecond: 69.532,
-      timeTofirstToken: 2.014,
       intelligenceScore: 49.6,
     },
-    lastUpdated: '2025-12-24',
-  },
-  'claude-haiku-4-5-20251001': {
-    type: 'chat' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Claude 4.5 Haiku',
-    pricing: { input: 0.001, output: 0.005 },
-    benchmarks: {
-      intelligence: 41.7,
-      coding: 37,
-      math: 39,
-      mmluPro: 0.8,
-      gpqa: 0.646,
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
     },
-    performance: {
-      outputTokenPerSecond: 111.623,
-      timeTofirstToken: 0.39,
-      intelligenceScore: 41.7,
-    },
-    lastUpdated: '2025-12-24',
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'claude-opus-4-5-20251101': {
-    type: 'chat' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Claude 4.5 Opus',
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-large-2-instruct': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage large 2 instruct',
-    contextLength: 16000,
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-finance-2': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage finance 2',
-    contextLength: 32000,
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-multilingual-2': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage multilingual 2',
-    contextLength: 32000,
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-law-2': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage law 2',
-    contextLength: 16000,
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-code-2': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage code 2',
-    contextLength: 16000,
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-large-2': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage large 2',
-    contextLength: 16000,
-    lastUpdated: '2025-12-24',
-  },
-  'voyage-2': {
-    type: 'embeddings' as const,
-    provider: 'anthropic' as const,
-    displayName: 'Voyage 2',
-    contextLength: 4000,
-    lastUpdated: '2025-12-24',
-  },
-
-  // Google models
-  'google/gemini-2.0-flash-exp': {
-    type: 'chat' as const,
+  'embedding-001': {
+    type: 'embedding' as const,
     provider: 'google' as const,
-    displayName: 'Gemini 2.0 Flash Experimental',
-    benchmarks: {
-      intelligence: 31.8,
-      mmluPro: 0.782,
-      gpqa: 0.636,
+    displayName: 'Embedding 001',
+    description: 'Legacy embedding model for text embeddings',
+    pricing: { input: 0.15, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
     },
-    performance: {
-      outputTokenPerSecond: 166.706,
-      timeTofirstToken: 0.284,
-      intelligenceScore: 31.8,
-    },
-    lastUpdated: '2025-12-24',
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemini-2.0-flash': {
+  'gemini-2.0-flash': {
     type: 'chat' as const,
     provider: 'google' as const,
     displayName: 'Gemini 2.0 Flash',
-    pricing: { input: 0.0001, output: 0.0004 },
+    description: 'Second generation workhorse model with 1 million token context window, superior speed, native tool use, and next-gen features',
+    pricing: { input: 0.1, output: 0.4 },
     benchmarks: {
-      intelligence: 33.6,
-      coding: 23.4,
-      math: 21.7,
-      mmluPro: 0.779,
-      gpqa: 0.623,
+      intelligence: 12.8,
+      coding: 17.6,
     },
     performance: {
-      outputTokenPerSecond: 0,
-      timeTofirstToken: 0,
-      intelligenceScore: 33.6,
+      intelligenceScore: 12.8,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 1048576,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemini-2.5-pro': {
+  'gemini-2.0-flash-exp-image-generation': {
     type: 'chat' as const,
     provider: 'google' as const,
-    displayName: 'Gemini 2.5 Pro',
-    pricing: { input: 0.00125, output: 0.01 },
+    displayName: 'Gemini 2.0 Flash Image',
+    description: 'Second generation model with image generation capabilities',
+    contextLength: 32768,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-2.0-flash-lite': {
+    type: 'chat' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 2.0 Flash-Lite',
+    description: 'Second generation small and powerful model with 1 million token context window, optimized for cost efficiency and low latency',
+    pricing: { input: 0.075, output: 0.3 },
     benchmarks: {
-      intelligence: 59.6,
-      coding: 49.3,
-      math: 87.7,
-      mmluPro: 0.862,
-      gpqa: 0.844,
+      intelligence: 26.8,
+      mmluPro: 0.72,
+      gpqa: 0.54,
     },
     performance: {
-      outputTokenPerSecond: 160.909,
-      timeTofirstToken: 34.11,
-      intelligenceScore: 59.6,
+      intelligenceScore: 26.8,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 1048576,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemini-2.5-flash': {
+  'gemini-2.5-flash': {
     type: 'chat' as const,
     provider: 'google' as const,
     displayName: 'Gemini 2.5 Flash',
-    pricing: { input: 0.0003, output: 0.0025 },
+    description: 'Fast and intelligent model with best price-performance, versatile features for high-volume tasks',
+    pricing: { input: 0.3, output: 2.5 },
     benchmarks: {
-      intelligence: 40.4,
-      coding: 30,
-      math: 60.3,
-      mmluPro: 0.809,
-      gpqa: 0.683,
+      intelligence: 54.4,
+      coding: 42.5,
+      math: 78.3,
+      mmluPro: 0.84,
+      gpqa: 0.79,
     },
     performance: {
-      outputTokenPerSecond: 261.732,
-      timeTofirstToken: 0.421,
-      intelligenceScore: 40.4,
+      intelligenceScore: 54.4,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 1048576,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemma-3-4b-it': {
+  'gemini-2.5-flash-image': {
+    type: 'image-generation' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 2.5 Flash Image',
+    description: 'Image generation model for creating images from text and image inputs',
+    pricing: { input: 0.3, output: 30 },
+    contextLength: 65536,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-2.5-flash-lite': {
     type: 'chat' as const,
     provider: 'google' as const,
-    displayName: 'Gemma 3 4B',
+    displayName: 'Gemini 2.5 Flash-Lite',
+    description: 'Ultra fast model optimized for cost efficiency and high throughput',
+    pricing: { input: 0.1, output: 0.4 },
     benchmarks: {
-      intelligence: 14.7,
-      coding: 6.4,
-      math: 12.7,
-      mmluPro: 0.417,
-      gpqa: 0.291,
+      intelligence: 40.1,
+      coding: 27.6,
+      math: 53.3,
+      mmluPro: 0.76,
+      gpqa: 0.63,
     },
     performance: {
-      outputTokenPerSecond: 42.309,
-      timeTofirstToken: 0.976,
-      intelligenceScore: 14.7,
+      intelligenceScore: 40.1,
     },
-    lastUpdated: '2025-12-24',
+    contextLength: 1048576,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemma-3-12b-it': {
+  'gemini-2.5-flash-preview-tts': {
+    type: 'tts' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 2.5 Flash TTS',
+    description: 'Text-to-speech model for audio generation',
+    pricing: { input: 0.5, output: 100 },
+    contextLength: 8192,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-2.5-pro': {
     type: 'chat' as const,
     provider: 'google' as const,
-    displayName: 'Gemma 3 12B',
+    displayName: 'Gemini 2.5 Pro',
+    description: 'Advanced thinking model for complex reasoning in code, math, and STEM, with long context for analyzing large datasets, codebases, and documents',
+    pricing: { input: 1.25, output: 10 },
+    benchmarks: {
+      intelligence: 53.2,
+      mmluPro: 0.84,
+      gpqa: 0.82,
+    },
+    performance: {
+      intelligenceScore: 53.2,
+    },
+    contextLength: 1048576,
+    context: {
+      input: {
+        pdf: true,
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-2.5-pro-preview-tts': {
+    type: 'tts' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 2.5 Pro TTS',
+    description: 'Text-to-speech model for audio generation',
+    pricing: { input: 1, output: 20 },
+    contextLength: 8192,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-3-flash-preview': {
+    type: 'chat' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 3 Flash Preview',
+    description: 'Most balanced model designed for speed, scale and the latest AI',
+    pricing: { input: 0.5, output: 3 },
+    benchmarks: {
+      intelligence: 71.3,
+      coding: 59.2,
+      math: 97,
+      mmluPro: 0.89,
+      gpqa: 0.9,
+    },
+    performance: {
+      intelligenceScore: 71.3,
+    },
+    contextLength: 1048576,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-3-pro-image-preview': {
+    type: 'image-generation' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 3 Pro Image Preview',
+    description: 'Image generation model for creating images from text and image inputs',
+    pricing: { input: 2, output: 12 },
+    contextLength: 65536,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-3-pro-preview': {
+    type: 'chat' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini 3 Pro Preview',
+    description: 'Most intelligent model with advanced reasoning, richer visuals and deeper interactions',
+    pricing: { input: 2, output: 12 },
+    benchmarks: {
+      intelligence: 64.5,
+      coding: 55.8,
+      math: 86.7,
+      mmluPro: 0.9,
+      gpqa: 0.89,
+    },
+    performance: {
+      intelligenceScore: 64.5,
+    },
+    contextLength: 1048576,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemini-robotics-er-1.5-preview': {
+    type: 'chat' as const,
+    provider: 'google' as const,
+    displayName: 'Gemini Robotics ER 1.5 Preview',
+    description: 'Robotics model for embodied reasoning and control tasks',
+    pricing: { input: 0.3, output: 2.5 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: true
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemma-3-12b-it': {
+    type: 'chat' as const,
+    provider: 'google' as const,
+    displayName: 'Gemma 3 12B IT',
+    description: 'Medium instruction-tuned Gemma model',
+    pricing: { input: 0, output: 0 },
     benchmarks: {
       intelligence: 20.4,
       coding: 10.6,
       math: 18.3,
-      mmluPro: 0.595,
-      gpqa: 0.349,
+      mmluPro: 0.6,
+      gpqa: 0.35,
     },
     performance: {
-      outputTokenPerSecond: 46.989,
-      timeTofirstToken: 7.926,
       intelligenceScore: 20.4,
     },
-    lastUpdated: '2025-12-24',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemma-3-27b-it': {
+  'gemma-3-1b-it': {
     type: 'chat' as const,
     provider: 'google' as const,
-    displayName: 'Gemma 3 27B',
+    displayName: 'Gemma 3 1B IT',
+    description: 'Compact instruction-tuned Gemma model',
+    pricing: { input: 0, output: 0 },
+    benchmarks: {
+      intelligence: 12.5,
+      mmluPro: 0.48,
+      gpqa: 0.28,
+    },
+    performance: {
+      intelligenceScore: 12.5,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gemma-3-27b-it': {
+    type: 'chat' as const,
+    provider: 'google' as const,
+    displayName: 'Gemma 3 27B IT',
+    description: 'Large instruction-tuned Gemma model',
+    pricing: { input: 0, output: 0 },
     benchmarks: {
       intelligence: 22.1,
       coding: 12.8,
       math: 20.7,
-      mmluPro: 0.669,
-      gpqa: 0.428,
+      mmluPro: 0.67,
+      gpqa: 0.43,
     },
     performance: {
-      outputTokenPerSecond: 47.301,
-      timeTofirstToken: 0.781,
       intelligenceScore: 22.1,
     },
-    lastUpdated: '2025-12-24',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemma-3n-e4b-it': {
+  'gemma-3-4b-it': {
     type: 'chat' as const,
     provider: 'google' as const,
-    displayName: 'Gemma 3n 4B',
-    pricing: { input: 0.00002, output: 0.00004 },
+    displayName: 'Gemma 3 4B IT',
+    description: 'Small instruction-tuned Gemma model',
+    pricing: { input: 0, output: 0 },
     benchmarks: {
       intelligence: 15.5,
       coding: 8.3,
       math: 14.3,
-      mmluPro: 0.488,
-      gpqa: 0.296,
+      mmluPro: 0.49,
+      gpqa: 0.3,
     },
     performance: {
-      outputTokenPerSecond: 0,
-      timeTofirstToken: 0,
       intelligenceScore: 15.5,
     },
-    lastUpdated: '2025-12-24',
-  },
-  'google/gemini-3-pro-preview': {
-    type: 'chat' as const,
-    provider: 'google' as const,
-    displayName: 'Gemini 3 Pro Preview',
-    pricing: { input: 0.002, output: 0.012 },
-    benchmarks: {
-      intelligence: 72.8,
-      coding: 62.3,
-      math: 95.7,
-      mmluPro: 0.898,
-      gpqa: 0.908,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
     },
-    performance: {
-      outputTokenPerSecond: 133.913,
-      timeTofirstToken: 29.692,
-      intelligenceScore: 72.8,
-    },
-    lastUpdated: '2025-12-24',
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gemini-3-flash-preview': {
-    type: 'chat' as const,
+  'imagen-4.0-fast-generate-001': {
+    type: 'image-generation' as const,
     provider: 'google' as const,
-    displayName: 'Gemini 3 Flash Preview',
-    pricing: { input: 0.0005, output: 0.003 },
-    benchmarks: {
-      intelligence: 54.5,
-      coding: 53.1,
-      math: 55.7,
-      mmluPro: 0.882,
-      gpqa: 0.812,
+    displayName: 'Imagen 4.0 Fast',
+    description: 'Fast image generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: true,
+        video: false
+      }
     },
-    performance: {
-      outputTokenPerSecond: 191.798,
-      timeTofirstToken: 0.683,
-      intelligenceScore: 54.5,
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'imagen-4.0-generate-001': {
+    type: 'image-generation' as const,
+    provider: 'google' as const,
+    displayName: 'Imagen 4.0',
+    description: 'Image generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: true,
+        video: false
+      }
     },
-    lastUpdated: '2025-12-24',
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/gc-document-ai': {
-    type: 'document' as const,
-    provider: 'google' as const,
-    displayName: 'GC document AI',
-    lastUpdated: '2025-12-24',
-  },
-  'imagen-3.0-generate-002': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Imagen 3.0',
-    lastUpdated: '2025-12-24',
-  },
-  'imagen-4.0-ultra-generate-preview-06-06': {
-    type: 'image' as const,
+  'imagen-4.0-ultra-generate-001': {
+    type: 'image-generation' as const,
     provider: 'google' as const,
     displayName: 'Imagen 4.0 Ultra',
-    lastUpdated: '2025-12-24',
-  },
-  'google/imagen-4.0-generate-001': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Imagen 4.0 Generate',
-    lastUpdated: '2025-12-24',
-  },
-  'google/imagen-4.0-fast-generate-001': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Imagen 4.0 Fast Generate',
-    lastUpdated: '2025-12-24',
-  },
-  'google/imagen-4.0-ultra-generate-001': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Imagen 4.0 Ultra Generate',
-    lastUpdated: '2025-12-24',
-  },
-  'google/imagen4/preview': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Imagen 4.0 Generate Preview',
-    lastUpdated: '2025-12-24',
-  },
-  'google/gemini-2.5-flash-image': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Gemini 2.5 Flash Image',
-    lastUpdated: '2025-12-24',
-  },
-  'google/gemini-2.5-flash-image-edit': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Gemini 2.5 Flash Image Edit',
-    lastUpdated: '2025-12-24',
-  },
-  'google/gemini-3-pro-image-preview': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Gemini 3 Pro Image',
-    lastUpdated: '2025-12-24',
-  },
-  'google/nano-banana-pro': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Nano Banana Pro',
-    lastUpdated: '2025-12-24',
-  },
-  'google/gemini-3-pro-image-preview-edit': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Gemini 3 Pro Image Edit',
-    lastUpdated: '2025-12-24',
-  },
-  'google/nano-banana-pro-edit': {
-    type: 'image' as const,
-    provider: 'google' as const,
-    displayName: 'Nano Banana Pro Edit',
-    lastUpdated: '2025-12-24',
+    description: 'Ultra quality image generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
   'text-embedding-004': {
-    type: 'embeddings' as const,
+    type: 'embedding' as const,
     provider: 'google' as const,
-    displayName: 'Text embedding 004',
-    contextLength: 2000,
-    lastUpdated: '2025-12-24',
+    displayName: 'Text Embedding 004',
+    description: 'Text embedding model for semantic similarity and retrieval',
+    pricing: { input: 0.6, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/veo-3.1-t2v': {
-    type: 'video' as const,
+  'veo-2.0-generate-001': {
+    type: 'video-generation' as const,
     provider: 'google' as const,
-    displayName: 'Veo3.1 Text-To-Video',
-    lastUpdated: '2025-12-24',
+    displayName: 'Veo 2.0',
+    description: 'Video generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: true
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/veo-3.1-i2v': {
-    type: 'video' as const,
+  'veo-3.0-fast-generate-001': {
+    type: 'video-generation' as const,
     provider: 'google' as const,
-    displayName: 'Veo3.1 Image-To-Video',
-    lastUpdated: '2025-12-24',
+    displayName: 'Veo 3.0 Fast',
+    description: 'Fast video generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: true
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/veo-3.1-first-last-image-to-video': {
-    type: 'video' as const,
+  'veo-3.0-generate-001': {
+    type: 'video-generation' as const,
     provider: 'google' as const,
-    displayName: 'Veo3.1 First-Last-Frame-Image-To-Video',
-    lastUpdated: '2025-12-24',
+    displayName: 'Veo 3.0',
+    description: 'Video generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: true
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/veo-3.1-reference-to-video': {
-    type: 'video' as const,
+  'veo-3.1-fast-generate-preview': {
+    type: 'video-generation' as const,
     provider: 'google' as const,
-    displayName: 'Veo3.1 Reference-To-Video',
-    lastUpdated: '2025-12-24',
+    displayName: 'Veo 3.1 Fast',
+    description: 'Fast video generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: true
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/veo-3.1-t2v-fast': {
-    type: 'video' as const,
+  'veo-3.1-generate-preview': {
+    type: 'video-generation' as const,
     provider: 'google' as const,
-    displayName: 'Veo3.1 Text-To-Video Fast',
-    lastUpdated: '2025-12-24',
+    displayName: 'Veo 3.1',
+    description: 'Video generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: true
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'google/veo-3.1-i2v-fast': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo3.1 Image-To-Video Fast',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo-3.1-first-last-image-to-video-fast': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo3.1 First-Last-Frame-Image-To-Video Fast',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo3-1-extend-video': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo 3.1 Extend Video',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo3-1-fast-extend-video': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo 3.1 Fast Extend Video',
-    lastUpdated: '2025-12-24',
-  },
-  'veo2/image-to-video': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo2 Image-to-Video',
-    lastUpdated: '2025-12-24',
-  },
-  'veo2': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo2 Text-to-Video',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo3': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo3 Text-to-Video',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo-3.0-i2v': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo3 Image-to-Video',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo-3.0-fast': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo3 Text-To-Video Fast',
-    lastUpdated: '2025-12-24',
-  },
-  'google/veo-3.0-i2v-fast': {
-    type: 'video' as const,
-    provider: 'google' as const,
-    displayName: 'Veo3 Image-to-Video Fast',
-    lastUpdated: '2025-12-24',
-  },
-  'google/lyria2': {
-    type: 'audio' as const,
-    provider: 'google' as const,
-    displayName: 'Lyria 2',
-    lastUpdated: '2025-12-24',
-  },
-
-  // Mistral models
-  'mistralai/Mixtral-8x7B-Instruct-v0.1': {
+  'codestral-2412': {
     type: 'chat' as const,
     provider: 'mistral' as const,
-    displayName: 'Mixtral 8x7B Instruct v0.1',
-    pricing: { input: 0.00054, output: 0.0006 },
+    displayName: 'Codestral',
+    description: 'Our cutting-edge language model for code completion released end of July 2025.',
+    benchmarks: {
+      intelligence: 68.5,
+      coding: 53.5,
+      math: 98.7,
+      mmluPro: 0.87,
+      gpqa: 0.84,
+    },
+    performance: {
+      intelligenceScore: 68.5,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'codestral-2508': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Codestral',
+    description: 'Our cutting-edge language model for code completion released end of July 2025.',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'codestral-embed-2505': {
+    type: 'embedding' as const,
+    provider: 'mistral' as const,
+    displayName: 'Codestral Embed',
+    description: 'Our state-of-the-art semantic for extracting representation of code extracts',
+    pricing: { input: 0.15, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'codestral-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Codestral',
+    description: 'Our cutting-edge language model for code completion',
+    pricing: { input: 0.3, output: 0.9 },
+    benchmarks: {
+      intelligence: 12.2,
+      mmluPro: 0.47,
+      gpqa: 0.34,
+    },
+    performance: {
+      intelligenceScore: 12.2,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'devstral-2512': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Devstral 2',
+    description: 'Our frontier code agents model for solving software engineering tasks.',
+    benchmarks: {
+      intelligence: 19.6,
+      mmluPro: 0.63,
+      gpqa: 0.43,
+    },
+    performance: {
+      intelligenceScore: 19.6,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'devstral-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Devstral',
+    description: 'Our frontier code agents model for solving software engineering tasks.',
+    pricing: { input: 0, output: 0 },
+    benchmarks: {
+      intelligence: 27.2,
+      coding: 18.5,
+      math: 29.3,
+      mmluPro: 0.62,
+      gpqa: 0.41,
+    },
+    performance: {
+      intelligenceScore: 27.2,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'magistral-medium-2509': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Magistral Medium 1.2',
+    description: 'Our frontier-class multimodal reasoning model.',
+    benchmarks: {
+      intelligence: 33.2,
+      coding: 30.3,
+      math: 40.3,
+      mmluPro: 0.75,
+      gpqa: 0.68,
+    },
+    performance: {
+      intelligenceScore: 33.2,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'magistral-medium-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Magistral Medium',
+    description: 'Our frontier-class multimodal reasoning model',
+    pricing: { input: 2, output: 5 },
+    benchmarks: {
+      intelligence: 33.2,
+      coding: 30.3,
+      math: 40.3,
+      mmluPro: 0.75,
+      gpqa: 0.68,
+    },
+    performance: {
+      intelligenceScore: 33.2,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'magistral-small-2509': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Magistral Small 1.2',
+    description: 'Our small multimodal reasoning model.',
+    benchmarks: {
+      intelligence: 43,
+      coding: 37.2,
+      math: 80.3,
+      mmluPro: 0.77,
+      gpqa: 0.66,
+    },
+    performance: {
+      intelligenceScore: 43,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'magistral-small-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Magistral Small',
+    description: 'Our small multimodal reasoning model',
+    pricing: { input: 0.5, output: 1.5 },
+    benchmarks: {
+      intelligence: 31.9,
+      coding: 26.6,
+      math: 41.3,
+      mmluPro: 0.75,
+      gpqa: 0.64,
+    },
+    performance: {
+      intelligenceScore: 31.9,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'ministral-14b-2512': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Ministral 3 14B',
+    description: 'A powerful model offering best-in-class text and vision capabilities.',
+    benchmarks: {
+      intelligence: 30.5,
+      coding: 21,
+      math: 30,
+      mmluPro: 0.69,
+      gpqa: 0.57,
+    },
+    performance: {
+      intelligenceScore: 30.5,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'ministral-14b-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Ministral 3 14B',
+    description: 'A powerful model offering best-in-class text and vision capabilities.',
+    pricing: { input: 0.2, output: 0.2 },
+    benchmarks: {
+      intelligence: 1,
+    },
+    performance: {
+      intelligenceScore: 1,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'ministral-3b-2512': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Ministral 3 3B',
+    description: 'A tiny and efficient model offering best-in-class text and vision capabilities.',
+    benchmarks: {
+      intelligence: 21.8,
+      coding: 13,
+      math: 22,
+      mmluPro: 0.52,
+      gpqa: 0.36,
+    },
+    performance: {
+      intelligenceScore: 21.8,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'ministral-3b-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Ministral 3 3B',
+    description: 'A tiny and efficient model offering best-in-class text and vision capabilities.',
+    pricing: { input: 0.1, output: 0.1 },
+    benchmarks: {
+      intelligence: 12.7,
+      coding: 6.9,
+      math: 0.3,
+      mmluPro: 0.44,
+      gpqa: 0.32,
+    },
+    performance: {
+      intelligenceScore: 12.7,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'ministral-8b-2512': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Ministral 3 8B',
+    description: 'A powerful and efficient model offering best-in-class text and vision capabilities.',
+    benchmarks: {
+      intelligence: 28.2,
+      coding: 18.4,
+      math: 31.7,
+      mmluPro: 0.64,
+      gpqa: 0.47,
+    },
+    performance: {
+      intelligenceScore: 28.2,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'ministral-8b-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Ministral 3 8B',
+    description: 'A powerful and efficient model offering best-in-class text and vision capabilities.',
+    pricing: { input: 0.15, output: 0.15 },
+    benchmarks: {
+      intelligence: 7,
+      mmluPro: 0.41,
+      gpqa: 0.3,
+    },
+    performance: {
+      intelligenceScore: 7,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-embed': {
+    type: 'embedding' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Embed',
+    description: 'Our state-of-the-art semantic for extracting representation of code extracts',
+    pricing: { input: 0.1, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-large-2512': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Large 3',
+    description: 'A state-of-the-art, open-weight, general-purpose multimodal model.',
     benchmarks: {
       intelligence: 2.6,
-      mmluPro: 0.387,
-      gpqa: 0.292,
+      mmluPro: 0.39,
+      gpqa: 0.29,
     },
     performance: {
-      outputTokenPerSecond: 0,
-      timeTofirstToken: 0,
       intelligenceScore: 2.6,
     },
-    lastUpdated: '2025-12-24',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'mistralai/Mistral-7B-Instruct-v0.2': {
+  'mistral-large-latest': {
     type: 'chat' as const,
     provider: 'mistral' as const,
-    displayName: 'Mistral 7B Instruct v0.2',
-    pricing: { input: 0.00025, output: 0.00025 },
+    displayName: 'Mistral Large',
+    description: 'Top-tier large model for high-complexity tasks.',
+    pricing: { input: 0.5, output: 1.5 },
+    benchmarks: {
+      intelligence: 11.9,
+      mmluPro: 0.52,
+      gpqa: 0.35,
+    },
+    performance: {
+      intelligenceScore: 11.9,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-medium-2508': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Medium 3.1',
+    description: 'Our frontier-class multimodal model released August 2025.',
+    benchmarks: {
+      intelligence: 33.6,
+      coding: 25.6,
+      math: 30.3,
+      mmluPro: 0.76,
+      gpqa: 0.58,
+    },
+    performance: {
+      intelligenceScore: 33.6,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-medium-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Medium 3.1',
+    description: 'Our frontier-class multimodal model released August 2025.',
+    pricing: { input: 0.4, output: 2 },
+    benchmarks: {
+      intelligence: 8.4,
+      mmluPro: 0.49,
+      gpqa: 0.35,
+    },
+    performance: {
+      intelligenceScore: 8.4,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-small-2501': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Small',
+    description: 'Efficient model for various tasks.',
+    benchmarks: {
+      intelligence: 8.5,
+      mmluPro: 0.42,
+      gpqa: 0.3,
+    },
+    performance: {
+      intelligenceScore: 8.5,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-small-2506': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Small 3.2',
+    description: 'An update to our previous small model, released June 2025.',
+    benchmarks: {
+      intelligence: 24.9,
+      coding: 18.3,
+      math: 3.7,
+      mmluPro: 0.66,
+      gpqa: 0.45,
+    },
+    performance: {
+      intelligenceScore: 24.9,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-small-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Small',
+    description: 'An efficient model offering best-in-class text and vision capabilities',
+    pricing: { input: 0.1, output: 0.3 },
+    benchmarks: {
+      intelligence: 24.9,
+      coding: 18.3,
+      math: 3.7,
+      mmluPro: 0.66,
+      gpqa: 0.45,
+    },
+    performance: {
+      intelligenceScore: 24.9,
+    },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-tiny-2407': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Nemo 12B',
+    description: 'Our best multilingual open source model released July 2024.',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'mistral-tiny-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral Tiny',
+    description: 'Compact model for efficient inference.',
+    pricing: { input: 0.14, output: 0.42 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'open-mistral-7b': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Mistral 7B',
+    description: 'Open source model for general purpose tasks.',
     benchmarks: {
       intelligence: 1,
-      mmluPro: 0.245,
-      gpqa: 0.177,
+      mmluPro: 0.25,
+      gpqa: 0.18,
     },
     performance: {
-      outputTokenPerSecond: 123.408,
-      timeTofirstToken: 0.382,
       intelligenceScore: 1,
     },
-    lastUpdated: '2025-12-24',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'mistralai/Mistral-7B-Instruct-v0.3': {
+  'open-mistral-nemo': {
     type: 'chat' as const,
     provider: 'mistral' as const,
-    displayName: 'Mistral 7B Instruct v0.3',
-    pricing: { input: 0.00025, output: 0.00025 },
+    displayName: 'Mistral Nemo 12B',
+    description: 'Our best multilingual open source model released July 2024.',
+    pricing: { input: 0.15, output: 0.15 },
     benchmarks: {
       intelligence: 1,
-      mmluPro: 0.245,
-      gpqa: 0.177,
+      mmluPro: 0.25,
+      gpqa: 0.18,
     },
     performance: {
-      outputTokenPerSecond: 123.408,
-      timeTofirstToken: 0.382,
       intelligenceScore: 1,
     },
-    lastUpdated: '2025-12-24',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'mistralai/mistral-tiny': {
+  'pixtral-12b-2409': {
     type: 'chat' as const,
     provider: 'mistral' as const,
-    displayName: 'Mistral tiny',
-    pricing: { input: 0.0002, output: 0.0006 },
-    benchmarks: {
-      intelligence: 13,
-      mmluPro: 0.529,
-      gpqa: 0.381,
+    displayName: 'Pixtral 12B',
+    description: 'Multimodal model with vision capabilities.',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
     },
-    performance: {
-      outputTokenPerSecond: 115.713,
-      timeTofirstToken: 0.399,
-      intelligenceScore: 13,
-    },
-    lastUpdated: '2025-12-24',
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'mistralai/mistral-nemo': {
+  'pixtral-12b-latest': {
     type: 'chat' as const,
     provider: 'mistral' as const,
-    displayName: 'Mistral nemo',
-    pricing: { input: 0.0002, output: 0.0006 },
+    displayName: 'Pixtral 12B',
+    description: 'Multimodal model with vision capabilities.',
+    pricing: { input: 0.15, output: 0.15 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'pixtral-large-2411': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Pixtral Large',
+    description: 'Our first frontier-class multimodal model released November 2024.',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'pixtral-large-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Pixtral Large',
+    description: 'Our first frontier-class multimodal model released November 2024.',
+    pricing: { input: 2, output: 6 },
     benchmarks: {
-      intelligence: 13,
-      mmluPro: 0.529,
-      gpqa: 0.381,
+      intelligence: 25,
+      math: 2.3,
+      mmluPro: 0.7,
+      gpqa: 0.51,
     },
     performance: {
-      outputTokenPerSecond: 115.713,
-      timeTofirstToken: 0.399,
-      intelligenceScore: 13,
+      intelligenceScore: 25,
     },
-    lastUpdated: '2025-12-24',
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-  'mistral/mistral-ocr-latest': {
-    type: 'document' as const,
+  'voxtral-mini-2507': {
+    type: 'chat' as const,
     provider: 'mistral' as const,
-    displayName: 'Mistral OCR',
-    lastUpdated: '2025-12-24',
+    displayName: 'Voxtral Mini',
+    description: 'A mini version of our first audio input model.',
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
   },
-
+  'voxtral-mini-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Voxtral Mini',
+    description: 'A mini version of our first audio input model',
+    pricing: { input: 0.04, output: 0.04 },
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'voxtral-small-2507': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Voxtral Small',
+    description: 'Our first model with audio input capabilities for instruct use cases.',
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'voxtral-small-latest': {
+    type: 'chat' as const,
+    provider: 'mistral' as const,
+    displayName: 'Voxtral Small',
+    description: 'Our first model with audio input capabilities for instruct use cases',
+    pricing: { input: 0.1, output: 0.3 },
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'dall-e-2': {
+    type: 'image' as const,
+    provider: 'openai' as const,
+    displayName: 'DALL·E 2',
+    description: 'Our first image generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'dall-e-3': {
+    type: 'image' as const,
+    provider: 'openai' as const,
+    displayName: 'DALL·E 3',
+    description: 'Previous generation image generation model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-3.5-turbo': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-3.5 Turbo',
+    description: 'Legacy GPT model for cheaper chat and non-chat tasks',
+    pricing: { input: 0.5, output: 1.5 },
+    contextLength: 16385,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4-turbo': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4 Turbo',
+    description: 'An older high-intelligence GPT model',
+    pricing: { input: 10, output: 30 },
+    benchmarks: {
+      intelligence: 21.5,
+      coding: 13.1,
+    },
+    performance: {
+      intelligenceScore: 21.5,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4.1': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4.1',
+    description: 'Smartest non-reasoning model',
+    pricing: { input: 2, output: 8 },
+    benchmarks: {
+      intelligence: 43.4,
+      coding: 32.2,
+      math: 34.7,
+      mmluPro: 0.81,
+      gpqa: 0.67,
+    },
+    performance: {
+      intelligenceScore: 43.4,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4.1-mini': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4.1 mini',
+    description: 'Smaller, faster version of GPT-4.1',
+    pricing: { input: 0.4, output: 1.6 },
+    benchmarks: {
+      intelligence: 42.5,
+      coding: 31.9,
+      math: 46.3,
+      mmluPro: 0.78,
+      gpqa: 0.66,
+    },
+    performance: {
+      intelligenceScore: 42.5,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4.1-nano-2025-04-14': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4.1 nano',
+    description: 'Fastest, most cost-efficient version of GPT-4.1',
+    pricing: { input: 0.1, output: 0.4 },
+    benchmarks: {
+      intelligence: 27.3,
+      coding: 20.7,
+      math: 24,
+      mmluPro: 0.66,
+      gpqa: 0.51,
+    },
+    performance: {
+      intelligenceScore: 27.3,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o',
+    description: 'Fast, intelligent, flexible GPT model',
+    pricing: { input: 2.5, output: 10 },
+    benchmarks: {
+      intelligence: 26,
+      coding: 20.1,
+      math: 15.3,
+      mmluPro: 0.75,
+      gpqa: 0.57,
+    },
+    performance: {
+      intelligenceScore: 26,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-audio-preview': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o Audio',
+    description: 'GPT-4o models capable of audio inputs and outputs',
+    pricing: { input: 2.5, output: 10 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-mini': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o mini',
+    description: 'Fast, affordable small model for focused tasks',
+    pricing: { input: 0.15, output: 0.6 },
+    benchmarks: {
+      intelligence: 18.9,
+    },
+    performance: {
+      intelligenceScore: 18.9,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-mini-search-preview': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o mini Search Preview',
+    description: 'Fast, affordable small model for web search',
+    pricing: { input: 0.15, output: 0.6 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-mini-transcribe': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o mini Transcribe',
+    description: 'Speech-to-text model powered by GPT-4o mini',
+    pricing: { input: 1.25, output: 5 },
+    context: {
+      input: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-mini-transcribe-2025-12-15': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o mini Transcribe',
+    description: 'Speech-to-text model powered by GPT-4o mini',
+    pricing: { input: 1.25, output: 5 },
+    context: {
+      input: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-mini-tts': {
+    type: 'tts' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o mini TTS',
+    description: 'Text-to-speech model powered by GPT-4o mini',
+    pricing: { input: 0.6, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-realtime-preview-2025-06-03': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o Realtime',
+    description: 'Model capable of realtime text and audio inputs and outputs',
+    pricing: { input: 5, output: 20 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-search-preview': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o Search Preview',
+    description: 'GPT model for web search in Chat Completions',
+    pricing: { input: 2.5, output: 10 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-transcribe': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o Transcribe',
+    description: 'Speech-to-text model powered by GPT-4o',
+    pricing: { input: 2.5, output: 10 },
+    context: {
+      input: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-4o-transcribe-diarize': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-4o Transcribe Diarize',
+    description: 'Transcription model that identifies who\'s speaking when',
+    pricing: { input: 2.5, output: 10 },
+    context: {
+      input: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-5-mini-2025-08-07': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-5 mini',
+    description: 'A faster, cost-efficient version of GPT-5 for well-defined tasks',
+    pricing: { input: 0.25, output: 2 },
+    benchmarks: {
+      intelligence: 66.4,
+      coding: 49.2,
+      math: 91.7,
+      mmluPro: 0.87,
+      gpqa: 0.84,
+    },
+    performance: {
+      intelligenceScore: 66.4,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-5-nano-2025-08-07': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-5 nano',
+    description: 'Fastest, most cost-efficient version of GPT-5',
+    pricing: { input: 0.05, output: 0.4 },
+    benchmarks: {
+      intelligence: 29.1,
+      coding: 27.5,
+      math: 27.3,
+      mmluPro: 0.56,
+      gpqa: 0.43,
+    },
+    performance: {
+      intelligenceScore: 29.1,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-5-search-api-2025-10-14': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-5 Search API',
+    description: 'GPT-5 model optimized for web search capabilities',
+    pricing: { input: 1.25, output: 10 },
+    benchmarks: {
+      intelligence: 68.5,
+      coding: 53.5,
+      math: 98.7,
+      mmluPro: 0.87,
+      gpqa: 0.84,
+    },
+    performance: {
+      intelligenceScore: 68.5,
+    },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-5.1-2025-11-13': {
+    type: 'chat' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT-5.1',
+    description: 'The best model for coding and agentic tasks with configurable reasoning effort',
+    pricing: { input: 1.25, output: 10 },
+    benchmarks: {
+      intelligence: 37,
+      coding: 29.2,
+      math: 73,
+      mmluPro: 0.79,
+      gpqa: 0.68,
+    },
+    performance: {
+      intelligenceScore: 37,
+    },
+    contextLength: 200000,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: true,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-audio-mini-2025-10-06': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'gpt-audio-mini',
+    description: 'A cost-efficient version of GPT Audio',
+    pricing: { input: 0.6, output: 2.4 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-audio-mini-2025-12-15': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'gpt-audio-mini',
+    description: 'A cost-efficient version of GPT Audio',
+    pricing: { input: 0.6, output: 2.4 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-image-1.5': {
+    type: 'image' as const,
+    provider: 'openai' as const,
+    displayName: 'GPT Image 1.5',
+    description: 'State-of-the-art image generation model',
+    pricing: { input: 5, output: 10 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: true,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-realtime-2025-08-28': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'gpt-realtime',
+    description: 'Model capable of realtime text and audio inputs and outputs',
+    pricing: { input: 4, output: 16 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'gpt-realtime-mini-2025-10-06': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'gpt-realtime-mini',
+    description: 'A cost-efficient version of GPT Realtime',
+    pricing: { input: 0.6, output: 2.4 },
+    contextLength: 128000,
+    context: {
+      input: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'text-embedding-3-large': {
+    type: 'embedding' as const,
+    provider: 'openai' as const,
+    displayName: 'text-embedding-3-large',
+    description: 'Most capable embedding model',
+    pricing: { input: 0.13, output: 0 },
+    contextLength: 8191,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'text-embedding-3-small': {
+    type: 'embedding' as const,
+    provider: 'openai' as const,
+    displayName: 'text-embedding-3-small',
+    description: 'Small embedding model',
+    pricing: { input: 0.02, output: 0 },
+    contextLength: 8191,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'text-embedding-ada-002': {
+    type: 'embedding' as const,
+    provider: 'openai' as const,
+    displayName: 'text-embedding-ada-002',
+    description: 'Older embedding model',
+    pricing: { input: 0.1, output: 0 },
+    contextLength: 8191,
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'tts-1': {
+    type: 'tts' as const,
+    provider: 'openai' as const,
+    displayName: 'TTS-1',
+    description: 'Text-to-speech model optimized for speed',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'tts-1-hd': {
+    type: 'tts' as const,
+    provider: 'openai' as const,
+    displayName: 'TTS-1 HD',
+    description: 'Text-to-speech model optimized for quality',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      },
+      output: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  },
+  'whisper-1': {
+    type: 'audio' as const,
+    provider: 'openai' as const,
+    displayName: 'Whisper',
+    description: 'General-purpose speech recognition model',
+    pricing: { input: 0, output: 0 },
+    context: {
+      input: {
+        text: false,
+        audio: true,
+        image: false,
+        video: false
+      },
+      output: {
+        text: true,
+        audio: false,
+        image: false,
+        video: false
+      }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-02',
+  }
 } as const;
 
-// Derive types from registry
-export type SupportedModel = keyof typeof MODEL_REGISTRY;
-export type Provider = typeof MODEL_REGISTRY[SupportedModel]['provider'];
+export type ModelId = keyof typeof MODEL_REGISTRY;
+
+// Legacy type aliases for backwards compatibility
+export type SupportedModel = ModelId;
+export type Provider = SupportedProvider;
