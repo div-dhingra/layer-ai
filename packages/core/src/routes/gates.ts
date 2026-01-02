@@ -19,7 +19,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
-    const { name, description, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels } = req.body as CreateGateRequest;
+    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as CreateGateRequest;
 
     if (!name || !model) {
       res.status(400).json({ error: 'bad_request', message: 'Missing required fields: name and model' });
@@ -40,6 +40,7 @@ router.post('/', async (req: Request, res: Response) => {
     const gate = await db.createGate(req.userId, {
       name,
       description,
+      taskType,
       model,
       systemPrompt,
       allowOverrides,
@@ -49,6 +50,11 @@ router.post('/', async (req: Request, res: Response) => {
       tags,
       routingStrategy,
       fallbackModels,
+      costWeight,
+      latencyWeight,
+      qualityWeight,
+      reanalysisPeriod,
+      taskAnalysis,
     });
 
     res.status(201).json(gate);
@@ -131,7 +137,7 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels } = req.body as UpdateGateRequest;
+    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateByUserAndName(req.userId, req.params.name);
 
@@ -147,6 +153,7 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
 
     const updated = await db.updateGate(existing.id, {
       description,
+      taskType,
       model,
       systemPrompt,
       allowOverrides,
@@ -156,6 +163,11 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       tags,
       routingStrategy,
       fallbackModels,
+      costWeight,
+      latencyWeight,
+      qualityWeight,
+      reanalysisPeriod,
+      taskAnalysis,
     });
 
     await cache.invalidateGate(req.userId, existing.name);
@@ -175,7 +187,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels } = req.body as UpdateGateRequest;
+    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateById(req.params.id);
 
@@ -196,6 +208,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 
     const updated = await db.updateGate(req.params.id, {
       description,
+      taskType,
       model,
       systemPrompt,
       allowOverrides,
@@ -205,6 +218,11 @@ router.patch('/:id', async (req: Request, res: Response) => {
       tags,
       routingStrategy,
       fallbackModels,
+      costWeight,
+      latencyWeight,
+      qualityWeight,
+      reanalysisPeriod,
+      taskAnalysis,
     });
 
     await cache.invalidateGate(req.userId, existing.name);
