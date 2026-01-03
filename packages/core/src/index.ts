@@ -1,8 +1,8 @@
 // Routes
-export { default as authRouter } from './routes/auth.js';
-export { default as gatesRouter } from './routes/gates.js';
-export { default as keysRouter } from './routes/keys.js';
-export { default as logsRouter } from './routes/logs.js';
+export { default as authRouter } from './routes/v1/auth.js';
+export { default as gatesRouter } from './routes/v1/gates.js';
+export { default as keysRouter } from './routes/v1/keys.js';
+export { default as logsRouter } from './routes/v1/logs.js';
 export { default as completeRouter } from './routes/v2/complete.js';
 
 // Middleware

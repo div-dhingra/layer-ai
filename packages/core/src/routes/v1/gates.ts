@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
-import { db } from '../lib/db/postgres.js';
-import { cache } from '../lib/db/redis.js';
-import { authenticate } from '../middleware/auth.js';
+import { db } from '../../lib/db/postgres.js';
+import { cache } from '../../lib/db/redis.js';
+import { authenticate } from '../../middleware/auth.js';
 import type { CreateGateRequest, UpdateGateRequest } from '@layer-ai/sdk';
 import { MODEL_REGISTRY } from '@layer-ai/sdk';
 
@@ -310,7 +310,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       qualityWeight: parseFloat(qualityWeight ?? '0.34'),
     };
 
-    const { analyzeTask } = await import('../services/task-analysis.js');
+    const { analyzeTask } = await import('../../services/task-analysis.js');
     const suggestions = await analyzeTask(description, userPreferences);
 
     res.json(suggestions);
