@@ -142,4 +142,47 @@ router.get('/overview', async (req: Request, res: Response) => {
   }
 });
 
+
+// GET /v1/logs/gate/:gateId - Get metrics for a specific gate
+router.get('/gate/:gateId', async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const { gateId } = req.params;
+
+    // Verify gate ownership
+    const gateCheck = await db.query(
+      'SELECT id FROM gates WHERE id = $1 AND user_id = $2',
+      [gateId, userId]
+    );
+
+    if (gateCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+    }
+
+    // Get gate metrics
+    const metricsResult = await db.query(
+      `SELECT
+        COUNT(*) as requests,
+        COALESCE(SUM(cost_usd), 0) as cost,
+        COALESCE(AVG(latency_ms), 0) as latency,
+        MAX(created_at) as last_request
+       FROM requests
+       WHERE gate_id = $1`,
+      [gateId]
+    );
+
+    const metrics = metricsResult.rows[0];
+
+    res.json({
+      requests: parseInt(metrics.requests) || 0,
+      cost: parseFloat(metrics.cost) || 0,
+      latency: Math.round(parseFloat(metrics.latency)) || 0,
+      lastRequest: metrics.last_request,
+    });
+  } catch (error) {
+    console.error('Gate metrics error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to fetch gate metrics' });
+  }
+});
+
 export default router;

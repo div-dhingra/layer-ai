@@ -153,6 +153,6 @@ export abstract class BaseProviderAdapter {
     if (!modelInfo || !('pricing' in modelInfo) || !modelInfo.pricing?.input || !modelInfo.pricing?.output) {
       return 0;
     }
-    return (promptTokens / 1000 * modelInfo.pricing.input) + (completionTokens / 1000 * modelInfo.pricing.output);
+    return (promptTokens / 1000000 * modelInfo.pricing.input) + (completionTokens / 1000000 * modelInfo.pricing.output);
   }
 }
