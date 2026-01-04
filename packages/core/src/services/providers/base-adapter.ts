@@ -17,11 +17,12 @@ import {
   MODEL_REGISTRY,
   SupportedModel,
 } from '@layer-ai/sdk';
+import type { Provider } from "../../lib/provider-constants.js";
 
 export { ADAPTER_HANDLED };
 
 export abstract class BaseProviderAdapter {
-  protected abstract provider: string;
+  protected abstract provider: Provider;
 
   protected roleMappings?: Record<Role, string>;
   protected imageDetailMappings?: Record<ImageDetail, string>;

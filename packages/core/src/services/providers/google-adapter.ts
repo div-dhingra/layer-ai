@@ -17,6 +17,7 @@ import {
 } from '@layer-ai/sdk';
 import { BaseProviderAdapter } from './base-adapter.js';
 import { ADAPTER_HANDLED } from './base-adapter.js';
+import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
 
 let client: GoogleGenAI | null = null;
 
@@ -28,7 +29,7 @@ function getGoogleClient(): GoogleGenAI {
 }
 
 export class GoogleAdapter extends BaseProviderAdapter {
-  protected provider = 'google';
+  protected provider: Provider = PROVIDER.GOOGLE;
 
   protected roleMappings: Record<Role, string> = {
     system: ADAPTER_HANDLED,
