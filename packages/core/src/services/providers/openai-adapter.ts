@@ -12,6 +12,7 @@ import {
   AudioFormat,
   FinishReason,
 } from '@layer-ai/sdk';
+import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
 
 let openai: OpenAI | null = null;
 
@@ -25,7 +26,7 @@ function getOpenAIClient(): OpenAI {
 }
 
 export class OpenAIAdapter extends BaseProviderAdapter {
-  protected provider = 'openai';
+  protected provider: Provider = PROVIDER.OPENAI;
 
   protected roleMappings: Record<Role, string> = {
     system: 'system',

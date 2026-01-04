@@ -7,6 +7,7 @@ import {
   FinishReason,
   ToolChoice,
 } from '@layer-ai/sdk';
+import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
 
 let anthropic: Anthropic | null = null;
 
@@ -20,7 +21,7 @@ function getAnthropicClient(): Anthropic {
 }
 
 export class AnthropicAdapter extends BaseProviderAdapter {
-  protected provider = 'anthropic';
+  protected provider: Provider = PROVIDER.ANTHROPIC;
 
   protected roleMappings: Record<Role, string> = {
     system: ADAPTER_HANDLED,    // Handled via system parameter

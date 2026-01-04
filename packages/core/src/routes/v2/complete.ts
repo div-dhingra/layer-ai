@@ -3,10 +3,7 @@ import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
 import { authenticate } from '../../middleware/auth.js';
-import { OpenAIAdapter } from '../../services/providers/openai-adapter.js';
-import { AnthropicAdapter } from '../../services/providers/anthropic-adapter.js';
-import { GoogleAdapter } from '../../services/providers/google-adapter.js';
-import { MistralAdapter } from '../../services/providers/mistral-adapter.js';
+import { callAdapter, normalizeModelId } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig } from '@layer-ai/sdk';
 import { MODEL_REGISTRY, OverrideField } from '@layer-ai/sdk';
 
@@ -21,22 +18,6 @@ interface RoutingResult {
 }
 
 // MARK:- Helper Functions
-
-function normalizeModelId(modelId: string): SupportedModel {
-  if (MODEL_REGISTRY[modelId as SupportedModel]) {
-    return modelId as SupportedModel;
-  }
-
-  const providers = ['openai', 'anthropic', 'google', 'mistral'];
-  for (const provider of providers) {
-    const fullId = `${provider}/${modelId}`;
-    if (MODEL_REGISTRY[fullId as SupportedModel]) {
-      return fullId as SupportedModel;
-    }
-  }
-
-  throw new Error(`invalid model ID: "${modelId}" not found in registry`);
-}
 
 function isOverrideAllowed(allowOverrides: boolean | OverrideConfig | undefined | null, field: keyof OverrideConfig): boolean {
   if (allowOverrides === undefined || allowOverrides === null || allowOverrides === true) return true;
@@ -104,31 +85,6 @@ function resolveFinalRequest(
   return finalRequest;
 }
 
-async function callProvider(request: LayerRequest): Promise<LayerResponse> {
-  const normalizedModel = normalizeModelId(request.model as string);
-  const provider = MODEL_REGISTRY[normalizedModel].provider;
-
-  switch (provider) {
-    case 'openai': {
-      const adapter = new OpenAIAdapter();
-      return await adapter.call(request);
-    }
-    case 'anthropic': {
-      const adapter = new AnthropicAdapter();
-      return await adapter.call(request);
-    }
-    case 'google':
-      const adapter = new GoogleAdapter();
-      return await adapter.call(request);
-    case 'mistral': {
-      const adapter = new MistralAdapter();
-      return await adapter.call(request);
-    }
-    default:
-      throw new Error(`Unknown provider: ${provider}`);
-  }
-}
-
 function getModelsToTry(gateConfig: Gate, primaryModel: SupportedModel): SupportedModel[] {
   const modelsToTry: SupportedModel[] = [primaryModel];
 
@@ -147,7 +103,7 @@ async function executeWithFallback(request: LayerRequest, modelsToTry: Supported
   for (const modelToTry of modelsToTry) {
     try {
       const modelRequest = { ...request, model: modelToTry };
-      result = await callProvider(modelRequest);
+      result = await callAdapter(modelRequest);
       modelUsed = modelToTry;
       break;
     } catch (error) {
@@ -166,7 +122,7 @@ async function executeWithFallback(request: LayerRequest, modelsToTry: Supported
 
 async function executeWithRoundRobin(gateConfig: Gate, request: LayerRequest): Promise<RoutingResult> {
   if (!gateConfig.fallbackModels?.length) {
-    const result = await callProvider(request);
+    const result = await callAdapter(request);
     return { result, modelUsed: request.model as SupportedModel };
   }
 
@@ -175,7 +131,7 @@ async function executeWithRoundRobin(gateConfig: Gate, request: LayerRequest): P
   const selectedModel = allModels[modelIndex];
 
   const modelRequest = { ...request, model: selectedModel };
-  const result = await callProvider(modelRequest);
+  const result = await callAdapter(modelRequest);
 
   return { result, modelUsed: selectedModel };
 }
@@ -192,7 +148,7 @@ async function executeWithRouting(gateConfig: Gate, request: LayerRequest): Prom
 
     case 'single':
     default:
-      const result = await callProvider(request);
+      const result = await callAdapter(request);
       return { result, modelUsed: request.model as SupportedModel };
   }
 }

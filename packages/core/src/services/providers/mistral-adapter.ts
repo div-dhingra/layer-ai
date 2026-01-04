@@ -7,6 +7,7 @@ import {
   FinishReason,
   ADAPTER_HANDLED,
 } from '@layer-ai/sdk';
+import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
 
 let client: Mistral | null = null;
 
@@ -20,7 +21,7 @@ function getMistralClient(): Mistral {
 }
 
 export class MistralAdapter extends BaseProviderAdapter {
-  protected provider = 'mistral';
+  protected provider: Provider = PROVIDER.MISTRAL;
 
   protected roleMappings: Record<Role, string> = {
     system: ADAPTER_HANDLED,
