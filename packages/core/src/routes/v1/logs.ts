@@ -37,9 +37,9 @@ router.get('/', async (req: Request, res: Response) => {
     `;
     
     const params: any[] = [userId];
-    
+
     if (gate) {
-      query += ` AND gate_name = $2`;
+      query += ` AND gate_id = $2`;
       params.push(gate);
     }
     
