@@ -89,4 +89,26 @@ export class GatesResource {
       path: `/v1/gates/${gateName}/suggestions`,
     });
   }
+
+  /**
+   * Test a gate configuration with a sample request.
+   *
+   * Tests the primary model and optionally all fallback models.
+   * Can test an unsaved configuration or a saved gate with optional overrides.
+   */
+  async test(data: {
+    gateId?: string;
+    gate?: Partial<CreateGateRequest>;
+    messages: Array<{ role: string; content: string }>;
+    quickTest?: boolean;
+  }): Promise<{
+    primary?: { model: string; success: boolean; latency: number; content?: string; error?: string };
+    fallback?: Array<{ model: string; success: boolean; latency: number; content?: string; error?: string }>;
+  }> {
+    return this.client.request({
+      method: 'POST',
+      path: '/v1/gates/test',
+      body: data,
+    });
+  }
 }
