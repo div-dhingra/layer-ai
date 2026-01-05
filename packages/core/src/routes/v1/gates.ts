@@ -3,7 +3,8 @@ import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
 import { authenticate } from '../../middleware/auth.js';
-import type { CreateGateRequest, UpdateGateRequest } from '@layer-ai/sdk';
+import { callAdapter } from '../../lib/provider-factory.js';
+import type { CreateGateRequest, UpdateGateRequest, LayerRequest } from '@layer-ai/sdk';
 import { MODEL_REGISTRY } from '@layer-ai/sdk';
 
 const router: RouterType = Router(); 
@@ -286,6 +287,134 @@ router.delete('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Delete gate error:', error);
     res.status(500).json({ error: 'internal_error', message: 'Failed to delete gate' });
+  }
+});
+
+// POST /test - Test a gate configuration with a sample request
+// Can either test a saved gate (by providing gateId) or test an unsaved configuration (by providing gate config)
+router.post('/test', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const { gateId, gate: gateOverride, messages, quickTest } = req.body;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      res.status(400).json({ error: 'bad_request', message: 'Missing or invalid messages array' });
+      return;
+    }
+
+    // Get base gate config from database if gateId provided, otherwise use empty base
+    let baseGate: Partial<typeof gateOverride> = {};
+
+    if (gateId) {
+      const savedGate = await db.getGateById(gateId);
+      if (!savedGate) {
+        res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+        return;
+      }
+      if (savedGate.userId !== req.userId) {
+        res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+        return;
+      }
+      baseGate = savedGate;
+    }
+
+    // Merge base gate with overrides (overrides take precedence)
+    const finalGate = { ...baseGate, ...gateOverride };
+
+    if (!finalGate.model) {
+      res.status(400).json({ error: 'bad_request', message: 'Missing required field: model' });
+      return;
+    }
+
+    const results: {
+      primary?: { model: string; success: boolean; latency: number; content?: string; error?: string };
+      fallback?: Array<{ model: string; success: boolean; latency: number; content?: string; error?: string }>;
+    } = {};
+
+    // Test primary model
+    const primaryStartTime = Date.now();
+    try {
+      const request: LayerRequest = {
+        type: 'chat',
+        gate: finalGate.name || 'test-gate',
+        model: finalGate.model,
+        data: {
+          messages,
+          systemPrompt: finalGate.systemPrompt,
+          temperature: finalGate.temperature,
+          maxTokens: finalGate.maxTokens,
+          topP: finalGate.topP,
+        },
+      };
+
+      const response = await callAdapter(request);
+      const latency = Date.now() - primaryStartTime;
+
+      results.primary = {
+        model: finalGate.model,
+        success: true,
+        latency,
+        content: response.content || 'Test completed successfully',
+      };
+    } catch (error) {
+      const latency = Date.now() - primaryStartTime;
+      results.primary = {
+        model: finalGate.model,
+        success: false,
+        latency,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+
+    // Test all fallback models (skip if quickTest flag is true)
+    if (!quickTest && finalGate.fallbackModels && finalGate.fallbackModels.length > 0) {
+      results.fallback = [];
+
+      for (const fallbackModel of finalGate.fallbackModels) {
+        const fallbackStartTime = Date.now();
+        try {
+          const request: LayerRequest = {
+            type: 'chat',
+            gate: finalGate.name || 'test-gate',
+            model: fallbackModel,
+            data: {
+              messages,
+              systemPrompt: finalGate.systemPrompt,
+              temperature: finalGate.temperature,
+              maxTokens: finalGate.maxTokens,
+              topP: finalGate.topP,
+            },
+          };
+
+          const response = await callAdapter(request);
+          const latency = Date.now() - fallbackStartTime;
+
+          results.fallback.push({
+            model: fallbackModel,
+            success: true,
+            latency,
+            content: response.content || 'Test completed successfully',
+          });
+        } catch (error) {
+          const latency = Date.now() - fallbackStartTime;
+          results.fallback.push({
+            model: fallbackModel,
+            success: false,
+            latency,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Test gate error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to test gate' });
   }
 });
 
