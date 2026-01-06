@@ -137,8 +137,16 @@ Return JSON with:
     }
 
     let jsonText = responseContent.text.trim();
+
+    // Extract JSON from code blocks
     if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+    }
+
+    // Extract JSON object if there's additional text after it
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[0];
     }
 
     const mapping = JSON.parse(jsonText);
