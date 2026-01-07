@@ -111,6 +111,7 @@ gates:
 Check out the [layer-ai-examples](https://github.com/micah-nettey/layer-ai-examples) repository for complete example projects:
 
 - **Content Generator** - Next.js app demonstrating smart routing for blog outlines, social captions, and product descriptions
+- **Chatbot Example** - Next.js app demonstrating normalization for a chatbot that can share context across multiple models from different providers.
 
 ## Documentation
 
