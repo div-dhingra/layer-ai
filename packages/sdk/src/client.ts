@@ -72,6 +72,17 @@ export class Layer {
   }
 
   async complete(request: LayerRequest): Promise<LayerResponse> {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(request.gate);
+
+    if (!isUUID) {
+      console.warn(
+        `[Layer SDK] DEPRECATION WARNING: Using gate names is deprecated and will be removed in a future version.\n` +
+        `Gate: "${request.gate}"\n` +
+        `Please use the gate ID instead. Find your gate ID in the dashboard at https://uselayer.ai/dashboard/gates\n` +
+        `Migration: Replace gate: "${request.gate}" with gate: "YOUR_GATE_ID"`
+      );
+    }
+
     return this.request<LayerResponse>({
       method: 'POST',
       path: '/v2/complete',

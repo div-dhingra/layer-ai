@@ -98,6 +98,19 @@ export const ADAPTER_HANDLED = '__ADAPTER_HANDLED__';
 // ====== LAYER REQUEST ======
 
 type BaseRequest = {
+  /**
+   * Gate identifier. Use gate ID (recommended) or gate name.
+   *
+   * @deprecated Using gate names is deprecated. Use gate IDs instead for better stability.
+   * Gate names can change, but IDs remain constant. Find your gate ID in the dashboard.
+   *
+   * @example
+   * // Recommended: Use gate ID
+   * gate: "123e4567-e89b-12d3-a456-426614174000"
+   *
+   * // Deprecated: Using gate name
+   * gate: "customer-support"
+   */
   gate: string;
   model?: string;
   metadata?: Record<string, unknown>;
