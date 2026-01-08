@@ -63,6 +63,45 @@ await layer.gates.create({
 
 **Note:** Admin mode is intended for setup scripts and infrastructure-as-code. For ongoing management, use the CLI or config files.
 
+## Migration Guide
+
+### Gate Names → Gate IDs (Recommended)
+
+**IMPORTANT:** Using gate names in `layer.complete()` is deprecated and will be removed in a future version. Please migrate to using gate IDs.
+
+#### Why Gate IDs?
+
+- **Stability:** Gate IDs never change, even if you rename your gate
+- **Reliability:** Avoid breaking your integration when renaming gates
+- **Best Practice:** Consistent with standard API design patterns
+
+#### How to Migrate
+
+1. **Find your gate ID** in the Layer AI dashboard at `https://uselayer.ai/dashboard/gates`
+2. **Copy the gate ID** from the gate details page
+3. **Replace gate names with gate IDs** in your code
+
+```typescript
+// ❌ Deprecated: Using gate name
+await layer.complete({
+  gate: 'customer-support',
+  type: 'chat',
+  data: { messages: [...] }
+});
+
+// ✅ Recommended: Using gate ID
+await layer.complete({
+  gate: '123e4567-e89b-12d3-a456-426614174000',
+  type: 'chat',
+  data: { messages: [...] }
+});
+```
+
+#### Deprecation Timeline
+
+- **Current:** Gate names still work but will show a deprecation warning
+- **Future (v1.0):** Gate names will be removed, gate IDs will be required
+
 ## API Reference
 
 ### Completions
@@ -73,19 +112,24 @@ Send a completion request through a gate.
 
 ```typescript
 const response = await layer.complete({
-  gate: 'my-gate',
-  prompt: 'What is the capital of France?',
+  gate: '123e4567-e89b-12d3-a456-426614174000',  // Gate ID (recommended)
+  type: 'chat',
+  data: {
+    messages: [
+      { role: 'user', content: 'What is the capital of France?' }
+    ]
+  },
 
   // Optional overrides (if gate allows)
-  model?: 'gpt-4o',
-  temperature?: 0.8,
-  maxTokens?: 500,
-  topP?: 0.9
+  model: 'gpt-4o',
+  temperature: 0.8,
+  maxTokens: 500,
+  topP: 0.9
 });
 
-// Response shape
+// Response
 {
-  text: string;
+  content: string;
   model: string;
   usage: {
     promptTokens: number;
@@ -93,6 +137,7 @@ const response = await layer.complete({
     totalTokens: number;
   };
   cost: number;
+  latencyMs: number;
 }
 ```
 

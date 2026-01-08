@@ -128,11 +128,19 @@ export const db = {
     return (result.rowCount ?? 0) > 0;
   },
 
-  // Gates 
+  // Gates
   async getGateByUserAndName(userId: string, gateName: string): Promise<Gate | null> {
     const result = await getPool().query(
       'SELECT * FROM gates WHERE user_id = $1 AND name = $2',
       [userId, gateName]
+    );
+    return result.rows[0] ? toCamelCase(result.rows[0]) : null;
+  },
+
+  async getGateByUserAndId(userId: string, gateId: string): Promise<Gate | null> {
+    const result = await getPool().query(
+      'SELECT * FROM gates WHERE user_id = $1 AND id = $2',
+      [userId, gateId]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
   },

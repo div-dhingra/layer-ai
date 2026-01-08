@@ -28,10 +28,14 @@ redis.on('error', (err) => {
 });
 
 // Cache key builders
-const CACHE_TTL = 300; 
+const CACHE_TTL = 300;
 
 function getGateCacheKey(userId: string, gateName: string): string {
-  return `gate:${userId}:${gateName}`;
+  return `gate:${userId}:name:${gateName}`;
+}
+
+function getGateCacheKeyById(userId: string, gateId: string): string {
+  return `gate:${userId}:id:${gateId}`;
 }
 
 // Cache operations
@@ -57,11 +61,36 @@ export const cache = {
     }
   },
 
+  // get the gate by ID
+  async getGateById(userId: string, gateId: string): Promise<Gate | null> {
+    try {
+      const key = getGateCacheKeyById(userId, gateId);
+      const cached = await redis.get(key);
+
+      if (!cached) {
+        return null;
+      }
+
+      const gate = JSON.parse(cached);
+      gate.createdAt = new Date(gate.createdAt);
+      gate.updatedAt = new Date(gate.updatedAt);
+
+      return gate;
+    } catch (error) {
+      console.error('Redis get error:', error);
+      return null; // if we fail, then we fetch from the db
+    }
+  },
+
   // Set gate in cache
   async setGate(userId: string, gateName: string, gate: Gate): Promise<void> {
     try {
-      const key = getGateCacheKey(userId, gateName); 
-      await redis.setex(key,CACHE_TTL, JSON.stringify(gate));
+      const key = getGateCacheKey(userId, gateName);
+      await redis.setex(key, CACHE_TTL, JSON.stringify(gate));
+
+      // Also cache by ID for lookups by gate ID
+      const keyById = getGateCacheKeyById(userId, gate.id);
+      await redis.setex(keyById, CACHE_TTL, JSON.stringify(gate));
     } catch (error) {
       console.error('Redis set error:', error);
       // cache miss here is okay
