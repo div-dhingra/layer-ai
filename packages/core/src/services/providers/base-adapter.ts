@@ -23,6 +23,7 @@ export { ADAPTER_HANDLED };
 
 export abstract class BaseProviderAdapter {
   protected abstract provider: Provider;
+  protected userId?: string;
 
   protected roleMappings?: Record<Role, string>;
   protected imageDetailMappings?: Record<ImageDetail, string>;
@@ -37,7 +38,7 @@ export abstract class BaseProviderAdapter {
   protected imageMimeTypeMappings?: Record<ImageMimeType, string>;
   protected encodingFormatMappings?: Record<EncodingFormat, string>;
 
-  abstract call(request: LayerRequest): Promise<LayerResponse>;
+  abstract call(request: LayerRequest, userId?: string): Promise<LayerResponse>;
 
   protected mapRole(role: Role): string {
     if (!this.roleMappings) {
