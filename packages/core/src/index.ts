@@ -13,6 +13,10 @@ export type {} from './middleware/auth.js';
 export { db } from './lib/db/postgres.js';
 export { default as redis } from './lib/db/redis.js';
 
+// Encryption
+export { encrypt, decrypt, generateEncryptionKey } from './lib/encryption.js';
+export type { EncryptedData } from '@layer-ai/sdk';
+
 // Session Key Utilities (for Next.js auth)
 export const createSessionKey = async (userId: string): Promise<string> => {
   const { db } = await import('./lib/db/postgres.js');

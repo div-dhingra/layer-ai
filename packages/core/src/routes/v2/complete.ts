@@ -110,7 +110,7 @@ function getModelsToTry(gateConfig: Gate, primaryModel: SupportedModel): Support
   return modelsToTry;
 }
 
-async function executeWithFallback(request: LayerRequest, modelsToTry: SupportedModel[]): Promise<RoutingResult> {
+async function executeWithFallback(request: LayerRequest, modelsToTry: SupportedModel[], userId?: string): Promise<RoutingResult> {
   let result: LayerResponse | null = null;
   let lastError: Error | null = null;
   let modelUsed: SupportedModel = request.model as SupportedModel;
@@ -118,7 +118,7 @@ async function executeWithFallback(request: LayerRequest, modelsToTry: Supported
   for (const modelToTry of modelsToTry) {
     try {
       const modelRequest = { ...request, model: modelToTry };
-      result = await callAdapter(modelRequest);
+      result = await callAdapter(modelRequest, userId);
       modelUsed = modelToTry;
       break;
     } catch (error) {
@@ -135,9 +135,9 @@ async function executeWithFallback(request: LayerRequest, modelsToTry: Supported
   return { result, modelUsed };
 }
 
-async function executeWithRoundRobin(gateConfig: Gate, request: LayerRequest): Promise<RoutingResult> {
+async function executeWithRoundRobin(gateConfig: Gate, request: LayerRequest, userId?: string): Promise<RoutingResult> {
   if (!gateConfig.fallbackModels?.length) {
-    const result = await callAdapter(request);
+    const result = await callAdapter(request, userId);
     return { result, modelUsed: request.model as SupportedModel };
   }
 
@@ -146,24 +146,24 @@ async function executeWithRoundRobin(gateConfig: Gate, request: LayerRequest): P
   const selectedModel = allModels[modelIndex];
 
   const modelRequest = { ...request, model: selectedModel };
-  const result = await callAdapter(modelRequest);
+  const result = await callAdapter(modelRequest, userId);
 
   return { result, modelUsed: selectedModel };
 }
 
-async function executeWithRouting(gateConfig: Gate, request: LayerRequest): Promise<RoutingResult> {
+async function executeWithRouting(gateConfig: Gate, request: LayerRequest, userId?: string): Promise<RoutingResult> {
   const modelsToTry = getModelsToTry(gateConfig, request.model as SupportedModel);
 
   switch (gateConfig.routingStrategy) {
     case 'fallback':
-      return await executeWithFallback(request, modelsToTry);
+      return await executeWithFallback(request, modelsToTry, userId);
 
     case 'round-robin':
-      return await executeWithRoundRobin(gateConfig, request);
+      return await executeWithRoundRobin(gateConfig, request, userId);
 
     case 'single':
     default:
-      const result = await callAdapter(request);
+      const result = await callAdapter(request, userId);
       return { result, modelUsed: request.model as SupportedModel };
   }
 }
@@ -210,7 +210,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     }
 
     const finalRequest = resolveFinalRequest(gateConfig, request);
-    const { result, modelUsed } = await executeWithRouting(gateConfig, finalRequest);
+    const { result, modelUsed } = await executeWithRouting(gateConfig, finalRequest, userId);
 
     const latencyMs = Date.now() - startTime;
 

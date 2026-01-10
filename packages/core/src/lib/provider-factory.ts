@@ -67,8 +67,10 @@ export function getProviderForModel(model: SupportedModel): Provider {
 /**
  * Calls the appropriate provider adapter for the given request.
  * This is the main entry point for executing AI model requests.
+ * @param request - The Layer request to execute
+ * @param userId - Optional user ID for BYOK key resolution
  */
-export async function callAdapter(request: LayerRequest): Promise<LayerResponse> {
+export async function callAdapter(request: LayerRequest, userId?: string): Promise<LayerResponse> {
   const normalizedModel = normalizeModelId(request.model as string);
   const provider = getProviderForModel(normalizedModel);
 
@@ -78,5 +80,5 @@ export async function callAdapter(request: LayerRequest): Promise<LayerResponse>
   }
 
   const adapter = new AdapterClass();
-  return await adapter.call(request);
+  return await adapter.call(request, userId);
 }

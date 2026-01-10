@@ -8,10 +8,17 @@ import {
   ToolChoice,
 } from '@layer-ai/sdk';
 import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
+import { resolveApiKey } from '../../lib/key-resolver.js';
 
 let anthropic: Anthropic | null = null;
 
-function getAnthropicClient(): Anthropic {
+function getAnthropicClient(apiKey?: string): Anthropic {
+  // If custom API key provided, create new client
+  if (apiKey) {
+    return new Anthropic({ apiKey });
+  }
+
+  // Otherwise use singleton with platform key
   if (!anthropic) {
     anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -60,10 +67,13 @@ export class AnthropicAdapter extends BaseProviderAdapter {
     return super.mapToolChoice(choice);
   }
 
-  async call(request: LayerRequest): Promise<LayerResponse> {
+  async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
+    // Resolve API key (BYOK → Platform key)
+    const apiKey = await resolveApiKey(this.provider, userId, process.env.ANTHROPIC_API_KEY);
+
     switch (request.type) {
       case 'chat':
-        return this.handleChat(request);
+        return this.handleChat(request, apiKey);
       case 'image':
         throw new Error('Image generation not yet supported by Anthropic');
       case 'embeddings':
@@ -77,9 +87,9 @@ export class AnthropicAdapter extends BaseProviderAdapter {
     }
   }
 
-  private async handleChat(request: Extract<LayerRequest, { type: 'chat' }>): Promise<LayerResponse> {
+  private async handleChat(request: Extract<LayerRequest, { type: 'chat' }>, apiKey: string): Promise<LayerResponse> {
     const startTime = Date.now();
-    const client = getAnthropicClient();
+    const client = getAnthropicClient(apiKey);
     const { data: chat, model } = request;
 
     if (!model) {

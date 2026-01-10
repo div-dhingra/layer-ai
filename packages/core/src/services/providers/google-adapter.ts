@@ -18,10 +18,17 @@ import {
 import { BaseProviderAdapter } from './base-adapter.js';
 import { ADAPTER_HANDLED } from './base-adapter.js';
 import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
+import { resolveApiKey } from '../../lib/key-resolver.js';
 
 let client: GoogleGenAI | null = null;
 
-function getGoogleClient(): GoogleGenAI {
+function getGoogleClient(apiKey?: string): GoogleGenAI {
+  // If custom API key provided, create new client
+  if (apiKey) {
+    return new GoogleGenAI({ apiKey });
+  }
+
+  // Otherwise use singleton with platform key
   if (!client) {
     client = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || '' });
   }
@@ -68,28 +75,32 @@ export class GoogleAdapter extends BaseProviderAdapter {
     '1792x1024': { aspectRatio: '16:9', resolution: '1080p' },
   };
 
-  async call(request: LayerRequest): Promise<LayerResponse> {
+  async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
+    // Resolve API key (BYOK → Platform key)
+    const apiKey = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
+
     switch (request.type) {
       case 'chat':
-        return this.handleChat(request);
+        return this.handleChat(request, apiKey);
       case 'image':
-        return this.handleImageGeneration(request);
+        return this.handleImageGeneration(request, apiKey);
       case 'embeddings':
-        return this.handleEmbeddings(request);
+        return this.handleEmbeddings(request, apiKey);
       case 'tts':
-        return this.handleTextToSpeech(request);
+        return this.handleTextToSpeech(request, apiKey);
       case 'video':
-        return this.handleVideoGeneration(request);
+        return this.handleVideoGeneration(request, apiKey);
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
     }
   }
 
   private async handleChat(
-    request: Extract<LayerRequest, { type: 'chat' }>
+    request: Extract<LayerRequest, { type: 'chat' }>,
+    apiKey: string
   ): Promise<LayerResponse> {
     const startTime = Date.now();
-    const client = getGoogleClient();
+    const client = getGoogleClient(apiKey);
     const { data: chat, model } = request;
 
     if (!model) {
@@ -267,10 +278,11 @@ export class GoogleAdapter extends BaseProviderAdapter {
   }
 
   private async handleImageGeneration(
-    request: Extract<LayerRequest, { type: 'image' }>
+    request: Extract<LayerRequest, { type: 'image' }>,
+    apiKey: string
   ): Promise<LayerResponse> {
     const startTime = Date.now();
-    const client = getGoogleClient();
+    const client = getGoogleClient(apiKey);
     const { data: image, model } = request;
 
     if (!model) {
@@ -301,10 +313,11 @@ export class GoogleAdapter extends BaseProviderAdapter {
   }
 
   private async handleEmbeddings(
-    request: Extract<LayerRequest, { type: 'embeddings' }>
+    request: Extract<LayerRequest, { type: 'embeddings' }>,
+    apiKey: string
   ): Promise<LayerResponse> {
     const startTime = Date.now();
-    const client = getGoogleClient();
+    const client = getGoogleClient(apiKey);
     const { data: embedding, model } = request;
 
     if (!model) {
@@ -336,10 +349,11 @@ export class GoogleAdapter extends BaseProviderAdapter {
   }
 
   private async handleVideoGeneration(
-    request: Extract<LayerRequest, { type: 'video' }>
+    request: Extract<LayerRequest, { type: 'video' }>,
+    apiKey: string
   ): Promise<LayerResponse> {
     const startTime = Date.now();
-    const client = getGoogleClient();
+    const client = getGoogleClient(apiKey);
     const { data: video, model } = request;
 
     if (!model) {
@@ -451,10 +465,11 @@ export class GoogleAdapter extends BaseProviderAdapter {
   }
 
   private async handleTextToSpeech(
-    request: Extract<LayerRequest, { type: 'tts' }>
+    request: Extract<LayerRequest, { type: 'tts' }>,
+    apiKey: string
   ): Promise<LayerResponse> {
     const startTime = Date.now();
-    const client = getGoogleClient();
+    const client = getGoogleClient(apiKey);
     const { data: tts, model } = request;
 
     if (!model) {

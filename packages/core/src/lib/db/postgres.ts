@@ -1,5 +1,5 @@
 import pg from 'pg';
-import type { User, ApiKey, Gate, Request as RequestLog } from '@layer-ai/sdk';
+import type { User, ApiKey, Gate, Request as RequestLog, ProviderKey } from '@layer-ai/sdk';
 
 const { Pool } = pg;
 
@@ -286,7 +286,82 @@ export const db = {
       'DELETE FROM session_keys WHERE user_id = $1',
       [userId]
     );
-  }
+  },
+
+  // Provider Keys (BYOK)
+  async getProviderKey(userId: string, provider: string): Promise<ProviderKey | null> {
+    const result = await getPool().query(
+      'SELECT * FROM provider_keys WHERE user_id = $1 AND provider = $2 AND deleted_at IS NULL',
+      [userId, provider]
+    );
+    return result.rows[0] ? toCamelCase(result.rows[0]) : null;
+  },
+
+  async getProviderKeys(userId: string): Promise<ProviderKey[]> {
+    const result = await getPool().query(
+      'SELECT * FROM provider_keys WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC',
+      [userId]
+    );
+    return result.rows.map(toCamelCase);
+  },
+
+  async createProviderKey(
+    userId: string,
+    provider: string,
+    encryptedKey: { encrypted: string; iv: string; authTag: string },
+    keyPrefix: string
+  ): Promise<ProviderKey> {
+    const result = await getPool().query(
+      `INSERT INTO provider_keys (user_id, provider, encrypted_key, key_prefix)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [userId, provider, JSON.stringify(encryptedKey), keyPrefix]
+    );
+    return toCamelCase(result.rows[0]);
+  },
+
+  async updateProviderKey(
+    userId: string,
+    provider: string,
+    encryptedKey: { encrypted: string; iv: string; authTag: string },
+    keyPrefix: string
+  ): Promise<ProviderKey | null> {
+    const result = await getPool().query(
+      `UPDATE provider_keys
+       SET encrypted_key = $3, key_prefix = $4, deleted_at = NULL, updated_at = NOW()
+       WHERE user_id = $1 AND provider = $2
+       RETURNING *`,
+      [userId, provider, JSON.stringify(encryptedKey), keyPrefix]
+    );
+    return result.rows[0] ? toCamelCase(result.rows[0]) : null;
+  },
+
+  async deleteProviderKey(userId: string, provider: string): Promise<boolean> {
+    const result = await getPool().query(
+      'UPDATE provider_keys SET deleted_at = NOW() WHERE user_id = $1 AND provider = $2 AND deleted_at IS NULL',
+      [userId, provider]
+    );
+    return (result.rowCount ?? 0) > 0;
+  },
+
+  async hardDeleteProviderKey(userId: string, provider: string): Promise<boolean> {
+    const result = await getPool().query(
+      'DELETE FROM provider_keys WHERE user_id = $1 AND provider = $2',
+      [userId, provider]
+    );
+    return (result.rowCount ?? 0) > 0;
+  },
+
+  async getDeletedProviderKeys(daysOld: number = 90): Promise<ProviderKey[]> {
+    const result = await getPool().query(
+      `SELECT * FROM provider_keys
+       WHERE deleted_at IS NOT NULL
+       AND deleted_at < NOW() - INTERVAL '1 day' * $1
+       ORDER BY deleted_at ASC`,
+      [daysOld]
+    );
+    return result.rows.map(toCamelCase);
+  },
 }; 
 
 export default getPool; 
