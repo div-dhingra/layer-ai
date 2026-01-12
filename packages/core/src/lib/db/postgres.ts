@@ -155,8 +155,8 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, reanalysis_period, task_analysis)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
+      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, task_analysis)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *`,
        [
          userId,
          data.name,
@@ -174,6 +174,7 @@ export const db = {
          data.costWeight ?? 0.33,
          data.latencyWeight ?? 0.33,
          data.qualityWeight ?? 0.34,
+         data.analysisMethod || 'balanced',
          data.reanalysisPeriod || 'never',
          data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null
        ]
@@ -192,26 +193,29 @@ export const db = {
   async updateGate(id: string, data: any): Promise<Gate | null> {
     const result = await getPool().query(
       `UPDATE gates SET
-        description = COALESCE($2, description),
-        task_type = COALESCE($3, task_type),
-        model = COALESCE($4, model),
-        system_prompt = COALESCE($5, system_prompt),
-        allow_overrides = COALESCE($6, allow_overrides),
-        temperature = COALESCE($7, temperature),
-        max_tokens = COALESCE($8, max_tokens),
-        top_p = COALESCE($9, top_p),
-        tags = COALESCE($10, tags),
-        routing_strategy = COALESCE($11, routing_strategy),
-        fallback_models = COALESCE($12, fallback_models),
-        cost_weight = COALESCE($13, cost_weight),
-        latency_weight = COALESCE($14, latency_weight),
-        quality_weight = COALESCE($15, quality_weight),
-        reanalysis_period = COALESCE($16, reanalysis_period),
-        task_analysis = COALESCE($17, task_analysis),
+        name = COALESCE($2, name),
+        description = COALESCE($3, description),
+        task_type = COALESCE($4, task_type),
+        model = COALESCE($5, model),
+        system_prompt = COALESCE($6, system_prompt),
+        allow_overrides = COALESCE($7, allow_overrides),
+        temperature = COALESCE($8, temperature),
+        max_tokens = COALESCE($9, max_tokens),
+        top_p = COALESCE($10, top_p),
+        tags = COALESCE($11, tags),
+        routing_strategy = COALESCE($12, routing_strategy),
+        fallback_models = COALESCE($13, fallback_models),
+        cost_weight = COALESCE($14, cost_weight),
+        latency_weight = COALESCE($15, latency_weight),
+        quality_weight = COALESCE($16, quality_weight),
+        analysis_method = COALESCE($17, analysis_method),
+        reanalysis_period = COALESCE($18, reanalysis_period),
+        task_analysis = COALESCE($19, task_analysis),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
       [
         id,
+        data.name,
         data.description,
         data.taskType,
         data.model,
@@ -226,6 +230,7 @@ export const db = {
         data.costWeight,
         data.latencyWeight,
         data.qualityWeight,
+        data.analysisMethod,
         data.reanalysisPeriod,
         data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
       ]
@@ -382,7 +387,7 @@ export const db = {
         gate.name,
         gate.description,
         gate.model,
-        JSON.stringify(gate.fallbackModels || []),
+        typeof gate.fallbackModels === 'string' ? gate.fallbackModels : JSON.stringify(gate.fallbackModels || []),
         gate.routingStrategy,
         gate.temperature,
         gate.maxTokens,
@@ -392,7 +397,7 @@ export const db = {
         gate.qualityWeight ?? 0.34,
         gate.analysisMethod ?? 'balanced',
         gate.taskType,
-        gate.taskAnalysis ? JSON.stringify(gate.taskAnalysis) : null,
+        typeof gate.taskAnalysis === 'string' ? gate.taskAnalysis : (gate.taskAnalysis ? JSON.stringify(gate.taskAnalysis) : null),
         gate.systemPrompt,
         gate.reanalysisPeriod ?? 'never',
         gate.autoApplyRecommendations ?? false,

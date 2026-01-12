@@ -138,7 +138,7 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
+    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateByUserAndName(req.userId, req.params.name);
 
@@ -151,9 +151,6 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
       return;
     }
-
-    // Create history snapshot before update
-    await db.createGateHistory(existing.id, existing, 'user');
 
     const updated = await db.updateGate(existing.id, {
       description,
@@ -170,9 +167,15 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       costWeight,
       latencyWeight,
       qualityWeight,
+      analysisMethod,
       reanalysisPeriod,
       taskAnalysis,
     });
+
+    // Create history snapshot after update with the updated values
+    if (updated) {
+      await db.createGateHistory(existing.id, updated, 'user');
+    }
 
     // Log manual update activity
     await db.createActivityLog(existing.id, req.userId, 'manual_update', {
@@ -196,7 +199,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
+    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateById(req.params.id);
 
@@ -215,10 +218,8 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    // Create history snapshot before update
-    await db.createGateHistory(req.params.id, existing, 'user');
-
     const updated = await db.updateGate(req.params.id, {
+      name,
       description,
       taskType,
       model,
@@ -233,9 +234,15 @@ router.patch('/:id', async (req: Request, res: Response) => {
       costWeight,
       latencyWeight,
       qualityWeight,
+      analysisMethod,
       reanalysisPeriod,
       taskAnalysis,
     });
+
+    // Create history snapshot after update with the updated values
+    if (updated) {
+      await db.createGateHistory(req.params.id, updated, 'user');
+    }
 
     // Log manual update activity
     await db.createActivityLog(req.params.id, req.userId, 'manual_update', {
