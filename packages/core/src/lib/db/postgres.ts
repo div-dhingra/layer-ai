@@ -362,6 +362,102 @@ export const db = {
     );
     return result.rows.map(toCamelCase);
   },
+
+  // Gate History
+  async createGateHistory(
+    gateId: string,
+    gate: Partial<Gate>,
+    appliedBy: 'user' | 'auto',
+    changedFields?: string[]
+  ): Promise<void> {
+    await getPool().query(
+      `INSERT INTO gate_history (
+        gate_id, name, description, model, fallback_models, routing_strategy,
+        temperature, max_tokens, top_p, cost_weight, latency_weight, quality_weight,
+        analysis_method, task_type, task_analysis, system_prompt,
+        reanalysis_period, auto_apply_recommendations, applied_by, applied_at, changed_fields
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), $20)`,
+      [
+        gateId,
+        gate.name,
+        gate.description,
+        gate.model,
+        JSON.stringify(gate.fallbackModels || []),
+        gate.routingStrategy,
+        gate.temperature,
+        gate.maxTokens,
+        gate.topP,
+        gate.costWeight ?? 0.33,
+        gate.latencyWeight ?? 0.33,
+        gate.qualityWeight ?? 0.34,
+        gate.analysisMethod ?? 'balanced',
+        gate.taskType,
+        gate.taskAnalysis ? JSON.stringify(gate.taskAnalysis) : null,
+        gate.systemPrompt,
+        gate.reanalysisPeriod ?? 'never',
+        gate.autoApplyRecommendations ?? false,
+        appliedBy,
+        changedFields ? JSON.stringify(changedFields) : null
+      ]
+    );
+
+    // Prune old history entries, keeping only the last 20
+    await getPool().query(
+      `DELETE FROM gate_history
+       WHERE gate_id = $1
+       AND id NOT IN (
+         SELECT id FROM gate_history
+         WHERE gate_id = $1
+         ORDER BY created_at DESC
+         LIMIT 20
+       )`,
+      [gateId]
+    );
+  },
+
+  async getGateHistory(gateId: string, limit: number = 20): Promise<any[]> {
+    const result = await getPool().query(
+      `SELECT * FROM gate_history
+       WHERE gate_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [gateId, limit]
+    );
+    return result.rows.map(toCamelCase);
+  },
+
+  async getGateHistoryById(id: string): Promise<any | null> {
+    const result = await getPool().query(
+      'SELECT * FROM gate_history WHERE id = $1',
+      [id]
+    );
+    return result.rows[0] ? toCamelCase(result.rows[0]) : null;
+  },
+
+  // Activity Log
+  async createActivityLog(
+    gateId: string,
+    userId: string | null,
+    action: 'manual_update' | 'auto_update' | 'reanalysis' | 'rollback',
+    details: any
+  ): Promise<void> {
+    await getPool().query(
+      `INSERT INTO gate_activity_log (gate_id, user_id, action, details)
+       VALUES ($1, $2, $3, $4)`,
+      [gateId, userId, action, details ? JSON.stringify(details) : null]
+    );
+  },
+
+  async getActivityLog(gateId: string, limit: number = 50): Promise<any[]> {
+    const result = await getPool().query(
+      `SELECT * FROM gate_activity_log
+       WHERE gate_id = $1
+       ORDER BY timestamp DESC
+       LIMIT $2`,
+      [gateId, limit]
+    );
+    return result.rows.map(toCamelCase);
+  },
 }; 
 
 export default getPool; 
