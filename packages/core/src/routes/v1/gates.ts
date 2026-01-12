@@ -152,6 +152,9 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       return;
     }
 
+    // Create history snapshot before update
+    await db.createGateHistory(existing.id, existing, 'user');
+
     const updated = await db.updateGate(existing.id, {
       description,
       taskType,
@@ -169,6 +172,11 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       qualityWeight,
       reanalysisPeriod,
       taskAnalysis,
+    });
+
+    // Log manual update activity
+    await db.createActivityLog(existing.id, req.userId, 'manual_update', {
+      changedFields: Object.keys(req.body)
     });
 
     await cache.invalidateGate(req.userId, existing.name);
@@ -207,6 +215,9 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return;
     }
 
+    // Create history snapshot before update
+    await db.createGateHistory(req.params.id, existing, 'user');
+
     const updated = await db.updateGate(req.params.id, {
       description,
       taskType,
@@ -224,6 +235,11 @@ router.patch('/:id', async (req: Request, res: Response) => {
       qualityWeight,
       reanalysisPeriod,
       taskAnalysis,
+    });
+
+    // Log manual update activity
+    await db.createActivityLog(req.params.id, req.userId, 'manual_update', {
+      changedFields: Object.keys(req.body)
     });
 
     await cache.invalidateGate(req.userId, existing.name);
