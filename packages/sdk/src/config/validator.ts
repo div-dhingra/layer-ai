@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { LayerConfigFile } from '../types/index.js';
+import { ROUTING_STRATEGIES, ANALYSIS_METHODS, REANALYSIS_PERIODS } from '../types/history.js';
 
 const GateConfigSchema = z.object({
   // Required fields
@@ -12,7 +13,7 @@ const GateConfigSchema = z.object({
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().positive().optional(),
   topP: z.number().min(0).max(1).optional(),
-  routingStrategy: z.enum(['single', 'fallback', 'round-robin']).optional(),
+  routingStrategy: z.enum(ROUTING_STRATEGIES).optional(),
   fallbackModels: z.array(z.string()).optional(),
   allowOverrides: z.union([
     z.boolean(),
@@ -24,6 +25,7 @@ const GateConfigSchema = z.object({
   costWeight: z.number().min(0).max(1).optional(),
   latencyWeight: z.number().min(0).max(1).optional(),
   qualityWeight: z.number().min(0).max(1).optional(),
+  analysisMethod: z.enum(ANALYSIS_METHODS).optional(),
   maxCostPer1kTokens: z.number().positive().optional(),
   maxLatencyMs: z.number().positive().optional(),
   taskAnalysis: z.object({
@@ -31,6 +33,8 @@ const GateConfigSchema = z.object({
     alternatives: z.array(z.string()),
     reasoning: z.string(),
   }).optional(),
+  reanalysisPeriod: z.enum(REANALYSIS_PERIODS).optional(),
+  autoApplyRecommendations: z.boolean().optional(),
 });
 
 const LayerConfigFileSchema = z.object({
