@@ -6,6 +6,7 @@ import { authenticate } from '../../middleware/auth.js';
 import { callAdapter } from '../../lib/provider-factory.js';
 import type { CreateGateRequest, UpdateGateRequest, LayerRequest } from '@layer-ai/sdk';
 import { MODEL_REGISTRY } from '@layer-ai/sdk';
+import { detectSignificantChanges } from '../../lib/gate-utils.js';
 
 const router: RouterType = Router(); 
 
@@ -138,7 +139,7 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
+    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateByUserAndName(req.userId, req.params.name);
 
@@ -151,6 +152,25 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
       return;
     }
+
+    // Detect significant changes before updating
+    const changedFields = detectSignificantChanges(existing, {
+      description,
+      taskType,
+      model,
+      systemPrompt,
+      temperature,
+      maxTokens,
+      topP,
+      routingStrategy,
+      fallbackModels,
+      costWeight,
+      latencyWeight,
+      qualityWeight,
+      analysisMethod,
+      reanalysisPeriod,
+      autoApplyRecommendations,
+    });
 
     const updated = await db.updateGate(existing.id, {
       description,
@@ -167,9 +187,21 @@ router.patch('/name/:name', async (req: Request, res: Response) => {
       costWeight,
       latencyWeight,
       qualityWeight,
+      analysisMethod,
       reanalysisPeriod,
       taskAnalysis,
+      autoApplyRecommendations,
     });
+
+    // Only create history snapshot if significant changes were detected
+    if (updated && changedFields.length > 0) {
+      await db.createGateHistory(existing.id, updated, 'user', changedFields);
+
+      // Log manual update activity with specific changed fields
+      await db.createActivityLog(existing.id, req.userId, 'manual_update', {
+        changedFields
+      });
+    }
 
     await cache.invalidateGate(req.userId, existing.name);
 
@@ -188,7 +220,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as UpdateGateRequest;
+    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateById(req.params.id);
 
@@ -207,7 +239,28 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return;
     }
 
+    // Detect significant changes before updating
+    const changedFields = detectSignificantChanges(existing, {
+      name,
+      description,
+      taskType,
+      model,
+      systemPrompt,
+      temperature,
+      maxTokens,
+      topP,
+      routingStrategy,
+      fallbackModels,
+      costWeight,
+      latencyWeight,
+      qualityWeight,
+      analysisMethod,
+      reanalysisPeriod,
+      autoApplyRecommendations,
+    });
+
     const updated = await db.updateGate(req.params.id, {
+      name,
       description,
       taskType,
       model,
@@ -222,9 +275,21 @@ router.patch('/:id', async (req: Request, res: Response) => {
       costWeight,
       latencyWeight,
       qualityWeight,
+      analysisMethod,
       reanalysisPeriod,
       taskAnalysis,
+      autoApplyRecommendations,
     });
+
+    // Only create history snapshot if significant changes were detected
+    if (updated && changedFields.length > 0) {
+      await db.createGateHistory(req.params.id, updated, 'user', changedFields);
+
+      // Log manual update activity with specific changed fields
+      await db.createActivityLog(req.params.id, req.userId, 'manual_update', {
+        changedFields
+      });
+    }
 
     await cache.invalidateGate(req.userId, existing.name);
 
@@ -446,6 +511,50 @@ router.post('/suggestions', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Get suggestions error:', error);
     res.status(500).json({ error: 'internal_error', message: 'Failed to fetch suggestions' });
+  }
+});
+
+// POST /:id/rollback - Rollback gate to a previous configuration from history
+router.post('/:id/rollback', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const { historyId } = req.body;
+
+    if (!historyId) {
+      res.status(400).json({ error: 'bad_request', message: 'Missing required field: historyId' });
+      return;
+    }
+
+    const gate = await db.getGateById(req.params.id);
+
+    if (!gate) {
+      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+      return;
+    }
+
+    if (gate.userId !== req.userId) {
+      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+      return;
+    }
+
+    // Rollback the gate to the historical configuration
+    const updated = await db.rollbackGate(req.params.id, historyId, req.userId);
+
+    if (!updated) {
+      res.status(404).json({ error: 'not_found', message: 'History entry not found' });
+      return;
+    }
+
+    await cache.invalidateGate(req.userId, gate.name);
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Rollback gate error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to rollback gate' });
   }
 });
 

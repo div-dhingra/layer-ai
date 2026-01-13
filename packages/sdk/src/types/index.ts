@@ -8,3 +8,4 @@ export * from './logs.js';
 export * from './smart-routing.js';
 export * from './config.js';
 export * from './provider-keys.js';
+export * from './history.js';

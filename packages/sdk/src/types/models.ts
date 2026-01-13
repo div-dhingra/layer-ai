@@ -1,6 +1,7 @@
 import type { SupportedModel } from "./gates.js";
 import { TaskAnalysis } from "./smart-routing.js";
 import type { ModelType } from "./model-registry.js";
+import type { AnalysisMethod, RoutingStrategy, ReanalysisPeriod } from "./history.js";
 
 // User 
 export interface User {
@@ -31,22 +32,24 @@ export interface GateBase {
 
   // Optional public fields
   description?: string;
-  taskType?: ModelType; 
+  taskType?: ModelType;
   systemPrompt?: string;
   allowOverrides?: boolean | OverrideConfig;
   temperature?: number;
   maxTokens?: number;
   topP?: number;
   tags?: string[];
-  routingStrategy?: 'single' | 'fallback' | 'round-robin';
+  routingStrategy?: RoutingStrategy;
   fallbackModels?: SupportedModel[];
   costWeight?: number;
   latencyWeight?: number;
   qualityWeight?: number;
+  analysisMethod?: AnalysisMethod;
   maxCostPer1kTokens?: number;
   maxLatencyMs?: number;
   taskAnalysis?: TaskAnalysis;
-  reanalysisPeriod?: 'daily' | 'weekly' | 'monthly' | 'never';
+  reanalysisPeriod?: ReanalysisPeriod;
+  autoApplyRecommendations?: boolean;
 }
 
 export interface Gate extends GateBase {
