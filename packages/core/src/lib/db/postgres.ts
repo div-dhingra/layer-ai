@@ -155,8 +155,8 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, task_analysis)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *`,
+      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING *`,
        [
          userId,
          data.name,
@@ -176,6 +176,7 @@ export const db = {
          data.qualityWeight ?? 0.34,
          data.analysisMethod || 'balanced',
          data.reanalysisPeriod || 'never',
+         data.autoApplyRecommendations ?? false,
          data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null
        ]
     );
@@ -210,7 +211,8 @@ export const db = {
         quality_weight = COALESCE($16, quality_weight),
         analysis_method = COALESCE($17, analysis_method),
         reanalysis_period = COALESCE($18, reanalysis_period),
-        task_analysis = COALESCE($19, task_analysis),
+        auto_apply_recommendations = COALESCE($19, auto_apply_recommendations),
+        task_analysis = COALESCE($20, task_analysis),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
       [
@@ -232,6 +234,7 @@ export const db = {
         data.qualityWeight,
         data.analysisMethod,
         data.reanalysisPeriod,
+        data.autoApplyRecommendations,
         data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
       ]
     );
@@ -463,6 +466,86 @@ export const db = {
     );
     return result.rows.map(toCamelCase);
   },
-}; 
+
+  async rollbackGate(gateId: string, historyId: string, userId: string): Promise<Gate | null> {
+    // Get the historical configuration
+    const historyEntry = await this.getGateHistoryById(historyId);
+
+    if (!historyEntry || historyEntry.gateId !== gateId) {
+      return null;
+    }
+
+    // Get the current gate state before rollback for history snapshot
+    const currentGate = await this.getGateById(gateId);
+
+    if (!currentGate) {
+      return null;
+    }
+
+    // Create a snapshot of the current state before rolling back
+    await this.createGateHistory(gateId, currentGate, 'user');
+
+    // Update the gate with the historical configuration
+    const result = await getPool().query(
+      `UPDATE gates SET
+        name = $2,
+        description = $3,
+        model = $4,
+        fallback_models = $5,
+        routing_strategy = $6,
+        temperature = $7,
+        max_tokens = $8,
+        top_p = $9,
+        cost_weight = $10,
+        latency_weight = $11,
+        quality_weight = $12,
+        analysis_method = $13,
+        task_type = $14,
+        task_analysis = $15,
+        system_prompt = $16,
+        reanalysis_period = $17,
+        auto_apply_recommendations = $18,
+        updated_at = NOW()
+      WHERE id = $1 RETURNING *`,
+      [
+        gateId,
+        historyEntry.name,
+        historyEntry.description,
+        historyEntry.model,
+        typeof historyEntry.fallbackModels === 'string' ? historyEntry.fallbackModels : JSON.stringify(historyEntry.fallbackModels || []),
+        historyEntry.routingStrategy,
+        historyEntry.temperature,
+        historyEntry.maxTokens,
+        historyEntry.topP,
+        historyEntry.costWeight ?? 0.33,
+        historyEntry.latencyWeight ?? 0.33,
+        historyEntry.qualityWeight ?? 0.34,
+        historyEntry.analysisMethod ?? 'balanced',
+        historyEntry.taskType,
+        typeof historyEntry.taskAnalysis === 'string' ? historyEntry.taskAnalysis : (historyEntry.taskAnalysis ? JSON.stringify(historyEntry.taskAnalysis) : null),
+        historyEntry.systemPrompt,
+        historyEntry.reanalysisPeriod ?? 'never',
+        historyEntry.autoApplyRecommendations ?? false
+      ]
+    );
+
+    const rolledBackGate = result.rows[0] ? toCamelCase(result.rows[0]) : null;
+
+    if (rolledBackGate) {
+      // Create a history snapshot of the rolled-back state (the new current state)
+      await this.createGateHistory(gateId, rolledBackGate, 'user');
+
+      // Log the rollback activity
+      await this.createActivityLog(gateId, userId, 'rollback', {
+        historyId: historyId,
+        rolledBackTo: historyEntry.createdAt,
+        previousModel: currentGate.model,
+        newModel: historyEntry.model
+      });
+    }
+
+    return rolledBackGate;
+  },
+};
 
 export default getPool; 
