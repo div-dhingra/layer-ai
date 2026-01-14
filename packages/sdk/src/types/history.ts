@@ -49,6 +49,7 @@ export interface ActivityLog {
   id: string;
   gateId: string;
   userId: string | null;
+  userEmail?: string | null;
   action: ActivityAction;
   details: {
     historyId?: string;
