@@ -104,6 +104,40 @@ router.get('/name/:name', async (req: Request, res: Response) => {
   }
 });
 
+// GET /history - Get history for all gates belonging to the user
+router.get('/history', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+    const history = await db.getAllGatesHistory(req.userId, limit);
+    res.json(history);
+  } catch (error) {
+    console.error('Get all gates history error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to fetch history' });
+  }
+});
+
+// GET /activity - Get activity log for all gates belonging to the user
+router.get('/activity', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+    const activity = await db.getAllGatesActivity(req.userId, limit);
+    res.json(activity);
+  } catch (error) {
+    console.error('Get all gates activity error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to fetch activity' });
+  }
+});
+
 // GET /:id - Get a single gate by ID
 router.get('/:id', async (req: Request, res: Response) => {
   if (!req.userId) {

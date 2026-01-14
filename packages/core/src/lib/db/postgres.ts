@@ -442,6 +442,18 @@ export const db = {
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
   },
 
+  async getAllGatesHistory(userId: string, limit: number = 100): Promise<any[]> {
+    const result = await getPool().query(
+      `SELECT gh.* FROM gate_history gh
+       JOIN gates g ON gh.gate_id = g.id
+       WHERE g.user_id = $1
+       ORDER BY gh.created_at DESC
+       LIMIT $2`,
+      [userId, limit]
+    );
+    return result.rows.map(toCamelCase);
+  },
+
   // Activity Log
   async createActivityLog(
     gateId: string,
@@ -463,6 +475,18 @@ export const db = {
        ORDER BY timestamp DESC
        LIMIT $2`,
       [gateId, limit]
+    );
+    return result.rows.map(toCamelCase);
+  },
+
+  async getAllGatesActivity(userId: string, limit: number = 100): Promise<any[]> {
+    const result = await getPool().query(
+      `SELECT gal.* FROM gate_activity_log gal
+       JOIN gates g ON gal.gate_id = g.id
+       WHERE g.user_id = $1
+       ORDER BY gal.timestamp DESC
+       LIMIT $2`,
+      [userId, limit]
     );
     return result.rows.map(toCamelCase);
   },
