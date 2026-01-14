@@ -493,6 +493,19 @@ export const db = {
     return result.rows.map(toCamelCase);
   },
 
+  async getGateActivity(gateId: string, limit: number = 100): Promise<any[]> {
+    const result = await getPool().query(
+      `SELECT gal.*, u.email as user_email
+       FROM gate_activity_log gal
+       LEFT JOIN users u ON gal.user_id = u.id
+       WHERE gal.gate_id = $1
+       ORDER BY gal.timestamp DESC
+       LIMIT $2`,
+      [gateId, limit]
+    );
+    return result.rows.map(toCamelCase);
+  },
+
   async rollbackGate(gateId: string, historyId: string, userId: string): Promise<Gate | null> {
     // Get the historical configuration
     const historyEntry = await this.getGateHistoryById(historyId);

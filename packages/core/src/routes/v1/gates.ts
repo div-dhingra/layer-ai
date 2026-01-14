@@ -138,6 +138,54 @@ router.get('/activity', async (req: Request, res: Response) => {
   }
 });
 
+// GET /:id/history - Get history for a specific gate
+router.get('/:id/history', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const gate = await db.getGateById(req.params.id);
+
+    if (!gate || gate.userId !== req.userId) {
+      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+      return;
+    }
+
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+    const history = await db.getGateHistory(req.params.id, limit);
+    res.json(history);
+  } catch (error) {
+    console.error('Get gate history error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to fetch history' });
+  }
+});
+
+// GET /:id/activity - Get activity log for a specific gate
+router.get('/:id/activity', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
+    return;
+  }
+
+  try {
+    const gate = await db.getGateById(req.params.id);
+
+    if (!gate || gate.userId !== req.userId) {
+      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
+      return;
+    }
+
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
+    const activity = await db.getGateActivity(req.params.id, limit);
+    res.json(activity);
+  } catch (error) {
+    console.error('Get gate activity error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to fetch activity' });
+  }
+});
+
 // GET /:id - Get a single gate by ID
 router.get('/:id', async (req: Request, res: Response) => {
   if (!req.userId) {
