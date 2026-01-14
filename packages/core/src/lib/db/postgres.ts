@@ -481,12 +481,27 @@ export const db = {
 
   async getAllGatesActivity(userId: string, limit: number = 100): Promise<any[]> {
     const result = await getPool().query(
-      `SELECT gal.* FROM gate_activity_log gal
+      `SELECT gal.*, u.email as user_email
+       FROM gate_activity_log gal
        JOIN gates g ON gal.gate_id = g.id
+       LEFT JOIN users u ON gal.user_id = u.id
        WHERE g.user_id = $1
        ORDER BY gal.timestamp DESC
        LIMIT $2`,
       [userId, limit]
+    );
+    return result.rows.map(toCamelCase);
+  },
+
+  async getGateActivity(gateId: string, limit: number = 100): Promise<any[]> {
+    const result = await getPool().query(
+      `SELECT gal.*, u.email as user_email
+       FROM gate_activity_log gal
+       LEFT JOIN users u ON gal.user_id = u.id
+       WHERE gal.gate_id = $1
+       ORDER BY gal.timestamp DESC
+       LIMIT $2`,
+      [gateId, limit]
     );
     return result.rows.map(toCamelCase);
   },
