@@ -1,17 +1,9 @@
-import type { LayerConfig, RequestOptions } from './types.js';
+import type { LayerConfig, RequestOptions } from './types/index.js';
 import type { ErrorResponse, LayerRequest, LayerResponse } from './types/index.js';
-import { GatesResource } from './resources/gates.js';
-import { KeysResource } from './resources/keys.js';
-import { LogsResource } from './resources/logs.js';
 
 export class Layer {
-  private apiKey: string; 
+  private apiKey: string;
   private baseUrl: string;
-  private adminMode: boolean;
-
-  public gates: GatesResource;
-  public keys: KeysResource;
-  public logs: LogsResource;
 
   constructor(config: LayerConfig) {
     if (!config.apiKey) {
@@ -19,28 +11,6 @@ export class Layer {
     }
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl || 'http://localhost:3001';
-    this.adminMode = config.adminMode || false;
-
-    this.gates = new GatesResource(this);
-    this.keys = new KeysResource(this);
-    this.logs = new LogsResource(this);
-  }
-
-  /** @internal */
-  checkAdminMode(): void {
-    if (!this.adminMode) {
-      throw new Error(
-        'This operation requires adminMode: true in Layer constructor.\n\n' +
-        'Example:\n' +
-        '   const layer = new Layer({ apiKey: "...", adminMode: true });\n\n' +
-        'Admin mode is required for mutation operations:\n'+
-        '  - gates.create/update/delete()\n' +
-        '  - keys.create/delete()\n\n' +
-        'These methods are intended for setup scripts only.\n' +
-        'For ongoing managmenent, use CLI or config files.\n\n' +
-        'See: https://docs.uselayer.ai/sdk/admin-mode'
-      );
-    }
   }
 
   public async request<T>(options: RequestOptions): Promise<T> {
