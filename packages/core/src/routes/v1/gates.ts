@@ -375,7 +375,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 
     await cache.invalidateGate(req.userId, existing.name);
 
-    res.json(updated);
+    res.json({ gate: updated, hasChanges: changedFields.length > 0, changedFields });
   } catch (error) {
     console.error('Update gate error:', error);
     res.status(500).json({ error: 'internal_error', message: 'Failed to update gate' });
