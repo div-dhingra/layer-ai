@@ -169,7 +169,7 @@ export const db = {
          data.maxTokens,
          data.topP,
          JSON.stringify(data.tags || []),
-         data.routingStrategy || 'single',
+         data.routingStrategy || 'fallback',
          JSON.stringify(data.fallbackModels || []),
          data.costWeight ?? 0.33,
          data.latencyWeight ?? 0.33,

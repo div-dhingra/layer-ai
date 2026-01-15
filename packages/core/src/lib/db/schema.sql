@@ -39,7 +39,7 @@ CREATE TABLE gates (
   max_tokens INTEGER,
   top_p DECIMAL(3,2),
   tags JSONB DEFAULT '[]',
-  routing_strategy VARCHAR(20) DEFAULT 'single',
+  routing_strategy VARCHAR(20) DEFAULT 'fallback',
   fallback_models JSONB DEFAULT '[]',
   cost_weight DECIMAL(3,2) DEFAULT 0.33,
   latency_weight DECIMAL(3,2) DEFAULT 0.33,
