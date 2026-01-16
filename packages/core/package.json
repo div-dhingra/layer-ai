@@ -15,9 +15,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/lib/db/migrations dist/lib/db/",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "migrate": "node dist/lib/db/migrate.js"
   },
   "author": "Micah Nettey",
   "license": "MIT",
