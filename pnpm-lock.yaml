@@ -118,6 +118,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@layer-ai/admin':
+        specifier: workspace:^
+        version: link:../admin
       '@layer-ai/sdk':
         specifier: workspace:^
         version: link:../sdk
