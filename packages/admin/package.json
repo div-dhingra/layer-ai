@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/micah-nettey/layer-ai#readme",
   "dependencies": {
-    "@layer-ai/sdk": "^1.0.1"
+    "@layer-ai/sdk": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -106,8 +106,8 @@ importers:
   packages/admin:
     dependencies:
       '@layer-ai/sdk':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: workspace:^
+        version: link:../sdk
     devDependencies:
       '@types/node':
         specifier: ^20.10.0
@@ -531,9 +531,6 @@ packages:
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
-
-  '@layer-ai/sdk@1.0.1':
-    resolution: {integrity: sha512-ZA3RYXaKVAvQqGg7DivijxEg1hr6fVkb+0j+kAgPGU1etDfzuRkR+Q7Pu0e0O8ewVOwm8Phd5CqR+lAIg/Li/A==}
 
   '@mistralai/mistralai@1.11.0':
     resolution: {integrity: sha512-6/BVj2mcaggYbpMzNSxtqtM2Tv/Jb5845XFd2CMYFO+O5VBkX70iLjtkBBTI4JFhh1l9vTCIMYXBVOjLoBVHGQ==}
@@ -1747,11 +1744,6 @@ snapshots:
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
-
-  '@layer-ai/sdk@1.0.1':
-    dependencies:
-      yaml: 2.3.4
-      zod: 3.25.76
 
   '@mistralai/mistralai@1.11.0':
     dependencies:
