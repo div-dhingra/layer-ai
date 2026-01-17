@@ -103,8 +103,24 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/admin:
+    dependencies:
+      '@layer-ai/sdk':
+        specifier: workspace:^
+        version: link:../sdk
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.25
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/cli:
     dependencies:
+      '@layer-ai/admin':
+        specifier: workspace:^
+        version: link:../admin
       '@layer-ai/sdk':
         specifier: workspace:^
         version: link:../sdk

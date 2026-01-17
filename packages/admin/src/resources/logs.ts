@@ -1,9 +1,8 @@
-import type { Layer } from '../client.js';
-import type { Log, ListLogOptions } from '../types/index.js';
-
+import type { LayerAdmin } from '../client.js';
+import type { Log, ListLogOptions } from '@layer-ai/sdk';
 
 export class LogsResource {
-  constructor(private client: Layer) {}
+  constructor(private client: LayerAdmin) {}
 
   async list(options?: ListLogOptions): Promise<Log[]> {
     const params = new URLSearchParams();

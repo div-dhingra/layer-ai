@@ -1,6 +1,8 @@
 # @layer-ai/sdk
 
-TypeScript/JavaScript SDK for Layer AI - Manage LLM requests with intelligent routing and fallbacks.
+TypeScript/JavaScript SDK for Layer AI - Intelligent LLM inference with smart routing and fallbacks.
+
+> **v1.0.0**: This package is now **inference-only**. For admin operations (managing gates, keys, logs), use [`@layer-ai/admin`](../admin).
 
 ## Installation
 
@@ -18,18 +20,30 @@ yarn add @layer-ai/sdk
 import { Layer } from '@layer-ai/sdk';
 
 const layer = new Layer({
-  apiKey: process.env.LAYER_API_KEY,
-  baseUrl: 'http://localhost:3001'
+  apiKey: process.env.LAYER_API_KEY
 });
 
-// Complete a request through a gate
+// Make an inference request through a gate
 const response = await layer.complete({
-  gate: 'my-gate',
-  prompt: 'Explain quantum computing in simple terms'
+  gate: '435282da-4548-4e08-8f9e-a6104803fb8a',  // Gate ID (UUID)
+  data: {
+    messages: [
+      { role: 'user', content: 'Explain quantum computing in simple terms' }
+    ]
+  }
 });
 
-console.log(response.text);
+console.log(response.content);
 ```
+
+## Migrating from v0.x?
+
+See the [Migration Guide](../../MIGRATION_V1.md) for detailed upgrade instructions.
+
+**Key Changes:**
+- SDK is now inference-only - use `@layer-ai/admin` for management operations
+- Gate IDs (UUIDs) required instead of gate names
+- Request format changed to include `data` wrapper
 
 ## Configuration
 
@@ -38,237 +52,134 @@ console.log(response.text);
 ```typescript
 const layer = new Layer({
   apiKey: string;        // Required: Your Layer API key
-  baseUrl?: string;      // Optional: API base URL (default: http://localhost:3001)
-  adminMode?: boolean;   // Optional: Enable mutation operations (default: false)
+  baseUrl?: string;      // Optional: API base URL (default: https://api.uselayer.ai)
 });
 ```
-
-### Admin Mode
-
-By default, the SDK is read-only to prevent accidental mutations in production. To enable create/update/delete operations, set `adminMode: true`:
-
-```typescript
-const layer = new Layer({
-  apiKey: process.env.LAYER_API_KEY,
-  adminMode: true  // Required for mutations
-});
-
-// Now you can create/update/delete gates and keys
-await layer.gates.create({
-  name: 'my-gate',
-  model: 'gpt-4o',
-  temperature: 0.7
-});
-```
-
-**Note:** Admin mode is intended for setup scripts and infrastructure-as-code. For ongoing management, use the CLI or config files.
-
-## Migration Guide
-
-### Gate Names → Gate IDs (Recommended)
-
-**IMPORTANT:** Using gate names in `layer.complete()` is deprecated and will be removed in a future version. Please migrate to using gate IDs.
-
-#### Why Gate IDs?
-
-- **Stability:** Gate IDs never change, even if you rename your gate
-- **Reliability:** Avoid breaking your integration when renaming gates
-- **Best Practice:** Consistent with standard API design patterns
-
-#### How to Migrate
-
-1. **Find your gate ID** in the Layer AI dashboard at `https://uselayer.ai/dashboard/gates`
-2. **Copy the gate ID** from the gate details page
-3. **Replace gate names with gate IDs** in your code
-
-```typescript
-// ❌ Deprecated: Using gate name
-await layer.complete({
-  gate: 'customer-support',
-  type: 'chat',
-  data: { messages: [...] }
-});
-
-// ✅ Recommended: Using gate ID
-await layer.complete({
-  gate: '123e4567-e89b-12d3-a456-426614174000',
-  type: 'chat',
-  data: { messages: [...] }
-});
-```
-
-#### Deprecation Timeline
-
-- **Current:** Gate names still work but will show a deprecation warning
-- **Future (v1.0):** Gate names will be removed, gate IDs will be required
 
 ## API Reference
 
-### Completions
-
-#### `layer.complete(params)`
+### `layer.complete(request)`
 
 Send a completion request through a gate.
 
+**Parameters:**
+
 ```typescript
-const response = await layer.complete({
-  gate: '123e4567-e89b-12d3-a456-426614174000',  // Gate ID (recommended)
-  type: 'chat',
-  data: {
-    messages: [
-      { role: 'user', content: 'What is the capital of France?' }
-    ]
-  },
-
-  // Optional overrides (if gate allows)
-  model: 'gpt-4o',
-  temperature: 0.8,
-  maxTokens: 500,
-  topP: 0.9
-});
-
-// Response
 {
-  content: string;
-  model: string;
+  gate: string;          // Required: Gate ID (UUID)
+  data: {
+    messages: Message[]; // Required: Conversation messages
+    temperature?: number;  // Optional: Override gate temperature
+    maxTokens?: number;    // Optional: Override max tokens
+    topP?: number;         // Optional: Override top-p sampling
+  };
+  model?: string;        // Optional: Override gate model
+  type?: 'chat';        // Optional: Request type (default: 'chat')
+}
+```
+
+**Response:**
+
+```typescript
+{
+  content: string;       // Generated text
+  model: string;         // Model used (may differ from requested if fallback occurred)
+  finishReason: string;  // Why generation stopped
   usage: {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
   };
-  cost: number;
-  latencyMs: number;
+  cost: number;          // Cost in USD
+  latencyMs: number;     // Request latency
 }
 ```
 
-### Gates
-
-#### `layer.gates.list()`
-
-List all gates.
+**Example:**
 
 ```typescript
-const gates = await layer.gates.list();
-// Returns: Gate[]
-```
-
-#### `layer.gates.get(name)`
-
-Get a specific gate by name.
-
-```typescript
-const gate = await layer.gates.get('my-gate');
-```
-
-#### `layer.gates.create(data)` ⚠️ Requires Admin Mode
-
-Create a new gate. For detailed information about gate configuration fields, see the [Configuration Guide](../../CONFIG.md).
-
-```typescript
-await layer.gates.create({
-  name: 'my-gate',
-  model: 'gpt-4o',
-  description: 'My custom gate',
-  systemPrompt: 'You are a helpful assistant',
-  temperature: 0.7,
-  maxTokens: 1000,
-  topP: 1.0,
-  allowOverrides: true,  // or specific fields: ['temperature', 'maxTokens']
-  routingStrategy: 'fallback',
-  fallbackModels: ['claude-sonnet-4', 'gemini-2.0-flash-exp'],
-  tags: ['production', 'general']
+const response = await layer.complete({
+  gate: '435282da-4548-4e08-8f9e-a6104803fb8a',
+  data: {
+    messages: [
+      { role: 'system', content: 'You are a helpful coding assistant' },
+      { role: 'user', content: 'Write a hello world function in Python' }
+    ],
+    temperature: 0.7,
+    maxTokens: 500
+  }
 });
+
+console.log(response.content);
+console.log(`Cost: $${response.cost.toFixed(6)}`);
+console.log(`Tokens: ${response.usage.totalTokens}`);
 ```
 
-#### `layer.gates.update(name, data)` ⚠️ Requires Admin Mode
+### `layer.models`
 
-Update an existing gate.
+Access to the model registry utilities.
 
 ```typescript
-await layer.gates.update('my-gate', {
-  temperature: 0.8,
-  maxTokens: 1500
+// Get all available models
+const models = layer.models.getAll();
+
+// Get models by provider
+const openaiModels = layer.models.getByProvider('openai');
+
+// Get model metadata
+const model = layer.models.get('gpt-4o');
+```
+
+## Smart Routing & Fallbacks
+
+Layer AI automatically handles model fallbacks when configured:
+
+```typescript
+// If your gate has fallback models configured:
+// Primary: gpt-4o
+// Fallbacks: [claude-sonnet-4, gemini-2.0-flash-exp]
+
+const response = await layer.complete({
+  gate: 'my-gate-id',
+  data: { messages: [...] }
 });
+
+// If gpt-4o fails, automatically tries claude-sonnet-4
+// If that fails, tries gemini-2.0-flash-exp
+// Returns the first successful response
 ```
 
-#### `layer.gates.delete(name)` ⚠️ Requires Admin Mode
+## Parameter Overrides
 
-Delete a gate.
-
-```typescript
-await layer.gates.delete('my-gate');
-```
-
-#### `layer.gates.suggestions(gateName)`
-
-Get AI-powered model recommendations for a gate based on its task description.
+Gates can allow or restrict parameter overrides:
 
 ```typescript
-const suggestions = await layer.gates.suggestions('my-gate');
-
-console.log(suggestions.primary);       // "gpt-4o"
-console.log(suggestions.alternatives);  // ["claude-sonnet-4", "gemini-2.5-flash"]
-console.log(suggestions.reasoning);     // "Based on your task description..."
-```
-
-Smart routing analyzes your gate's description and user preferences (cost, latency, quality weights) to recommend the best models from the registry.
-
-### API Keys
-
-#### `layer.keys.list()`
-
-List all API keys.
-
-```typescript
-const keys = await layer.keys.list();
-```
-
-#### `layer.keys.create(name)` ⚠️ Requires Admin Mode
-
-Create a new API key.
-
-```typescript
-const key = await layer.keys.create('my-app-key');
-// Returns: { id: string, name: string, key: string, createdAt: string }
-// Save the key - it's only shown once!
-```
-
-#### `layer.keys.delete(id)` ⚠️ Requires Admin Mode
-
-Revoke an API key.
-
-```typescript
-await layer.keys.delete('key-id');
-```
-
-### Logs
-
-#### `layer.logs.list(options?)`
-
-List request logs.
-
-```typescript
-const logs = await layer.logs.list({
-  limit: 100,
-  offset: 0,
-  gateName: 'my-gate'  // Optional filter
+// If gate allows temperature overrides
+const response = await layer.complete({
+  gate: 'my-gate-id',
+  data: {
+    messages: [...],
+    temperature: 0.9  // Override gate's default
+  }
 });
+
+// If override not allowed, gate's default is used
 ```
 
 ## TypeScript Support
 
-The SDK is written in TypeScript and provides full type definitions:
+Full TypeScript support with exported types:
 
 ```typescript
-import { Layer, Gate, CompletionRequest, CompletionResponse } from '@layer-ai/sdk';
-
-const layer = new Layer({ apiKey: 'key' });
-
-// All methods are fully typed
-const response: CompletionResponse = await layer.complete({
-  gate: 'my-gate',
-  prompt: 'Hello'
-});
+import type {
+  Gate,
+  GateConfig,
+  Log,
+  ApiKey,
+  SupportedModel,
+  LayerRequest,
+  LayerResponse
+} from '@layer-ai/sdk';
 ```
 
 ## Error Handling
@@ -276,75 +187,122 @@ const response: CompletionResponse = await layer.complete({
 ```typescript
 try {
   const response = await layer.complete({
-    gate: 'my-gate',
-    prompt: 'Hello'
+    gate: 'my-gate-id',
+    data: { messages: [...] }
   });
 } catch (error) {
   if (error instanceof Error) {
     console.error('Layer error:', error.message);
+    // Handle: authentication, rate limits, model failures, etc.
   }
 }
 ```
 
 ## Examples
 
-For complete working examples, check out the [layer-ai-examples](https://github.com/micah-nettey/layer-ai-examples) repository:
-
-- **Content Generator** - Next.js app with smart routing for content generation
-
-### Basic Completion
+### Basic Chatbot
 
 ```typescript
 import { Layer } from '@layer-ai/sdk';
 
-const layer = new Layer({
-  apiKey: process.env.LAYER_API_KEY
-});
+const layer = new Layer({ apiKey: process.env.LAYER_API_KEY });
 
-const response = await layer.complete({
-  gate: 'default',
-  prompt: 'Explain machine learning'
-});
+async function chat(userMessage: string) {
+  const response = await layer.complete({
+    gate: process.env.CHATBOT_GATE_ID!,
+    data: {
+      messages: [
+        { role: 'user', content: userMessage }
+      ]
+    }
+  });
 
-console.log(response.text);
+  return response.content;
+}
+
+const answer = await chat('What is the capital of France?');
+console.log(answer);
 ```
 
-### With Parameter Overrides
+### Multi-turn Conversation
+
+```typescript
+const messages = [
+  { role: 'user', content: 'Hello!' },
+  { role: 'assistant', content: 'Hi! How can I help you today?' },
+  { role: 'user', content: 'Tell me about quantum computing' }
+];
+
+const response = await layer.complete({
+  gate: 'chat-gate-id',
+  data: { messages }
+});
+
+messages.push({
+  role: 'assistant',
+  content: response.content
+});
+```
+
+### With Model Override
 
 ```typescript
 const response = await layer.complete({
-  gate: 'my-gate',
-  prompt: 'Write a haiku about coding',
-  temperature: 0.9,  // More creative
-  maxTokens: 100
+  gate: 'my-gate-id',
+  model: 'claude-sonnet-4',  // Override gate's default model
+  data: {
+    messages: [
+      { role: 'user', content: 'Explain relativity' }
+    ]
+  }
 });
 ```
 
-### Infrastructure as Code
+## Admin Operations
+
+For managing gates, API keys, and logs, use the separate admin package:
+
+```bash
+npm install @layer-ai/admin
+```
 
 ```typescript
-import { Layer } from '@layer-ai/sdk';
+import { LayerAdmin } from '@layer-ai/admin';
 
-const layer = new Layer({
-  apiKey: process.env.LAYER_API_KEY,
-  adminMode: true
-});
+const admin = new LayerAdmin({ apiKey: process.env.LAYER_ADMIN_KEY });
 
-// Create gates programmatically
-await layer.gates.create({
-  name: 'production-gate',
-  model: 'gpt-4o',
-  temperature: 0.7,
-  routingStrategy: 'fallback',
-  fallbackModels: ['claude-sonnet-4']
-});
-
-await layer.gates.create({
-  name: 'dev-gate',
+// Create a gate
+const gate = await admin.gates.create({
+  name: 'my-gate',
   model: 'gpt-4o-mini',
-  temperature: 0.5
+  systemPrompt: 'You are a helpful assistant'
+});
+
+// Use the gate ID for completions
+const response = await layer.complete({
+  gate: gate.id,
+  data: { messages: [...] }
 });
 ```
+
+See the [`@layer-ai/admin` documentation](../admin) for details.
+
+## Database Migrations
+
+If you're self-hosting Layer AI, the SDK includes database migrations:
+
+```bash
+# Run migrations
+cd node_modules/@layer-ai/core
+npm run migrate
+```
+
+Migrations are located in `@layer-ai/core/dist/lib/db/migrations/`
+
+## Related Packages
+
+- [`@layer-ai/admin`](../admin) - Admin SDK for managing gates, keys, and logs
+- [`@layer-ai/core`](../core) - Core API implementation (for self-hosting)
 
 ## License
 

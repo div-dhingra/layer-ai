@@ -1,18 +1,17 @@
 {
-  "name": "@layer-ai/sdk",
-  "version": "1.0.1",
-  "description": "Configure multiple AI models at runtime without code changes or deployments",
+  "name": "@layer-ai/admin",
+  "version": "0.1.0",
+  "description": "Admin SDK for Layer AI - manage gates, keys, and analytics",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./config": {
-      "types": "./dist/config/index.d.ts",
-      "import": "./dist/config/index.js"
     }
   },
   "files": [
@@ -26,36 +25,33 @@
     "clean": "rm -rf dist"
   },
   "keywords": [
+    "layer",
     "ai",
-    "llm",
-    "openai",
-    "anthropic",
-    "google",
-    "gemini",
-    "claude",
-    "gpt",
-    "gateway",
-    "proxy",
-    "routing",
-    "fallback"
+    "admin",
+    "management",
+    "gates",
+    "keys",
+    "analytics"
   ],
   "author": "Micah Nettey",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/micah-nettey/layer-ai.git",
-    "directory": "packages/sdk"
+    "directory": "packages/admin"
   },
   "bugs": {
     "url": "https://github.com/micah-nettey/layer-ai/issues"
   },
   "homepage": "https://github.com/micah-nettey/layer-ai#readme",
   "dependencies": {
-    "yaml": "^2.3.4",
-    "zod": "^3.22.4"
+    "@layer-ai/sdk": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@layer-ai/sdk": "^1.0.1"
   }
 }

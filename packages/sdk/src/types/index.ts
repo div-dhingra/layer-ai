@@ -1,4 +1,5 @@
 // Re-export all types from different files
+export * from './client.js';
 export * from './models.js';
 export * from './model-registry.js';
 export * from './gates.js';
