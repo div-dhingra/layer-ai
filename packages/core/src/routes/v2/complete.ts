@@ -179,6 +179,9 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   }
   const userId = req.userId;
 
+  let gateConfig: Gate | null = null;
+  let request: LayerRequest | null = null;
+
   try {
     const rawRequest = req.body;
 
@@ -187,14 +190,14 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       return;
     }
 
-    const gateConfig = await getGateConfig(userId, rawRequest.gate);
+    gateConfig = await getGateConfig(userId, rawRequest.gate);
     if (!gateConfig) {
       res.status(404).json({ error: 'not_found', message: `Gate "${rawRequest.gate}" not found` });
       return;
     }
 
     const requestType = rawRequest.type || gateConfig.taskType || 'chat';
-    const request: LayerRequest = {
+    request = {
       gate: rawRequest.gate,
       type: requestType,
       data: rawRequest.data,
@@ -246,9 +249,9 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
     db.logRequest({
       userId,
-      gateId: null,
+      gateId: gateConfig?.id || null,
       gateName: req.body?.gate || null,
-      modelRequested: null,
+      modelRequested: (request?.model || gateConfig?.model) || 'unknown',
       modelUsed: null,
       promptTokens: 0,
       completionTokens: 0,
