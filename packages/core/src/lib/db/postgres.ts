@@ -249,20 +249,70 @@ export const db = {
     return (result.rowCount ?? 0) > 0;
   },
 
-  // Request Logging 
+  // Request Logging
   async logRequest(data: any): Promise<void> {
     await getPool().query(
       `INSERT INTO requests (
       user_id, gate_id, gate_name, model_requested, model_used, prompt_tokens,
-      completion_tokens, total_tokens, cost_usd, latency_ms, success, 
-      error_message, user_agent, ip_address)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      completion_tokens, total_tokens, cost_usd, latency_ms, success,
+      error_message, user_agent, ip_address, request_payload, response_payload)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
       [
-        data.userId, data.gateId, data.gateName, data.modelRequested, data.modelUsed, data.promptTokens, 
-        data.completionTokens, data.totalTokens, data.costUsd, data.latencyMs, data.success, 
-        data.errorMessage, data.userAgent, data.ipAddress
+        data.userId, data.gateId, data.gateName, data.modelRequested, data.modelUsed, data.promptTokens,
+        data.completionTokens, data.totalTokens, data.costUsd, data.latencyMs, data.success,
+        data.errorMessage, data.userAgent, data.ipAddress,
+        data.requestPayload ? JSON.stringify(data.requestPayload) : '{}',
+        data.responsePayload ? JSON.stringify(data.responsePayload) : null
       ]
     )
+  },
+
+  async getRequestLogs(
+    userId: string,
+    options?: {
+      gateId?: string;
+      success?: boolean;
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<any[]> {
+    const { gateId, success, startDate, endDate, limit = 100, offset = 0 } = options || {};
+
+    let query = 'SELECT * FROM requests WHERE user_id = $1';
+    const params: any[] = [userId];
+    let paramIndex = 2;
+
+    if (gateId) {
+      query += ` AND gate_id = $${paramIndex}`;
+      params.push(gateId);
+      paramIndex++;
+    }
+
+    if (success !== undefined) {
+      query += ` AND success = $${paramIndex}`;
+      params.push(success);
+      paramIndex++;
+    }
+
+    if (startDate) {
+      query += ` AND created_at >= $${paramIndex}`;
+      params.push(startDate);
+      paramIndex++;
+    }
+
+    if (endDate) {
+      query += ` AND created_at <= $${paramIndex}`;
+      params.push(endDate);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+
+    const result = await getPool().query(query, params);
+    return result.rows.map(toCamelCase);
   },
 
   // Session Keys
