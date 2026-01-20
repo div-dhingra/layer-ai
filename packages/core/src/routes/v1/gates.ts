@@ -213,87 +213,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// PATCH /name/:name - Update a gate by name
-router.patch('/name/:name', async (req: Request, res: Response) => {
-  if (!req.userId) {
-    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
-    return;
-  }
-
-  try {
-    const { description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations } = req.body as UpdateGateRequest;
-
-    const existing = await db.getGateByUserAndName(req.userId, req.params.name);
-
-    if (!existing) {
-      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
-      return;
-    }
-
-    if (model && !MODEL_REGISTRY[model]) {
-      res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
-      return;
-    }
-
-    // Detect significant changes before updating
-    const changedFields = detectSignificantChanges(existing, {
-      description,
-      taskType,
-      model,
-      systemPrompt,
-      temperature,
-      maxTokens,
-      topP,
-      routingStrategy,
-      fallbackModels,
-      costWeight,
-      latencyWeight,
-      qualityWeight,
-      analysisMethod,
-      reanalysisPeriod,
-      autoApplyRecommendations,
-    });
-
-    const updated = await db.updateGate(existing.id, {
-      description,
-      taskType,
-      model,
-      systemPrompt,
-      allowOverrides,
-      temperature,
-      maxTokens,
-      topP,
-      tags,
-      routingStrategy,
-      fallbackModels,
-      costWeight,
-      latencyWeight,
-      qualityWeight,
-      analysisMethod,
-      reanalysisPeriod,
-      taskAnalysis,
-      autoApplyRecommendations,
-    });
-
-    // Only create history snapshot if significant changes were detected
-    if (updated && changedFields.length > 0) {
-      await db.createGateHistory(existing.id, updated, 'user', changedFields);
-
-      // Log manual update activity with specific changed fields
-      await db.createActivityLog(existing.id, req.userId, 'manual_update', {
-        changedFields
-      });
-    }
-
-    await cache.invalidateGate(req.userId, existing.name);
-
-    res.json(updated);
-  } catch (error) {
-    console.error('Update gate by name error:', error);
-    res.status(500).json({ error: 'internal_error', message: 'Failed to update gate' });
-  }
-});
-
 // PATCH /:id - Update a gate by ID
 router.patch('/:id', async (req: Request, res: Response) => {
   if (!req.userId) {
@@ -379,31 +298,6 @@ router.patch('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Update gate error:', error);
     res.status(500).json({ error: 'internal_error', message: 'Failed to update gate' });
-  }
-});
-
-// DELETE /name/:name - Delete a gate by name
-router.delete('/name/:name', async (req: Request, res: Response) => {
-  if (!req.userId) {
-    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID' });
-    return;
-  }
-
-  try {
-    const existing = await db.getGateByUserAndName(req.userId, req.params.name);
-
-    if (!existing) {
-      res.status(404).json({ error: 'not_found', message: 'Gate not found' });
-      return;
-    }
-
-    await db.deleteGate(existing.id);
-    await cache.invalidateGate(req.userId, existing.name);
-
-    res.status(204).send();
-  } catch (error) {
-    console.error('Delete gate by name error:', error);
-    res.status(500).json({ error: 'internal_error', message: 'Failed to delete gate' });
   }
 });
 

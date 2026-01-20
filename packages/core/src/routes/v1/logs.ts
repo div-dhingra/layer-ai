@@ -16,6 +16,7 @@ router.get('/', async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = parseInt(req.query.offset as string) || 0;
     const gate = req.query.gate as string | undefined;
+    const success = req.query.success as string | undefined;
 
     let query = `
       SELECT
@@ -31,18 +32,25 @@ router.get('/', async (req: Request, res: Response) => {
         latency_ms,
         success,
         error_message,
+        request_payload,
+        response_payload,
         created_at as logged_at
       FROM requests
       WHERE user_id = $1
     `;
-    
+
     const params: any[] = [userId];
 
     if (gate) {
       query += ` AND gate_id = $2`;
       params.push(gate);
     }
-    
+
+    if (success !== undefined) {
+      query += ` AND success = $${params.length + 1}`;
+      params.push(success === 'true');
+    }
+
     query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
@@ -61,6 +69,8 @@ router.get('/', async (req: Request, res: Response) => {
       latencyMs: row.latency_ms,
       success: row.success,
       errorMessage: row.error_message,
+      requestPayload: row.request_payload,
+      responsePayload: row.response_payload,
       loggedAt: row.logged_at,
     }));
 
