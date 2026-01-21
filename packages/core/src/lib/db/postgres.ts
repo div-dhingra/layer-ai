@@ -386,7 +386,7 @@ export const db = {
   ): Promise<ProviderKey | null> {
     const result = await getPool().query(
       `UPDATE provider_keys
-       SET encrypted_key = $3, key_prefix = $4, deleted_at = NULL, updated_at = NOW()
+       SET encrypted_key = $3, key_prefix = $4, deleted_at = NULL, is_active = true, updated_at = NOW()
        WHERE user_id = $1 AND provider = $2
        RETURNING *`,
       [userId, provider, JSON.stringify(encryptedKey), keyPrefix]
@@ -400,6 +400,17 @@ export const db = {
       [userId, provider]
     );
     return (result.rowCount ?? 0) > 0;
+  },
+
+  async toggleProviderKeyActive(userId: string, provider: string, isActive: boolean): Promise<ProviderKey | null> {
+    const result = await getPool().query(
+      `UPDATE provider_keys
+       SET is_active = $3, updated_at = NOW()
+       WHERE user_id = $1 AND provider = $2 AND deleted_at IS NULL
+       RETURNING *`,
+      [userId, provider, isActive]
+    );
+    return result.rows[0] ? toCamelCase(result.rows[0]) : null;
   },
 
   async hardDeleteProviderKey(userId: string, provider: string): Promise<boolean> {
