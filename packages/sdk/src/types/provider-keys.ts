@@ -12,6 +12,7 @@ export interface ProviderKey {
   provider: string;
   encryptedKey: EncryptedData;
   keyPrefix: string;
+  isActive: boolean;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;

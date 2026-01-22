@@ -63,6 +63,11 @@ async function getUserProviderKey(userId: string, provider: Provider): Promise<s
     return null;
   }
 
+  // Check if key is active
+  if (!providerKey.isActive) {
+    return null;
+  }
+
   // Decrypt the key
   const decryptedKey = decrypt(providerKey.encryptedKey, encryptionKey);
   return decryptedKey;
