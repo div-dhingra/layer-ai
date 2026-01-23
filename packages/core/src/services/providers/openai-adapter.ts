@@ -96,17 +96,17 @@ export class OpenAIAdapter extends BaseProviderAdapter {
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
     // Resolve API key (BYOK → Platform key)
-    const apiKey = await resolveApiKey(this.provider, userId, process.env.OPENAI_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.OPENAI_API_KEY);
 
     switch (request.type) {
       case 'chat':
-        return this.handleChat(request, apiKey);
+        return this.handleChat(request, resolved.key, resolved.usedPlatformKey);
       case 'image':
-        return this.handleImageGeneration(request, apiKey);
+        return this.handleImageGeneration(request, resolved.key, resolved.usedPlatformKey);
       case 'embeddings':
-        return this.handleEmbeddings(request, apiKey);
+        return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
       case 'tts':
-        return this.handleTextToSpeech(request, apiKey);
+        return this.handleTextToSpeech(request, resolved.key, resolved.usedPlatformKey);
       case 'video':
         throw new Error('Video generation not yet supported by OpenAI');
       default:
@@ -114,7 +114,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
     }
   }
 
-  private async handleChat(request: Extract<LayerRequest, { type: 'chat' }>, apiKey: string): Promise<LayerResponse> {
+  private async handleChat(request: Extract<LayerRequest, { type: 'chat' }>, apiKey: string, usedPlatformKey: boolean): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getOpenAIClient(apiKey);
     const { data: chat, model } = request;
@@ -217,11 +217,12 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       },
       cost,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
-  private async handleImageGeneration(request: Extract<LayerRequest, { type: 'image' }>, apiKey: string): Promise<LayerResponse> {
+  private async handleImageGeneration(request: Extract<LayerRequest, { type: 'image' }>, apiKey: string, usedPlatformKey: boolean): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getOpenAIClient(apiKey);
     const { data: image, model } = request;
@@ -246,11 +247,12 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       })),
       model: model,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
-  private async handleEmbeddings(request: Extract<LayerRequest, { type: 'embeddings' }>, apiKey: string): Promise<LayerResponse> {
+  private async handleEmbeddings(request: Extract<LayerRequest, { type: 'embeddings' }>, apiKey: string, usedPlatformKey: boolean): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getOpenAIClient(apiKey);
     const { data: embedding, model } = request;
@@ -279,11 +281,12 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       },
       cost,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
-  private async handleTextToSpeech(request: Extract<LayerRequest, { type: 'tts' }>, apiKey: string): Promise<LayerResponse> {
+  private async handleTextToSpeech(request: Extract<LayerRequest, { type: 'tts' }>, apiKey: string, usedPlatformKey: boolean): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getOpenAIClient(apiKey);
     const { data: tts, model } = request;
@@ -310,6 +313,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       },
       model: model,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
     };
   }
 

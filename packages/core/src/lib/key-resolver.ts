@@ -8,24 +8,29 @@
 import type { Provider } from './provider-constants.js';
 import { decrypt } from './encryption.js';
 
+export interface ResolvedKey {
+  key: string;
+  usedPlatformKey: boolean;
+}
+
 /**
  * Resolves the API key to use for a provider
  * @param provider - The provider name
  * @param userId - Optional user ID for BYOK lookup
  * @param platformKey - The platform's API key (fallback)
- * @returns The API key to use
+ * @returns The API key to use and whether platform key was used
  */
 export async function resolveApiKey(
   provider: Provider,
   userId: string | undefined,
   platformKey: string | undefined
-): Promise<string> {
+): Promise<ResolvedKey> {
   // If userId is provided, check for BYOK key
   if (userId) {
     try {
       const byokKey = await getUserProviderKey(userId, provider);
       if (byokKey) {
-        return byokKey;
+        return { key: byokKey, usedPlatformKey: false };
       }
     } catch (error) {
       console.error(`Failed to fetch BYOK key for user ${userId}, provider ${provider}:`, error);
@@ -35,7 +40,7 @@ export async function resolveApiKey(
 
   // Fallback to platform key
   if (platformKey) {
-    return platformKey;
+    return { key: platformKey, usedPlatformKey: true };
   }
 
   throw new Error(`No API key available for provider: ${provider}`);

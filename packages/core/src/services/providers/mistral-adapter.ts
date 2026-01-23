@@ -57,15 +57,15 @@ export class MistralAdapter extends BaseProviderAdapter {
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
     // Resolve API key (BYOK → Platform key)
-    const apiKey = await resolveApiKey(this.provider, userId, process.env.MISTRAL_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.MISTRAL_API_KEY);
 
     switch (request.type) {
       case 'chat':
-        return this.handleChat(request, apiKey);
+        return this.handleChat(request, resolved.key, resolved.usedPlatformKey);
       case 'embeddings':
-        return this.handleEmbeddings(request, apiKey);
+        return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
       case 'ocr':
-        return this.handleOCR(request, apiKey);
+        return this.handleOCR(request, resolved.key, resolved.usedPlatformKey);
       case 'image':
         throw new Error('Image generation not supported by Mistral');
       case 'tts':
@@ -79,7 +79,8 @@ export class MistralAdapter extends BaseProviderAdapter {
 
   private async handleChat(
     request: Extract<LayerRequest, { type: 'chat' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const mistral = getMistralClient(apiKey);
@@ -264,13 +265,15 @@ export class MistralAdapter extends BaseProviderAdapter {
       },
       cost,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
   private async handleEmbeddings(
     request: Extract<LayerRequest, { type: 'embeddings' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const mistral = getMistralClient(apiKey);
@@ -304,13 +307,15 @@ export class MistralAdapter extends BaseProviderAdapter {
       },
       cost,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
   private async handleOCR(
     request: Extract<LayerRequest, { type: 'ocr' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const mistral = getMistralClient(apiKey);
@@ -381,6 +386,7 @@ export class MistralAdapter extends BaseProviderAdapter {
       },
       model: response.model || ocrModel,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }

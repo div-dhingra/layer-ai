@@ -327,6 +327,7 @@ export interface LayerResponse {
   stream?: boolean;
   cost?: number;
   latencyMs?: number;
+  usedPlatformKey?: boolean;
   raw?: unknown;
 }
 
