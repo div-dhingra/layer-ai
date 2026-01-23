@@ -77,19 +77,19 @@ export class GoogleAdapter extends BaseProviderAdapter {
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
     // Resolve API key (BYOK → Platform key)
-    const apiKey = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
 
     switch (request.type) {
       case 'chat':
-        return this.handleChat(request, apiKey);
+        return this.handleChat(request, resolved.key, resolved.usedPlatformKey);
       case 'image':
-        return this.handleImageGeneration(request, apiKey);
+        return this.handleImageGeneration(request, resolved.key, resolved.usedPlatformKey);
       case 'embeddings':
-        return this.handleEmbeddings(request, apiKey);
+        return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
       case 'tts':
-        return this.handleTextToSpeech(request, apiKey);
+        return this.handleTextToSpeech(request, resolved.key, resolved.usedPlatformKey);
       case 'video':
-        return this.handleVideoGeneration(request, apiKey);
+        return this.handleVideoGeneration(request, resolved.key, resolved.usedPlatformKey);
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
     }
@@ -97,7 +97,8 @@ export class GoogleAdapter extends BaseProviderAdapter {
 
   private async handleChat(
     request: Extract<LayerRequest, { type: 'chat' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getGoogleClient(apiKey);
@@ -273,13 +274,15 @@ export class GoogleAdapter extends BaseProviderAdapter {
       },
       cost,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
   private async handleImageGeneration(
     request: Extract<LayerRequest, { type: 'image' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getGoogleClient(apiKey);
@@ -308,13 +311,15 @@ export class GoogleAdapter extends BaseProviderAdapter {
       images,
       model: model,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
   private async handleEmbeddings(
     request: Extract<LayerRequest, { type: 'embeddings' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getGoogleClient(apiKey);
@@ -344,13 +349,15 @@ export class GoogleAdapter extends BaseProviderAdapter {
         totalTokens: 0,
       },
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
 
   private async handleVideoGeneration(
     request: Extract<LayerRequest, { type: 'video' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getGoogleClient(apiKey);
@@ -460,13 +467,15 @@ export class GoogleAdapter extends BaseProviderAdapter {
       videos: videos.filter((v) => v.url),
       model: model!,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: operation.response,
     };
   }
 
   private async handleTextToSpeech(
     request: Extract<LayerRequest, { type: 'tts' }>,
-    apiKey: string
+    apiKey: string,
+    usedPlatformKey: boolean
   ): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getGoogleClient(apiKey);
@@ -501,6 +510,7 @@ export class GoogleAdapter extends BaseProviderAdapter {
       },
       model: model,
       latencyMs: Date.now() - startTime,
+      usedPlatformKey,
       raw: response,
     };
   }
