@@ -7,7 +7,7 @@ async function testFallbackRouting() {
   console.log('Test 1: Fallback routing (Anthropic -> OpenAI)\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate-with-fallback',
+    gateId: 'test-gate-with-fallback',
     model: 'claude-sonnet-4-5-20250929', // Primary model
     type: 'chat',
     data: {
@@ -34,7 +34,7 @@ async function testRoundRobinRouting() {
   console.log('\n\nTest 2: Round-robin routing across providers\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate-with-round-robin',
+    gateId: 'test-gate-with-round-robin',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -60,7 +60,7 @@ async function testCrossProviderFallback() {
   console.log('\n\nTest 3: Cross-provider fallback with vision\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate-vision-fallback',
+    gateId: 'test-gate-vision-fallback',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -91,7 +91,7 @@ async function testToolCallsFallback() {
   console.log('\n\nTest 4: Fallback routing with tool calls\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate-tools-fallback',
+    gateId: 'test-gate-tools-fallback',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -133,7 +133,7 @@ async function testCostOptimization() {
   console.log('\n\nTest 5: Cost optimization with round-robin\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate-cost-optimization',
+    gateId: 'test-gate-cost-optimization',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {

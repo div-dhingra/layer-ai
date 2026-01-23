@@ -8,7 +8,7 @@ async function testChatCompletion() {
   console.log('Testing chat completion...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gemini-2.5-flash',
     type: 'chat',
     data: {
@@ -33,7 +33,7 @@ async function testChatWithVision() {
   console.log('Testing chat with vision...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gemini-2.5-flash',
     type: 'chat',
     data: {
@@ -62,7 +62,7 @@ async function testImageGeneration() {
   console.log('Testing image generation...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'imagen-4.0-generate-001',
     type: 'image',
     data: {
@@ -82,7 +82,7 @@ async function testEmbeddings() {
   console.log('Testing embeddings...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'text-embedding-004',
     type: 'embeddings',
     data: {
@@ -101,7 +101,7 @@ async function testToolCalling() {
 
   // Step 1: Send message with tools available
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gemini-2.5-flash',
     type: 'chat',
     data: {
@@ -142,7 +142,7 @@ async function testToolCalling() {
 
   // Step 2: Send tool response back
   const toolResponseRequest: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gemini-2.5-flash',
     type: 'chat',
     data: {
@@ -172,7 +172,7 @@ async function testEmbeddingsMultiple() {
   console.log('Testing multiple embeddings...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'text-embedding-004',
     type: 'embeddings',
     data: {
@@ -191,7 +191,7 @@ async function testTextToSpeech() {
   console.log('Testing text-to-speech...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gemini-2.5-flash-preview-tts',
     type: 'tts',
     data: {
@@ -211,7 +211,7 @@ async function testVideoGeneration() {
   console.log('Testing video generation (this may take a few minutes)...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'veo-2.0-generate-001',
     type: 'video',
     data: {

@@ -7,7 +7,7 @@ async function testBasicChat() {
   console.log('Test 1: Basic chat completion with OpenAI\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -33,7 +33,7 @@ async function testVision() {
   console.log('\n\nTest 2: Vision with GPT-4o\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o',
     type: 'chat',
     data: {
@@ -59,7 +59,7 @@ async function testToolCalls() {
   console.log('\n\nTest 3: Tool calls with GPT-4\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -98,7 +98,7 @@ async function testImageGeneration() {
   console.log('\n\nTest 4: Image generation with DALL-E\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'dall-e-3',
     type: 'image',
     data: {
@@ -118,7 +118,7 @@ async function testEmbeddings() {
   console.log('\n\nTest 5: Text embeddings\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'text-embedding-3-small',
     type: 'embeddings',
     data: {
@@ -136,7 +136,7 @@ async function testTextToSpeech() {
   console.log('\n\nTest 6: Text-to-speech\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'tts-1',
     type: 'tts',
     data: {
@@ -155,7 +155,7 @@ async function testResponseFormat() {
   console.log('\n\nTest 7: JSON response format\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {

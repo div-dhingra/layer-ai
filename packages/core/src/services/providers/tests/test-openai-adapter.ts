@@ -7,7 +7,7 @@ async function testChatCompletion() {
   console.log('Testing chat completion...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -32,7 +32,7 @@ async function testChatWithVision() {
   console.log('Testing chat with vision...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -60,7 +60,7 @@ async function testImageGeneration() {
   console.log('Testing image generation...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'dall-e-3',
     type: 'image',
     data: {
@@ -82,7 +82,7 @@ async function testEmbeddings() {
   console.log('Testing embeddings...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'text-embedding-3-small',
     type: 'embeddings',
     data: {
@@ -101,7 +101,7 @@ async function testTextToSpeech() {
   console.log('Testing text-to-speech...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'tts-1',
     type: 'tts',
     data: {
@@ -123,7 +123,7 @@ async function testToolCalling() {
 
   // Step 1: Initial request with tool available
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -168,7 +168,7 @@ async function testToolCalling() {
 
   // Step 2: Send tool response back
   const toolResponseRequest: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
@@ -199,7 +199,7 @@ async function testContentAndToolCalls() {
 
   // This tests the fix we made - assistant messages can have BOTH content and toolCalls
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'gpt-4o-mini',
     type: 'chat',
     data: {
