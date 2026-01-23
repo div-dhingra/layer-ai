@@ -7,7 +7,7 @@ async function testBasicChat() {
   console.log('Test 1: Basic chat completion with Anthropic\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -34,7 +34,7 @@ async function testVision() {
   console.log('\n\nTest 2: Vision with Anthropic (not supported in v1)\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -59,7 +59,7 @@ async function testToolCalls() {
   console.log('\n\nTest 3: Tool calls with Anthropic (not supported in v1)\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -99,7 +99,7 @@ async function testSystemPrompt() {
   console.log('\n\nTest 4: System prompt and advanced params\n');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {

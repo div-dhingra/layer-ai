@@ -381,7 +381,7 @@ router.post('/test', async (req: Request, res: Response) => {
     try {
       const request: LayerRequest = {
         type: 'chat',
-        gate: finalGate.name || 'test-gate',
+        gateId: finalGate.id,
         model: finalGate.model,
         data: {
           messages,
@@ -420,7 +420,7 @@ router.post('/test', async (req: Request, res: Response) => {
         try {
           const request: LayerRequest = {
             type: 'chat',
-            gate: finalGate.name || 'test-gate',
+            gateId: finalGate.id,
             model: fallbackModel,
             data: {
               messages,

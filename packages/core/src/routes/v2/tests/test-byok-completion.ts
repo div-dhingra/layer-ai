@@ -16,7 +16,7 @@ import type { LayerRequest } from '@layer-ai/sdk';
 const TEST_USER_ID = 'ebd64998-465d-4211-ad67-87b4e01ad0da';
 
 const SIMPLE_REQUEST: LayerRequest = {
-  gate: 'byok-test',
+  gateId: 'byok-test',
   model: 'gpt-4o-mini',
   type: 'chat',
   data: {

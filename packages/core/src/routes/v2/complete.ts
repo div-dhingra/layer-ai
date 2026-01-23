@@ -25,34 +25,6 @@ function isOverrideAllowed(allowOverrides: boolean | OverrideConfig | undefined 
   return allowOverrides[field] ?? false;
 }
 
-async function getGateConfig(userId: string, gateIdentifier: string): Promise<Gate | null> {
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gateIdentifier);
-
-  let gateConfig: Gate | null = null;
-
-  if (isUUID) {
-    gateConfig = await cache.getGateById(userId, gateIdentifier);
-
-    if (!gateConfig) {
-      gateConfig = await db.getGateByUserAndId(userId, gateIdentifier);
-      if (gateConfig) {
-        await cache.setGate(userId, gateConfig.name, gateConfig);
-      }
-    }
-  } else {
-    gateConfig = await cache.getGate(userId, gateIdentifier);
-
-    if (!gateConfig) {
-      gateConfig = await db.getGateByUserAndName(userId, gateIdentifier);
-      if (gateConfig) {
-        await cache.setGate(userId, gateIdentifier, gateConfig);
-      }
-    }
-  }
-
-  return gateConfig;
-}
-
 function resolveFinalRequest(
   gateConfig: Gate,
   request: LayerRequest
@@ -185,20 +157,26 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   try {
     const rawRequest = req.body;
 
-    if (!rawRequest.gate) {
-      res.status(400).json({ error: 'bad_request', message: 'Missing required field: gate' });
+    if (!rawRequest.gateId) {
+      res.status(400).json({ error: 'bad_request', message: 'Missing required field: gateId' });
       return;
     }
 
-    gateConfig = await getGateConfig(userId, rawRequest.gate);
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawRequest.gateId);
+    if (!isUUID) {
+      res.status(400).json({ error: 'bad_request', message: 'gateId must be a valid UUID. Gate names are no longer supported.' });
+      return;
+    }
+
+    gateConfig = await db.getGateByUserAndId(userId, rawRequest.gateId);
     if (!gateConfig) {
-      res.status(404).json({ error: 'not_found', message: `Gate "${rawRequest.gate}" not found` });
+      res.status(404).json({ error: 'not_found', message: `Gate with ID "${rawRequest.gateId}" not found` });
       return;
     }
 
     const requestType = rawRequest.type || gateConfig.taskType || 'chat';
     request = {
-      gate: rawRequest.gate,
+      gateId: rawRequest.gateId,
       type: requestType,
       data: rawRequest.data,
       model: rawRequest.model,
@@ -221,7 +199,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     db.logRequest({
       userId,
       gateId: gateConfig.id,
-      gateName: request.gate,
+      gateName: gateConfig.name,
       modelRequested: request.model || gateConfig.model,
       modelUsed: modelUsed,
       promptTokens: result.usage?.promptTokens || 0,

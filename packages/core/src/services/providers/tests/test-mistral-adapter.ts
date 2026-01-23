@@ -11,7 +11,7 @@ async function testChatCompletion() {
   console.log('--- Testing Chat Completion ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'mistral-small-latest',
     data: {
@@ -39,7 +39,7 @@ async function testChatWithSystemPrompt() {
   console.log('--- Testing Chat with System Prompt ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'mistral-small-latest',
     data: {
@@ -65,7 +65,7 @@ async function testChatWithTools() {
   console.log('--- Testing Chat with Tools ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'mistral-small-latest',
     data: {
@@ -116,7 +116,7 @@ async function testToolResponse() {
 
   // First, get the tool call
   const initialRequest: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'mistral-small-latest',
     data: {
@@ -162,7 +162,7 @@ async function testToolResponse() {
     await delay(2000);
 
     const followUpRequest: LayerRequest = {
-      gate: 'test-gate',
+      gateId: 'test-gate',
       type: 'chat',
       model: 'mistral-small-latest',
       data: {
@@ -197,7 +197,7 @@ async function testEmbeddings() {
   console.log('--- Testing Embeddings ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'embeddings',
     model: 'mistral-embed',
     data: {
@@ -218,7 +218,7 @@ async function testVisionCapability() {
 
   // Use a public image URL for testing
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'pixtral-large-2411',
     data: {
@@ -251,7 +251,7 @@ async function testResponseFormat() {
   console.log('--- Testing JSON Response Format ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'mistral-small-latest',
     data: {
@@ -275,7 +275,7 @@ async function testMultiTurn() {
   console.log('--- Testing Multi-turn Conversation ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'chat',
     model: 'mistral-small-latest',
     data: {
@@ -306,7 +306,7 @@ async function testOCR() {
   console.log('--- Testing OCR Capability ---');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'ocr',
     model: 'mistral-ocr-latest',
     data: {
@@ -330,7 +330,7 @@ async function testUnsupportedModality() {
   console.log('--- Testing Unsupported Modality (Image Generation) ---');
 
   const request = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     type: 'image',
     model: 'mistral-large-latest',
     data: {

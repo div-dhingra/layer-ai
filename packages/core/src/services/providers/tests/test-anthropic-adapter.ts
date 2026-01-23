@@ -7,7 +7,7 @@ async function testChatCompletion() {
   console.log('Testing chat completion...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -32,7 +32,7 @@ async function testChatWithVision() {
   console.log('Testing chat with vision...');
 
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -60,7 +60,7 @@ async function testToolCalls() {
 
   // Step 1: Initial request with tool available
   const request: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {
@@ -105,7 +105,7 @@ async function testToolCalls() {
 
   // Step 2: Send tool response back
   const toolResponseRequest: LayerRequest = {
-    gate: 'test-gate',
+    gateId: 'test-gate',
     model: 'claude-sonnet-4-5-20250929',
     type: 'chat',
     data: {

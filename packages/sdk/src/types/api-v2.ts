@@ -99,20 +99,14 @@ export const ADAPTER_HANDLED = '__ADAPTER_HANDLED__';
 
 type BaseRequest = {
   /**
-   * Gate identifier. Use gate ID (recommended) or gate name.
-   *
-   * @deprecated Using gate names is deprecated. Use gate IDs instead for better stability.
-   * Gate names can change, but IDs remain constant. Find your gate ID in the dashboard.
+   * Gate identifier. Use gate ID.
    *
    * @example
-   * // Recommended: Use gate ID
    * gate: "123e4567-e89b-12d3-a456-426614174000"
-   *
-   * // Deprecated: Using gate name
-   * gate: "customer-support"
    */
-  gate: string;
-  model?: string;
+  gateId: string; // required: Gate UUID only
+  gateName?: string; // optional: for display purposes only
+  model?: string; // overrides the model in code if provided
   metadata?: Record<string, unknown>;
 };
 
