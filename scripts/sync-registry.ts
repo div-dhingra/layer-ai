@@ -19,6 +19,7 @@ interface ModelEntry {
     input?: number;
     output?: number;
   };
+  imagePricing?: Record<string, number> | number;
   benchmarks?: {
     intelligence?: number;
     coding?: number;
@@ -122,6 +123,19 @@ function formatModelEntry(model: ModelEntry, indent: string = '    '): string {
 
   if (model.pricing) {
     lines.push(`${indent}pricing: { ${model.pricing.input !== undefined ? `input: ${model.pricing.input}` : ''}${model.pricing.input !== undefined && model.pricing.output !== undefined ? ', ' : ''}${model.pricing.output !== undefined ? `output: ${model.pricing.output}` : ''} },`);
+  }
+
+  if (model.imagePricing !== undefined) {
+    if (typeof model.imagePricing === 'number') {
+      // Flat rate pricing
+      lines.push(`${indent}imagePricing: ${model.imagePricing},`);
+    } else {
+      // Structured pricing per size/quality
+      const pricingParts = Object.entries(model.imagePricing)
+        .map(([key, value]) => `'${key}': ${value}`)
+        .join(', ');
+      lines.push(`${indent}imagePricing: { ${pricingParts} },`);
+    }
   }
 
   if (model.benchmarks) {
@@ -270,6 +284,7 @@ export interface ChatModelEntry extends BaseModelEntry {
 // Image generation models
 export interface ImageModelEntry extends BaseModelEntry {
   type: 'image';
+  imagePricing?: number | Record<string, number>;  // Flat rate or per-size/quality pricing
 }
 
 // Video generation models
