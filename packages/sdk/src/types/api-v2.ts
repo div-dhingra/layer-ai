@@ -110,6 +110,15 @@ type BaseRequest = {
   metadata?: Record<string, unknown>;
 };
 
+/**
+ * Task type determines how request data is interpreted.
+ * When omitted, defaults to the gate's configured taskType.
+ */
+export type TaskType = 'chat' | 'image' | 'video' | 'embeddings' | 'tts' | 'ocr';
+
+/**
+ * Internal LayerRequest type with required type field (used by API after type resolution)
+ */
 export type LayerRequest =
   | (BaseRequest & { type: 'chat'; data: ChatRequest })
   | (BaseRequest & { type: 'image'; data: ImageGenerationRequest })
@@ -117,6 +126,18 @@ export type LayerRequest =
   | (BaseRequest & { type: 'embeddings'; data: EmbeddingsRequest })
   | (BaseRequest & { type: 'tts'; data: TextToSpeechRequest })
   | (BaseRequest & { type: 'ocr'; data: OCRRequest });
+
+/**
+ * User-facing LayerRequest type with optional type field.
+ * Type defaults to gate's taskType when omitted, but can be overridden.
+ */
+export type LayerRequestInput =
+  | (BaseRequest & { type?: 'chat'; data: ChatRequest })
+  | (BaseRequest & { type?: 'image'; data: ImageGenerationRequest })
+  | (BaseRequest & { type?: 'video'; data: VideoGenerationRequest })
+  | (BaseRequest & { type?: 'embeddings'; data: EmbeddingsRequest })
+  | (BaseRequest & { type?: 'tts'; data: TextToSpeechRequest })
+  | (BaseRequest & { type?: 'ocr'; data: OCRRequest });
 
 // ====== CHAT/COMPLETION REQUEST ======
 

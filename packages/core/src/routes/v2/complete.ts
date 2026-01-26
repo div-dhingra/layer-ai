@@ -230,7 +230,17 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       return;
     }
 
-    const requestType = rawRequest.type || gateConfig.taskType || 'chat';
+    // Default to gate's taskType, allow override via request.type
+    const requestType = rawRequest.type || gateConfig.taskType;
+
+    // Warn if request type doesn't match gate's taskType (possible misconfiguration)
+    if (rawRequest.type && gateConfig.taskType && rawRequest.type !== gateConfig.taskType) {
+      console.warn(
+        `[Type Mismatch] Gate "${gateConfig.name}" (${gateConfig.id}) configured for taskType="${gateConfig.taskType}" ` +
+        `but received request with type="${rawRequest.type}". Using request type as override.`
+      );
+    }
+
     request = {
       gateId: rawRequest.gateId,
       type: requestType,

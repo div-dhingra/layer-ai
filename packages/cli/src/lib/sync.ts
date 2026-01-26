@@ -15,6 +15,7 @@ export async function pullGatesToConfig(
     const config: GateConfig = {
       name: gate.name,
       model: gate.model,
+      taskType: gate.taskType,
     };
 
     if (gate.description) config.description = gate.description;
