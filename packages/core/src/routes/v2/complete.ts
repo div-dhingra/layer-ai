@@ -29,7 +29,6 @@ function resolveFinalRequest(
   gateConfig: Gate,
   request: LayerRequest
 ): LayerRequest {
-  const finalRequest = { ...request };
   let finalModel = gateConfig.model;
 
   if (request.model && isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Model)) {
@@ -39,37 +38,94 @@ function resolveFinalRequest(
       finalModel = gateConfig.model;
     }
   }
-  finalRequest.model = normalizeModelId(finalModel);
 
-  if (request.type === 'chat') {
-    const chatData = { ...request.data };
+  // Use discriminated union to handle each request type
+  switch (request.type) {
+    case 'chat': {
+      const chatData = { ...request.data };
 
-    if (!chatData.systemPrompt && gateConfig.systemPrompt) {
-      chatData.systemPrompt = gateConfig.systemPrompt;
+      if (!chatData.systemPrompt && gateConfig.systemPrompt) {
+        chatData.systemPrompt = gateConfig.systemPrompt;
+      }
+
+      if (chatData.temperature === undefined && gateConfig.temperature !== undefined) {
+        chatData.temperature = gateConfig.temperature;
+      } else if (chatData.temperature !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Temperature)) {
+        chatData.temperature = gateConfig.temperature;
+      }
+
+      if (chatData.maxTokens === undefined && gateConfig.maxTokens !== undefined) {
+        chatData.maxTokens = gateConfig.maxTokens;
+      } else if (chatData.maxTokens !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.MaxTokens)) {
+        chatData.maxTokens = gateConfig.maxTokens;
+      }
+
+      if (chatData.topP === undefined && gateConfig.topP !== undefined) {
+        chatData.topP = gateConfig.topP;
+      } else if (chatData.topP !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.TopP)) {
+        chatData.topP = gateConfig.topP;
+      }
+
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+        data: chatData,
+      };
     }
 
-    if (chatData.temperature === undefined && gateConfig.temperature !== undefined) {
-      chatData.temperature = gateConfig.temperature;
-    } else if (chatData.temperature !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Temperature)) {
-      chatData.temperature = gateConfig.temperature;
+    case 'image': {
+      // TODO: Future enhancement - intelligently apply gate-level defaults
+      // Potential features:
+      // - Apply systemPrompt by intelligently merging with user prompt
+      // - Support defaults for size, quality, style, count
+      // - Make this opt-in with a gate setting (e.g., applySystemPromptToAllTasks)
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };
     }
 
-    if (chatData.maxTokens === undefined && gateConfig.maxTokens !== undefined) {
-      chatData.maxTokens = gateConfig.maxTokens;
-    } else if (chatData.maxTokens !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.MaxTokens)) {
-      chatData.maxTokens = gateConfig.maxTokens;
+    case 'video': {
+      // TODO: Future enhancement - intelligently apply gate-level defaults
+      // Similar to image generation, could support systemPrompt integration
+      // and video-specific defaults (duration, size, fps)
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };
     }
 
-    if (chatData.topP === undefined && gateConfig.topP !== undefined) {
-      chatData.topP = gateConfig.topP;
-    } else if (chatData.topP !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.TopP)) {
-      chatData.topP = gateConfig.topP;
+    case 'embeddings': {
+      // Embeddings are deterministic and don't typically need gate-level defaults
+      // beyond model selection (already handled)
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };
     }
 
-    finalRequest.data = chatData;
+    case 'tts': {
+      // TODO: Future enhancement - support defaults for voice, speed, format
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };
+    }
+
+    case 'ocr': {
+      // TODO: Future enhancement - support defaults for tableFormat, includeImageBase64, etc.
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };
+    }
+
+    default: {
+      // This will cause a TypeScript error if we miss a case
+      const exhaustiveCheck: never = request;
+      throw new Error(`Unhandled request type: ${(exhaustiveCheck as LayerRequest).type}`);
+    }
   }
-
-  return finalRequest;
 }
 
 function getModelsToTry(gateConfig: Gate, primaryModel: SupportedModel): SupportedModel[] {
@@ -174,7 +230,17 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       return;
     }
 
-    const requestType = rawRequest.type || gateConfig.taskType || 'chat';
+    // Default to gate's taskType, allow override via request.type
+    const requestType = rawRequest.type || gateConfig.taskType;
+
+    // Warn if request type doesn't match gate's taskType (possible misconfiguration)
+    if (rawRequest.type && gateConfig.taskType && rawRequest.type !== gateConfig.taskType) {
+      console.warn(
+        `[Type Mismatch] Gate "${gateConfig.name}" (${gateConfig.id}) configured for taskType="${gateConfig.taskType}" ` +
+        `but received request with type="${rawRequest.type}". Using request type as override.`
+      );
+    }
+
     request = {
       gateId: rawRequest.gateId,
       type: requestType,
@@ -183,11 +249,44 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       metadata: rawRequest.metadata
     } as LayerRequest;
 
-    if (request.type === 'chat') {
-      if (!request.data.messages || !Array.isArray(request.data.messages) || request.data.messages.length === 0) {
-        res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.messages' });
-        return;
-      }
+    // Validate required fields based on request type
+    switch (request.type) {
+      case 'chat':
+        if (!request.data.messages || !Array.isArray(request.data.messages) || request.data.messages.length === 0) {
+          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.messages' });
+          return;
+        }
+        break;
+      case 'image':
+        if (!request.data.prompt) {
+          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.prompt' });
+          return;
+        }
+        break;
+      case 'video':
+        if (!request.data.prompt) {
+          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.prompt' });
+          return;
+        }
+        break;
+      case 'embeddings':
+        if (!request.data.input) {
+          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.input' });
+          return;
+        }
+        break;
+      case 'tts':
+        if (!request.data.input) {
+          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.input' });
+          return;
+        }
+        break;
+      case 'ocr':
+        if (!request.data.documentUrl && !request.data.imageUrl && !request.data.base64) {
+          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data must contain one of documentUrl, imageUrl, or base64' });
+          return;
+        }
+        break;
     }
 
     const finalRequest = resolveFinalRequest(gateConfig, request);

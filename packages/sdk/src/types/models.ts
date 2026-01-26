@@ -29,10 +29,10 @@ export interface GateBase {
   // Required fields
   name: string;
   model: SupportedModel;
+  taskType: ModelType; // Required: determines what kind of task this gate handles
 
   // Optional public fields
   description?: string;
-  taskType?: ModelType;
   systemPrompt?: string;
   allowOverrides?: boolean | OverrideConfig;
   temperature?: number;
