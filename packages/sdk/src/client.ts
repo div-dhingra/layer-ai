@@ -1,5 +1,5 @@
 import type { LayerConfig, RequestOptions } from './types/index.js';
-import type { ErrorResponse, LayerRequest, LayerResponse } from './types/index.js';
+import type { ErrorResponse, LayerRequestInput, LayerResponse } from './types/index.js';
 
 export class Layer {
   private apiKey: string;
@@ -41,7 +41,7 @@ export class Layer {
     return data as T;
   }
 
-  async complete(request: LayerRequest): Promise<LayerResponse> {
+  async complete(request: LayerRequestInput): Promise<LayerResponse> {
     return this.request<LayerResponse>({
       method: 'POST',
       path: '/v2/complete',
