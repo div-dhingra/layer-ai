@@ -1,5 +1,5 @@
 import type { LayerConfig, RequestOptions } from './types/index.js';
-import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest } from './types/index.js';
+import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest, ImageGenerationRequest } from './types/index.js';
 
 export class Layer {
   private apiKey: string;
@@ -62,6 +62,23 @@ export class Layer {
     return this.request<LayerResponse>({
       method: 'POST',
       path: '/v3/chat',
+      body: request,
+    });
+  }
+
+  /**
+   * v3 Image generation endpoint - Type-safe image requests
+   * @param request - Image request with gateId and ImageGenerationRequest data
+   */
+  async image(request: {
+    gateId: string;
+    data: ImageGenerationRequest;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v3/image',
       body: request,
     });
   }
