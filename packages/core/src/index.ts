@@ -10,6 +10,7 @@ export { default as completeRouter } from './routes/v2/complete.js';
 // v3 routes
 export { default as chatRouter } from './routes/v3/chat.js';
 export { default as imageRouter } from './routes/v3/image.js';
+export { default as videoRouter } from './routes/v3/video.js';
 
 // Middleware
 export { authenticate } from './middleware/auth.js';

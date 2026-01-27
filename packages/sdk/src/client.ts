@@ -1,5 +1,5 @@
 import type { LayerConfig, RequestOptions } from './types/index.js';
-import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest, ImageGenerationRequest } from './types/index.js';
+import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest, ImageGenerationRequest, VideoGenerationRequest } from './types/index.js';
 
 export class Layer {
   private apiKey: string;
@@ -79,6 +79,23 @@ export class Layer {
     return this.request<LayerResponse>({
       method: 'POST',
       path: '/v3/image',
+      body: request,
+    });
+  }
+
+  /**
+   * v3 Video generation endpoint - Type-safe video requests
+   * @param request - Video request with gateId and VideoGenerationRequest data
+   */
+  async video(request: {
+    gateId: string;
+    data: VideoGenerationRequest;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v3/video',
       body: request,
     });
   }
