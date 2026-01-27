@@ -1,5 +1,5 @@
 import type { LayerConfig, RequestOptions } from './types/index.js';
-import type { ErrorResponse, LayerRequestInput, LayerResponse } from './types/index.js';
+import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest } from './types/index.js';
 
 export class Layer {
   private apiKey: string;
@@ -45,6 +45,23 @@ export class Layer {
     return this.request<LayerResponse>({
       method: 'POST',
       path: '/v2/complete',
+      body: request,
+    });
+  }
+
+  /**
+   * v3 Chat completion endpoint - Type-safe chat requests
+   * @param request - Chat request with gateId and ChatRequest data
+   */
+  async chat(request: {
+    gateId: string;
+    data: ChatRequest;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v3/chat',
       body: request,
     });
   }
