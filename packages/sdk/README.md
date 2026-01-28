@@ -58,9 +58,183 @@ const layer = new Layer({
 
 ## API Reference
 
-### `layer.complete(request)`
+### Type-Safe Methods (v2.5.0+)
 
-Send a completion request through a gate.
+Layer SDK now provides dedicated type-safe methods for each modality with full TypeScript support and IDE autocomplete.
+
+#### `layer.chat(request)`
+
+Type-safe chat completions with message-based interface.
+
+**Parameters:**
+
+```typescript
+{
+  gateId: string;        // Required: Gate ID (UUID)
+  data: {
+    messages: Message[]; // Required: Conversation messages
+    temperature?: number;  // Optional: Override gate temperature
+    maxTokens?: number;    // Optional: Override max tokens
+    topP?: number;         // Optional: Override top-p sampling
+  };
+  model?: string;        // Optional: Override gate model
+  metadata?: Record<string, unknown>; // Optional: Custom metadata
+}
+```
+
+**Example:**
+
+```typescript
+const response = await layer.chat({
+  gateId: 'my-chat-gate-id',
+  data: {
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant' },
+      { role: 'user', content: 'Explain quantum computing' }
+    ],
+    temperature: 0.7
+  }
+});
+```
+
+#### `layer.image(request)`
+
+Type-safe image generation.
+
+**Parameters:**
+
+```typescript
+{
+  gateId: string;        // Required: Gate ID (UUID)
+  data: {
+    prompt: string;      // Required: Image generation prompt
+    size?: string;       // Optional: Image size (e.g., '1024x1024')
+    quality?: string;    // Optional: Image quality
+    style?: string;      // Optional: Image style
+  };
+  model?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+**Example:**
+
+```typescript
+const response = await layer.image({
+  gateId: 'my-image-gate-id',
+  data: {
+    prompt: 'A serene landscape with mountains and a lake',
+    size: '1024x1024',
+    quality: 'hd'
+  }
+});
+
+console.log(response.imageUrl); // Generated image URL
+```
+
+#### `layer.video(request)`
+
+Type-safe video generation.
+
+**Parameters:**
+
+```typescript
+{
+  gateId: string;        // Required: Gate ID (UUID)
+  data: {
+    prompt: string;      // Required: Video generation prompt
+  };
+  model?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+#### `layer.embeddings(request)`
+
+Type-safe text embeddings.
+
+**Parameters:**
+
+```typescript
+{
+  gateId: string;        // Required: Gate ID (UUID)
+  data: {
+    input: string | string[]; // Required: Text(s) to embed
+  };
+  model?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+**Example:**
+
+```typescript
+const response = await layer.embeddings({
+  gateId: 'my-embeddings-gate-id',
+  data: {
+    input: 'Machine learning is fascinating'
+  }
+});
+
+console.log(response.embeddings[0].length); // Vector dimensions (e.g., 1536)
+```
+
+#### `layer.tts(request)`
+
+Type-safe text-to-speech.
+
+**Parameters:**
+
+```typescript
+{
+  gateId: string;        // Required: Gate ID (UUID)
+  data: {
+    input: string;       // Required: Text to synthesize
+    voice?: string;      // Optional: Voice selection
+  };
+  model?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+**Example:**
+
+```typescript
+const response = await layer.tts({
+  gateId: 'my-tts-gate-id',
+  data: {
+    input: 'Hello, this is a test of text to speech',
+    voice: 'alloy'
+  }
+});
+
+console.log(response.audio.base64); // Base64 encoded audio
+console.log(response.audio.format); // Audio format (e.g., 'mp3')
+```
+
+#### `layer.ocr(request)`
+
+Type-safe optical character recognition and document processing.
+
+**Parameters:**
+
+```typescript
+{
+  gateId: string;        // Required: Gate ID (UUID)
+  data: {
+    documentUrl?: string;  // Document URL
+    imageUrl?: string;     // Image URL
+    base64?: string;       // Base64 encoded document/image
+    // Note: Provide one of the above
+  };
+  model?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+### `layer.complete(request)` (v2 Legacy)
+
+Send a generic completion request through a gate. This method remains available for backwards compatibility.
 
 **Parameters:**
 

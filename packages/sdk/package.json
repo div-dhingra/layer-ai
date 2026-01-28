@@ -1,6 +1,6 @@
 {
   "name": "@layer-ai/sdk",
-  "version": "2.1.0",
+  "version": "2.5.0",
   "description": "Configure multiple AI models at runtime without code changes or deployments",
   "type": "module",
   "main": "./dist/index.js",
