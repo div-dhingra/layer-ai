@@ -10,7 +10,7 @@
 
 If you discover a security vulnerability, please email us at:
 
-**micah@justfaang.com**
+**micah@uselayer.ai**
 
 Please include:
 - Description of the vulnerability
