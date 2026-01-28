@@ -160,4 +160,52 @@ export abstract class BaseProviderAdapter {
     const outputCost = ('output' in pricing && pricing.output) ? (completionTokens / 1000000 * pricing.output) : 0;
     return inputCost + outputCost;
   }
+
+  protected calculateImageCost(
+    model: string,
+    quality?: string,
+    size?: string,
+    count: number = 1
+  ): number {
+    const modelInfo = MODEL_REGISTRY[model as SupportedModel];
+    if (!modelInfo || !('imagePricing' in modelInfo) || !modelInfo.imagePricing) {
+      return 0;
+    }
+
+    const imagePricing = modelInfo.imagePricing as Record<string, number>;
+
+    // Build pricing key from quality and size (e.g., 'hd-1024x1024' or 'standard-1024x1024')
+    const pricingKey = quality && size ? `${quality}-${size}` : size || 'standard-1024x1024';
+    const pricePerImage = imagePricing[pricingKey];
+
+    if (!pricePerImage) {
+      // If exact match not found, try without quality prefix
+      const fallbackPrice = imagePricing[size || '1024x1024'];
+      return (fallbackPrice || 0) * count;
+    }
+
+    return pricePerImage * count;
+  }
+
+  protected calculateVideoCost(
+    model: string,
+    duration?: number,
+    count: number = 1
+  ): number {
+    const modelInfo = MODEL_REGISTRY[model as SupportedModel];
+    if (!modelInfo || !('videoPricing' in modelInfo) || !modelInfo.videoPricing) {
+      return 0;
+    }
+
+    const videoPricing = modelInfo.videoPricing as any;
+
+    // Video pricing might be per-second or per-video
+    const pricePerUnit = videoPricing.perVideo || videoPricing.perSecond || 0;
+
+    if (videoPricing.perSecond && duration) {
+      return pricePerUnit * duration * count;
+    }
+
+    return pricePerUnit * count;
+  }
 }

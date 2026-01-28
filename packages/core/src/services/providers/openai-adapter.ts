@@ -240,12 +240,21 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       ...(image.style && { style: this.mapImageStyle(image.style) as 'vivid' | 'natural' }),
     });
 
+    // Calculate cost based on quality, size, and count
+    const cost = this.calculateImageCost(
+      model,
+      image.quality || 'standard',
+      image.size || '1024x1024',
+      image.count || 1
+    );
+
     return {
       images: (response.data || []).map(img => ({
         url: img.url,
         revisedPrompt: img.revised_prompt,
       })),
       model: model,
+      cost,
       latencyMs: Date.now() - startTime,
       usedPlatformKey,
       raw: response,
