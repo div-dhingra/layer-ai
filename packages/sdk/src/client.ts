@@ -1,5 +1,5 @@
 import type { LayerConfig, RequestOptions } from './types/index.js';
-import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest, ImageGenerationRequest, VideoGenerationRequest } from './types/index.js';
+import type { ErrorResponse, LayerRequestInput, LayerResponse, ChatRequest, ImageGenerationRequest, VideoGenerationRequest, EmbeddingsRequest, TextToSpeechRequest, OCRRequest } from './types/index.js';
 
 export class Layer {
   private apiKey: string;
@@ -96,6 +96,57 @@ export class Layer {
     return this.request<LayerResponse>({
       method: 'POST',
       path: '/v3/video',
+      body: request,
+    });
+  }
+
+  /**
+   * v3 Embeddings endpoint - Type-safe embeddings requests
+   * @param request - Embeddings request with gateId and EmbeddingsRequest data
+   */
+  async embeddings(request: {
+    gateId: string;
+    data: EmbeddingsRequest;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v3/embeddings',
+      body: request,
+    });
+  }
+
+  /**
+   * v3 Text-to-Speech endpoint - Type-safe TTS requests
+   * @param request - TTS request with gateId and TextToSpeechRequest data
+   */
+  async tts(request: {
+    gateId: string;
+    data: TextToSpeechRequest;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v3/tts',
+      body: request,
+    });
+  }
+
+  /**
+   * v3 OCR endpoint - Type-safe OCR requests
+   * @param request - OCR request with gateId and OCRRequest data
+   */
+  async ocr(request: {
+    gateId: string;
+    data: OCRRequest;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<LayerResponse> {
+    return this.request<LayerResponse>({
+      method: 'POST',
+      path: '/v3/ocr',
       body: request,
     });
   }

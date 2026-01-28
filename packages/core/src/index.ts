@@ -11,6 +11,9 @@ export { default as completeRouter } from './routes/v2/complete.js';
 export { default as chatRouter } from './routes/v3/chat.js';
 export { default as imageRouter } from './routes/v3/image.js';
 export { default as videoRouter } from './routes/v3/video.js';
+export { default as embeddingsRouter } from './routes/v3/embeddings.js';
+export { default as ttsRouter } from './routes/v3/tts.js';
+export { default as ocrRouter } from './routes/v3/ocr.js';
 
 // Middleware
 export { authenticate } from './middleware/auth.js';
