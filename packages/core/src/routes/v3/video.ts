@@ -37,12 +37,22 @@ function resolveFinalRequest(
     }
   }
 
-  // For image generation, we don't merge gate config like we do for chat
-  // The prompt and parameters are specific to the request
+  // Apply gate config temperature if not provided in request
+  // While most video models don't support temperature, some providers/future models might
+  const videoData: VideoGenerationRequest = { ...request.data } as VideoGenerationRequest;
+
+  // Apply temperature from gate config if available
+  if ((videoData as any).temperature === undefined && gateConfig.temperature !== undefined) {
+    (videoData as any).temperature = gateConfig.temperature;
+  } else if ((videoData as any).temperature !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Temperature)) {
+    (videoData as any).temperature = gateConfig.temperature;
+  }
+
   return {
     ...request,
     type: 'video',
     model: normalizeModelId(finalModel),
+    data: videoData,
   } as LayerRequest;
 }
 

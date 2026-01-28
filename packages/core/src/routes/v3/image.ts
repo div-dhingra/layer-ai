@@ -37,12 +37,22 @@ function resolveFinalRequest(
     }
   }
 
-  // For image generation, we don't merge gate config like we do for chat
-  // The prompt and parameters are specific to the request
+  // Apply gate config temperature if not provided in request
+  // While most image models don't support temperature, some providers/future models might
+  const imageData: ImageGenerationRequest = { ...request.data } as ImageGenerationRequest;
+
+  // Apply temperature from gate config if available
+  if ((imageData as any).temperature === undefined && gateConfig.temperature !== undefined) {
+    (imageData as any).temperature = gateConfig.temperature;
+  } else if ((imageData as any).temperature !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.Temperature)) {
+    (imageData as any).temperature = gateConfig.temperature;
+  }
+
   return {
     ...request,
     type: 'image',
     model: normalizeModelId(finalModel),
+    data: imageData,
   } as LayerRequest;
 }
 
