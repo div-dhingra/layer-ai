@@ -1,10 +1,10 @@
 // AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
-// Generated at: 2026-01-25T15:12:28.574Z
+// Generated at: 2026-01-29T05:32:54.519Z
 // Source: Internal Model Registry API
 // To update: Run `pnpm sync:registry`
 //
-// Registry version: 2026-01-25
-// Last sync: 2026-01-25T15:12:28.569Z
+// Registry version: 2026-01-29
+// Last sync: 2026-01-29T05:32:54.514Z
 // Total models: 77
 
 // Providers we support with adapters
@@ -712,7 +712,7 @@ export const MODEL_REGISTRY = {
     lastUpdated: '2026-01-25',
   },
   'imagen-4.0-fast-generate-001': {
-    type: 'image-generation' as const,
+    type: 'image' as const,
     provider: 'google' as const,
     displayName: 'Imagen 4.0 Fast',
     imagePricing: 0.02,
@@ -735,7 +735,7 @@ export const MODEL_REGISTRY = {
     lastUpdated: '2026-01-25',
   },
   'imagen-4.0-ultra-generate-001': {
-    type: 'image-generation' as const,
+    type: 'image' as const,
     provider: 'google' as const,
     displayName: 'Imagen 4.0 Ultra',
     imagePricing: 0.06,
@@ -781,7 +781,7 @@ export const MODEL_REGISTRY = {
     lastUpdated: '2026-01-25',
   },
   'veo-3.1-fast-generate-preview': {
-    type: 'video-generation' as const,
+    type: 'video' as const,
     provider: 'google' as const,
     displayName: 'Veo 3.1 Fast',
     context: {
@@ -803,7 +803,7 @@ export const MODEL_REGISTRY = {
     lastUpdated: '2026-01-25',
   },
   'veo-3.1-generate-preview': {
-    type: 'video-generation' as const,
+    type: 'video' as const,
     provider: 'google' as const,
     displayName: 'Veo 3.1',
     context: {
