@@ -131,7 +131,7 @@ export const db = {
   // Gates
   async getGateByUserAndName(userId: string, gateName: string): Promise<Gate | null> {
     const result = await getPool().query(
-      'SELECT * FROM gates WHERE user_id = $1 AND name = $2',
+      'SELECT * FROM gates WHERE user_id = $1 AND name = $2 AND deleted_at IS NULL',
       [userId, gateName]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
@@ -139,7 +139,7 @@ export const db = {
 
   async getGateByUserAndId(userId: string, gateId: string): Promise<Gate | null> {
     const result = await getPool().query(
-      'SELECT * FROM gates WHERE user_id = $1 AND id = $2',
+      'SELECT * FROM gates WHERE user_id = $1 AND id = $2 AND deleted_at IS NULL',
       [userId, gateId]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
@@ -147,7 +147,7 @@ export const db = {
 
   async getGatesForUser(userId: string): Promise<Gate[]> {
     const result = await getPool().query(
-      'SELECT * FROM gates WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT * FROM gates WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC',
       [userId]
     );
     return result.rows.map(toCamelCase);
@@ -185,7 +185,7 @@ export const db = {
 
   async getGateById(id: string): Promise<Gate | null> {
     const result = await getPool().query(
-      'SELECT * FROM gates WHERE id = $1',
+      'SELECT * FROM gates WHERE id = $1 AND deleted_at IS NULL',
       [id]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
@@ -242,8 +242,9 @@ export const db = {
   },
 
   async deleteGate(id: string): Promise<boolean> {
+    // Soft delete: set deleted_at timestamp instead of hard delete
     const result = await getPool().query(
-      'DELETE FROM gates WHERE id = $1',
+      'UPDATE gates SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL',
       [id]
     );
     return (result.rowCount ?? 0) > 0;
