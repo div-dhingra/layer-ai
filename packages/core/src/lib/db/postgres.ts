@@ -88,6 +88,14 @@ export const db = {
     return toCamelCase(result.rows[0]);
   },
 
+  async getUserStatus(userId: string): Promise<string | null> {
+    const result = await getPool().query(
+      'SELECT status FROM users WHERE id = $1',
+      [userId]
+    );
+    return result.rows[0]?.status || null;
+  },
+
   // API Keys
   async getApiKeyByHash(keyHash: string): Promise<ApiKey | null> {
     const result = await getPool().query(

@@ -73,6 +73,25 @@ export async function authenticate(
         return;
       }
 
+      // Check user status before allowing access
+      const userStatus = await db.getUserStatus(apiKeyRecord.userId);
+
+      if (userStatus === 'suspended') {
+        res.status(403).json({
+          error: 'account_suspended',
+          message: 'Your account has been suspended. Please contact support.',
+        });
+        return;
+      }
+
+      if (userStatus === 'banned') {
+        res.status(403).json({
+          error: 'account_banned',
+          message: 'Your account has been banned.',
+        });
+        return;
+      }
+
       // Attach userId to request for downstream handlers
       req.userId = apiKeyRecord.userId;
       req.apiKeyId = apiKeyRecord.id;
@@ -91,6 +110,25 @@ export async function authenticate(
     const sessionKey = await db.getSessionKeyByHash(tokenHash);
 
     if (sessionKey) {
+      // Check user status for session keys as well
+      const userStatus = await db.getUserStatus(sessionKey.userId);
+
+      if (userStatus === 'suspended') {
+        res.status(403).json({
+          error: 'account_suspended',
+          message: 'Your account has been suspended. Please contact support.',
+        });
+        return;
+      }
+
+      if (userStatus === 'banned') {
+        res.status(403).json({
+          error: 'account_banned',
+          message: 'Your account has been banned.',
+        });
+        return;
+      }
+
       req.userId = sessionKey.userId;
       next();
       return;
