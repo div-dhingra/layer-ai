@@ -12,6 +12,8 @@ export interface Log {
   success: number;
   errorMessage: string | null;
   loggedAt: Date;
+  requestPayload?: Record<string, any>;
+  responsePayload?: Record<string, any>;
 }
 
 export interface ListLogOptions {
