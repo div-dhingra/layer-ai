@@ -22,8 +22,14 @@ AVAILABLE TASK TYPES:
 Return ONLY the task type as a single word, nothing else.`;
 
   try {
+    // Smart routing model - upgraded to Sonnet 4.5 for better recommendations
+    // Can be overridden via SMART_ROUTING_MODEL environment variable
+    // Default: claude-sonnet-4-5-20250929 (~$3/1M tokens vs Haiku ~$0.25/1M)
+    // Cost impact is minimal since smart routing is infrequent (gate creation/reanalysis)
+    const smartRoutingModel = process.env.SMART_ROUTING_MODEL || 'claude-sonnet-4-5-20250929';
+
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: smartRoutingModel,
       max_tokens: 50,
       temperature: 0.0,
       messages: [{
@@ -121,8 +127,13 @@ Return JSON with:
 }`;
 
   try {
+    // Smart routing model - upgraded to Sonnet 4.5 for superior analysis quality
+    // Can be overridden via SMART_ROUTING_MODEL environment variable
+    // Default: claude-sonnet-4-5-20250929 for more nuanced model recommendations
+    const smartRoutingModel = process.env.SMART_ROUTING_MODEL || 'claude-sonnet-4-5-20250929';
+
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: smartRoutingModel,
       max_tokens: 2000,
       temperature: 0.0,
       messages: [{
