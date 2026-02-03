@@ -190,6 +190,19 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       errorMessage: null,
       userAgent: req.headers['user-agent'] || null,
       ipAddress: req.ip || null,
+      requestPayload: {
+        gateId: request.gateId,
+        type: request.type,
+        model: request.model,
+        data: request.data,
+        metadata: request.metadata,
+      },
+      responsePayload: {
+        audio: result.audio,
+        model: result.model,
+        usage: result.usage,
+        cost: result.cost,
+      },
     }).catch(err => console.error('Failed to log request:', err));
 
     // Return LayerResponse with additional metadata
@@ -219,6 +232,14 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       errorMessage,
       userAgent: req.headers['user-agent'] || null,
       ipAddress: req.ip || null,
+      requestPayload: request ? {
+        gateId: request.gateId,
+        type: request.type,
+        model: request.model,
+        data: request.data,
+        metadata: request.metadata,
+      } : null,
+      responsePayload: null,
     }).catch(err => console.error('Failed to log request:', err));
 
     console.error('TTS error:', error);
