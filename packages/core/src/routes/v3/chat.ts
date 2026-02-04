@@ -23,7 +23,7 @@ function isOverrideAllowed(allowOverrides: boolean | OverrideConfig | undefined 
   return allowOverrides[field] ?? false;
 }
 
-function resolveFinalRequest(
+export function resolveFinalRequest(
   gateConfig: Gate,
   request: LayerRequest
 ): LayerRequest {
@@ -69,10 +69,8 @@ function resolveFinalRequest(
     if (modelProvider === PROVIDER.OPENAI) {
       // OpenAI: Use native response_format support
       if (gateConfig.responseFormatType === 'json_schema' && gateConfig.responseFormatSchema) {
-        chatData.responseFormat = {
-          type: 'json_schema',
-          json_schema: gateConfig.responseFormatSchema,
-        };
+        // Schema is already in the correct format from DB
+        chatData.responseFormat = gateConfig.responseFormatSchema as { type: 'json_schema'; json_schema: unknown };
       } else {
         chatData.responseFormat = gateConfig.responseFormatType; // 'text' or 'json_object'
       }
@@ -82,11 +80,13 @@ function resolveFinalRequest(
         let schemaInstructions = '';
 
         if (gateConfig.responseFormatType === 'json_schema' && gateConfig.responseFormatSchema) {
-          // For json_schema mode, include the actual schema
-          schemaInstructions = `\n\n[STRUCTURED OUTPUT - BETA] You MUST respond with valid JSON matching this exact schema:\n${JSON.stringify(gateConfig.responseFormatSchema, null, 2)}\n\nIMPORTANT: Output ONLY the JSON object. Do not include any explanatory text, markdown formatting, or code blocks. Just the raw JSON.`;
+          // Extract just the schema portion if it's the full OpenAI format
+          const schemaObj = gateConfig.responseFormatSchema as any;
+          const actualSchema = schemaObj.json_schema?.schema || schemaObj;
+
+          schemaInstructions = `\n\nYou MUST respond with ONLY a valid JSON object matching this schema. Do not include ANY text before or after the JSON. Do not wrap it in markdown code blocks. Do not add explanations. ONLY output the raw JSON object.\n\nRequired JSON Schema:\n${JSON.stringify(actualSchema, null, 2)}`;
         } else if (gateConfig.responseFormatType === 'json_object') {
-          // For json_object mode, just require valid JSON
-          schemaInstructions = `\n\n[STRUCTURED OUTPUT - BETA] You MUST respond with valid JSON only. Do not include any explanatory text, markdown formatting, or code blocks. Output should be a raw JSON object.`;
+          schemaInstructions = `\n\nYou MUST respond with ONLY a valid JSON object. Do not include ANY text before or after the JSON. Do not wrap it in markdown code blocks. Do not add explanations. ONLY output the raw JSON object.`;
         }
 
         // Append to existing system prompt or create new one
