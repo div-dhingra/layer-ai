@@ -40,6 +40,9 @@ export abstract class BaseProviderAdapter {
 
   abstract call(request: LayerRequest, userId?: string): Promise<LayerResponse>;
 
+  // streaming support (optional - adapters can implement if provider supports streaming)
+  callStream?(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse>;
+
   protected mapRole(role: Role): string {
     if (!this.roleMappings) {
       return role;

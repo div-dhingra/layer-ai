@@ -82,3 +82,27 @@ export async function callAdapter(request: LayerRequest, userId?: string): Promi
   const adapter = new AdapterClass();
   return await adapter.call(request, userId);
 }
+
+/**
+ * Calls the appropriate provider adapter for streaming responses.
+ * This is the streaming version of callAdapter.
+ * @param request - The Layer request to execute
+ * @param userId - Optional user ID for BYOK key resolution
+ */
+export async function* callAdapterStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
+  const normalizedModel = normalizeModelId(request.model as string);
+  const provider = getProviderForModel(normalizedModel);
+
+  const AdapterClass = PROVIDER_ADAPTERS[provider];
+  if (!AdapterClass) {
+    throw new Error(`No adapter found for provider: ${provider}`);
+  }
+
+  const adapter = new AdapterClass();
+
+  if (!adapter.callStream) {
+    throw new Error(`Streaming not supported for provider: ${provider}`);
+  }
+
+  yield* adapter.callStream(request, userId);
+}

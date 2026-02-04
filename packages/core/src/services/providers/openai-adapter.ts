@@ -18,12 +18,10 @@ import { resolveApiKey } from '../../lib/key-resolver.js';
 let openai: OpenAI | null = null;
 
 function getOpenAIClient(apiKey?: string): OpenAI {
-  // If custom API key provided, create new client
   if (apiKey) {
     return new OpenAI({ apiKey });
   }
 
-  // Otherwise use singleton with platform key
   if (!openai) {
     openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -95,7 +93,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
   };
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
-    // Resolve API key (BYOK → Platform key)
     const resolved = await resolveApiKey(this.provider, userId, process.env.OPENAI_API_KEY);
 
     switch (request.type) {
@@ -111,6 +108,18 @@ export class OpenAIAdapter extends BaseProviderAdapter {
         throw new Error('Video generation not yet supported by OpenAI');
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
+    }
+  }
+
+  async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
+    const resolved = await resolveApiKey(this.provider, userId, process.env.OPENAI_API_KEY);
+
+    switch (request.type) {
+      case 'chat': 
+        yield* this.handleChatStream(request, resolved.key, resolved.usedPlatformKey);
+        break;
+      default: 
+        throw new Error(`Streaming not supported for type: ${(request as any).type}`);
     }
   }
 
@@ -132,7 +141,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
     for (const msg of chat.messages) {
       const role = this.mapRole(msg.role) as OpenAI.Chat.ChatCompletionMessageParam['role'];
 
-      // Handle vision messages (content + images)
       if (msg.images && msg.images.length > 0) {
         const content: OpenAI.Chat.ChatCompletionContentPart[] = [];
 
@@ -153,7 +161,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
 
         messages.push({ role: role as 'user', content });
       }
-      // Handle tool responses (mutually exclusive)
       else if (msg.toolCallId) {
         messages.push({
           role: 'tool',
@@ -161,7 +168,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
           tool_call_id: msg.toolCallId,
         });
       }
-      // Handle assistant messages with tool calls (can have content + tool_calls)
       else if (msg.toolCalls) {
         messages.push({
           role: 'assistant',
@@ -169,7 +175,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
           tool_calls: msg.toolCalls as unknown as OpenAI.Chat.ChatCompletionMessageToolCall[],
         });
       }
-      // Handle regular text messages
       else {
         messages.push({
           role,
@@ -194,7 +199,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
         tools: chat.tools as unknown as OpenAI.Chat.ChatCompletionTool[],
         ...(chat.toolChoice && { tool_choice: chat.toolChoice as OpenAI.Chat.ChatCompletionToolChoiceOption }),
       }),
-      // Structured output support: convert camelCase to snake_case
       ...(chat.responseFormat && {
         response_format: (
           typeof chat.responseFormat === 'string'
@@ -230,6 +234,143 @@ export class OpenAIAdapter extends BaseProviderAdapter {
     };
   }
 
+  private async *handleChatStream(
+    request: Extract<LayerRequest, { type: 'chat' }>,
+    apiKey: string, 
+    usedPlatformKey: boolean
+  ): AsyncIterable<LayerResponse> {
+    const startTime = Date.now(); 
+    const client = getOpenAIClient(apiKey);
+    const { data: chat, model } = request;
+
+    if (!model) {
+      throw new Error('Model is required for chat completion');
+    }
+
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+
+    if (chat.systemPrompt) {
+      messages.push({ role: 'system', content: chat.systemPrompt });
+    }
+
+    for (const msg of chat.messages) {
+      const role = this.mapRole(msg.role) as OpenAI.Chat.ChatCompletionMessageParam['role'];
+
+      if (msg.images && msg.images.length > 0) {
+        const content: OpenAI.Chat.ChatCompletionContentPart[] = [];
+
+        if (msg.content) {
+          content.push({ type: 'text', text: msg.content });
+        }
+
+        for (const image of msg.images) {
+          const imageUrl = image.url || `data:${image.mimeType || 'image/jpeg'};base64,${image.base64}`;
+          content.push({
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+              ...(image.detail && { detail: this.mapImageDetail(image.detail) as 'auto' | 'low' | 'high' }),
+            },
+          });
+        }
+
+        messages.push({ role: role as 'user', content });
+      }
+      else if (msg.toolCallId) {
+        messages.push({
+          role: 'tool',
+          content: msg.content || '',
+          tool_call_id: msg.toolCallId,
+        });
+      }
+      else if (msg.toolCalls) {
+        messages.push({
+          role: 'assistant',
+          content: msg.content || null,
+          tool_calls: msg.toolCalls as unknown as OpenAI.Chat.ChatCompletionMessageToolCall[],
+        });
+      }
+      else {
+        messages.push({
+          role,
+          content: msg.content || '',
+          ...(role === 'function' && msg.name && { name: msg.name }),
+        } as OpenAI.Chat.ChatCompletionMessageParam);
+      }
+    }
+
+    const openaiRequest = {
+      model: model,
+      messages,
+      stream: true,
+      ...(chat.temperature !== undefined && { temperature: chat.temperature }),
+      ...(chat.maxTokens !== undefined && { max_completion_tokens: chat.maxTokens }),
+      ...(chat.topP !== undefined && { top_p: chat.topP }),
+      ...(chat.stopSequences !== undefined && { stop: chat.stopSequences }),
+      ...(chat.frequencyPenalty !== undefined && { frequency_penalty: chat.frequencyPenalty }),
+      ...(chat.presencePenalty !== undefined && { presence_penalty: chat.presencePenalty }),
+      ...(chat.seed !== undefined && { seed: chat.seed }),
+      ...(chat.tools && {
+        tools: chat.tools as unknown as OpenAI.Chat.ChatCompletionTool[],
+        ...(chat.toolChoice && { tool_choice: chat.toolChoice as OpenAI.Chat.ChatCompletionToolChoiceOption }),
+      }),
+      ...(chat.responseFormat && {
+        response_format: (
+          typeof chat.responseFormat === 'string'
+            ? { type: chat.responseFormat }
+            : chat.responseFormat
+        ) as any,
+      }),
+    } as OpenAI.Chat.ChatCompletionCreateParamsStreaming;
+
+    const stream = await client.chat.completions.create(openaiRequest);
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let fullContent = '';
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta;
+      const finishReason = chunk.choices[0]?.finish_reason;
+
+      if (delta?.content) {
+        fullContent += delta.content;
+      }
+
+      if (chunk.usage) {
+        promptTokens = chunk.usage.prompt_tokens || 0;
+        completionTokens = chunk.usage.completion_tokens || 0;
+      }
+
+      yield {
+        content: delta?.content || undefined,
+        toolCalls: delta?.tool_calls as unknown as LayerResponse['toolCalls'],
+        model: chunk.model || model,
+        finishReason: finishReason ? this.mapFinishReason(finishReason) : undefined,
+        rawFinishReason: finishReason || undefined,
+        stream: true,
+      };
+    }
+
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
+    const latencyMs = Date.now() - startTime;
+
+    yield {
+      content: '',
+      model: model,
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
+      },
+      cost,
+      latencyMs,
+      usedPlatformKey,
+      stream: true,
+      finishReason: 'completed',
+    };
+  }
+
   private async handleImageGeneration(request: Extract<LayerRequest, { type: 'image' }>, apiKey: string, usedPlatformKey: boolean): Promise<LayerResponse> {
     const startTime = Date.now();
     const client = getOpenAIClient(apiKey);
@@ -248,7 +389,6 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       ...(image.style && { style: this.mapImageStyle(image.style) as 'vivid' | 'natural' }),
     });
 
-    // Calculate cost based on quality, size, and count
     const cost = this.calculateImageCost(
       model,
       image.quality || 'standard',

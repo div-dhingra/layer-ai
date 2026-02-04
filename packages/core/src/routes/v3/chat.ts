@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { authenticate } from '../../middleware/auth.js';
-import { callAdapter, normalizeModelId, getProviderForModel, PROVIDER } from '../../lib/provider-factory.js';
+import { callAdapter, callAdapterStream, normalizeModelId, getProviderForModel, PROVIDER } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig, ChatRequest } from '@layer-ai/sdk';
 import { OverrideField } from '@layer-ai/sdk';
 
@@ -37,7 +37,6 @@ export function resolveFinalRequest(
     }
   }
 
-  // Since this is v3/chat endpoint, we know the data is ChatRequest
   const chatData: ChatRequest = { ...request.data } as ChatRequest;
 
   if (!chatData.systemPrompt && gateConfig.systemPrompt) {
@@ -178,6 +177,57 @@ async function executeWithRouting(gateConfig: Gate, request: LayerRequest, userI
   }
 }
 
+async function* executeWithFallbackStream(request: LayerRequest, modelsToTry: SupportedModel[], userId?: string): AsyncIterable<LayerResponse> {
+  let lastError: Error | null = null;
+
+  for (const modelToTry of modelsToTry) {
+    try {
+      const modelRequest = { ...request, model: modelToTry };
+      yield* callAdapterStream(modelRequest, userId);
+      return;
+    } catch (error) {
+      lastError = error as Error;
+      console.log(`Model ${modelToTry} failed during streaming, trying next fallback...`, error instanceof Error ? error.message : error);
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All models failed during streaming');
+}
+
+async function* executeWithRoundRobinStream(gateConfig: Gate, request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
+  if (!gateConfig.fallbackModels?.length) {
+    yield* callAdapterStream(request, userId);
+    return;
+  }
+
+  const allModels = [gateConfig.model, ...gateConfig.fallbackModels];
+  const modelIndex = Math.floor(Math.random() * allModels.length);
+  const selectedModel = allModels[modelIndex];
+
+  const modelRequest = { ...request, model: selectedModel };
+  yield* callAdapterStream(modelRequest, userId);
+}
+
+async function* executeWithRoutingStream(gateConfig: Gate, request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
+  const modelsToTry = getModelsToTry(gateConfig, request.model as SupportedModel);
+
+  switch (gateConfig.routingStrategy) {
+    case 'fallback':
+      yield* executeWithFallbackStream(request, modelsToTry, userId);
+      break;
+
+    case 'round-robin':
+      yield* executeWithRoundRobinStream(gateConfig, request, userId);
+      break;
+
+    case 'single':
+    default:
+      yield* callAdapterStream(request, userId);
+      break;
+  }
+}
+
 // MARK:- Route Handler
 
 router.post('/', authenticate, async (req: Request, res: Response) => {
@@ -235,11 +285,108 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     } as LayerRequest;
 
     const finalRequest = resolveFinalRequest(gateConfig, request);
+    const isStreaming = finalRequest.data && 'stream' in finalRequest.data && finalRequest.data.stream === true;
+
+    if (isStreaming) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      let promptTokens = 0;
+      let completionTokens = 0;
+      let totalCost = 0;
+      let modelUsed: SupportedModel = finalRequest.model as SupportedModel;
+
+      try {
+        for await (const chunk of executeWithRoutingStream(gateConfig, finalRequest, userId)) {
+          if (chunk.usage) {
+            promptTokens = chunk.usage.promptTokens || 0;
+            completionTokens = chunk.usage.completionTokens || 0;
+          }
+          if (chunk.cost) {
+            totalCost = chunk.cost;
+          }
+          if (chunk.model) {
+            modelUsed = chunk.model as SupportedModel;
+          }
+
+          res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+        }
+
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+
+        const latencyMs = Date.now() - startTime;
+
+        db.logRequest({
+          userId,
+          gateId: gateConfig.id,
+          gateName: gateConfig.name,
+          modelRequested: request.model || gateConfig.model,
+          modelUsed: modelUsed,
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+          costUsd: totalCost,
+          latencyMs,
+          success: true,
+          errorMessage: null,
+          userAgent: req.headers['user-agent'] || null,
+          ipAddress: req.ip || null,
+          requestPayload: {
+            gateId: request.gateId,
+            type: request.type,
+            model: request.model,
+            data: request.data,
+            metadata: request.metadata,
+          },
+          responsePayload: {
+            streamed: true,
+            model: modelUsed,
+            usage: { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens },
+            cost: totalCost,
+          },
+        }).catch(err => console.error('Failed to log request:', err));
+
+      } catch (streamError) {
+        const errorMessage = streamError instanceof Error ? streamError.message : 'Unknown streaming error';
+        res.write(`data: ${JSON.stringify({ error: 'stream_error', message: errorMessage })}\n\n`);
+        res.end();
+
+        db.logRequest({
+          userId,
+          gateId: gateConfig.id,
+          gateName: gateConfig.name,
+          modelRequested: request.model || gateConfig.model,
+          modelUsed: null,
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          latencyMs: Date.now() - startTime,
+          success: false,
+          errorMessage,
+          userAgent: req.headers['user-agent'] || null,
+          ipAddress: req.ip || null,
+          requestPayload: {
+            gateId: request.gateId,
+            type: request.type,
+            model: request.model,
+            data: request.data,
+            metadata: request.metadata,
+          },
+          responsePayload: null,
+        }).catch(err => console.error('Failed to log request:', err));
+      }
+
+      return;
+    }
+
     const { result, modelUsed } = await executeWithRouting(gateConfig, finalRequest, userId);
 
     const latencyMs = Date.now() - startTime;
 
-    // Log request to database
     db.logRequest({
       userId,
       gateId: gateConfig.id,
@@ -271,7 +418,6 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       },
     }).catch(err => console.error('Failed to log request:', err));
 
-    // Return LayerResponse with additional metadata
     const response: LayerResponse = {
       ...result,
       model: modelUsed,
