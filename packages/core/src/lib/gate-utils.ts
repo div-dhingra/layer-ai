@@ -48,6 +48,9 @@ export function detectSignificantChanges(existing: any, updates: any): string[] 
     systemPrompt: 'systemPrompt',
     reanalysisPeriod: 'reanalysisPeriod',
     autoApplyRecommendations: 'autoApplyRecommendations',
+    responseFormatEnabled: 'responseFormatEnabled',
+    responseFormatType: 'responseFormatType',
+    responseFormatSchema: 'responseFormatSchema',
   };
 
   for (const [field, displayName] of Object.entries(significantFields)) {

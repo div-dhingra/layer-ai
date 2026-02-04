@@ -2,6 +2,7 @@ import type { SupportedModel } from "./gates.js";
 import { TaskAnalysis } from "./smart-routing.js";
 import type { ModelType } from "./model-registry.js";
 import type { AnalysisMethod, RoutingStrategy, ReanalysisPeriod } from "./history.js";
+import type { ResponseFormatType } from "./api-v3.js";
 
 // User 
 export interface User {
@@ -50,6 +51,11 @@ export interface GateBase {
   taskAnalysis?: TaskAnalysis;
   reanalysisPeriod?: ReanalysisPeriod;
   autoApplyRecommendations?: boolean;
+
+  // Structured output support (OpenAI)
+  responseFormatEnabled?: boolean;
+  responseFormatType?: ResponseFormatType;
+  responseFormatSchema?: unknown;
 }
 
 export interface Gate extends GateBase {

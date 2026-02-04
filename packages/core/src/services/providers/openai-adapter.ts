@@ -179,7 +179,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       }
     }
 
-    const openaiRequest: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
+    const openaiRequest = {
       model: model,
       messages,
       stream: false,
@@ -194,7 +194,15 @@ export class OpenAIAdapter extends BaseProviderAdapter {
         tools: chat.tools as unknown as OpenAI.Chat.ChatCompletionTool[],
         ...(chat.toolChoice && { tool_choice: chat.toolChoice as OpenAI.Chat.ChatCompletionToolChoiceOption }),
       }),
-    };
+      // Structured output support: convert camelCase to snake_case
+      ...(chat.responseFormat && {
+        response_format: (
+          typeof chat.responseFormat === 'string'
+            ? { type: chat.responseFormat }
+            : chat.responseFormat
+        ) as any,
+      }),
+    } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
 
     const response = await client.chat.completions.create(openaiRequest);
     const choice = response.choices[0];
