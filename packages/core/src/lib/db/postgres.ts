@@ -163,8 +163,8 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING *`,
+      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis, response_format_enabled, response_format_type, response_format_schema)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *`,
        [
          userId,
          data.name,
@@ -185,7 +185,10 @@ export const db = {
          data.analysisMethod || 'balanced',
          data.reanalysisPeriod || 'never',
          data.autoApplyRecommendations ?? false,
-         data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null
+         data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
+         data.responseFormatEnabled ?? false,
+         data.responseFormatType || null,
+         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null
        ]
     );
     return toCamelCase(result.rows[0]);
@@ -221,6 +224,9 @@ export const db = {
         reanalysis_period = COALESCE($18, reanalysis_period),
         auto_apply_recommendations = COALESCE($19, auto_apply_recommendations),
         task_analysis = COALESCE($20, task_analysis),
+        response_format_enabled = COALESCE($21, response_format_enabled),
+        response_format_type = COALESCE($22, response_format_type),
+        response_format_schema = COALESCE($23, response_format_schema),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
       [
@@ -244,6 +250,9 @@ export const db = {
         data.reanalysisPeriod,
         data.autoApplyRecommendations,
         data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
+        data.responseFormatEnabled,
+        data.responseFormatType,
+        data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null,
       ]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;

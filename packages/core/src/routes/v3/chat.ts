@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { authenticate } from '../../middleware/auth.js';
-import { callAdapter, normalizeModelId } from '../../lib/provider-factory.js';
+import { callAdapter, normalizeModelId, getProviderForModel, PROVIDER } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig, ChatRequest } from '@layer-ai/sdk';
 import { OverrideField } from '@layer-ai/sdk';
 
@@ -23,7 +23,7 @@ function isOverrideAllowed(allowOverrides: boolean | OverrideConfig | undefined 
   return allowOverrides[field] ?? false;
 }
 
-function resolveFinalRequest(
+export function resolveFinalRequest(
   gateConfig: Gate,
   request: LayerRequest
 ): LayerRequest {
@@ -60,6 +60,46 @@ function resolveFinalRequest(
     chatData.topP = gateConfig.topP;
   } else if (chatData.topP !== undefined && !isOverrideAllowed(gateConfig.allowOverrides, OverrideField.TopP)) {
     chatData.topP = gateConfig.topP;
+  }
+
+  // Apply structured output (response format) from gate config if enabled
+  if (gateConfig.responseFormatEnabled && gateConfig.responseFormatType) {
+    const modelProvider = getProviderForModel(finalModel);
+
+    if (modelProvider === PROVIDER.OPENAI) {
+      // OpenAI: Use native response_format support
+      if (gateConfig.responseFormatType === 'json_schema' && gateConfig.responseFormatSchema) {
+        // Schema is already in the correct format from DB
+        chatData.responseFormat = gateConfig.responseFormatSchema as { type: 'json_schema'; json_schema: unknown };
+      } else {
+        chatData.responseFormat = gateConfig.responseFormatType; // 'text' or 'json_object'
+      }
+    } else {
+      // Non-OpenAI providers: Beta mode - inject instructions into system prompt
+      if (gateConfig.responseFormatType !== 'text') {
+        let schemaInstructions = '';
+
+        if (gateConfig.responseFormatType === 'json_schema' && gateConfig.responseFormatSchema) {
+          // Extract just the schema portion if it's the full OpenAI format
+          const schemaObj = gateConfig.responseFormatSchema as any;
+          const actualSchema = schemaObj.json_schema?.schema || schemaObj;
+
+          schemaInstructions = `\n\nYou MUST respond with ONLY a valid JSON object matching this schema. Do not include ANY text before or after the JSON. Do not wrap it in markdown code blocks. Do not add explanations. ONLY output the raw JSON object.\n\nRequired JSON Schema:\n${JSON.stringify(actualSchema, null, 2)}`;
+        } else if (gateConfig.responseFormatType === 'json_object') {
+          schemaInstructions = `\n\nYou MUST respond with ONLY a valid JSON object. Do not include ANY text before or after the JSON. Do not wrap it in markdown code blocks. Do not add explanations. ONLY output the raw JSON object.`;
+        }
+
+        // Append to existing system prompt or create new one
+        chatData.systemPrompt = (chatData.systemPrompt || '') + schemaInstructions;
+
+        // Log info message about beta mode
+        console.log(
+          `[Layer AI - Structured Output Beta] Gate "${gateConfig.name}" (ID: ${gateConfig.id}) ` +
+          `is using structured output with provider "${modelProvider}". This is a beta feature that relies on ` +
+          `prompt engineering and may not be as reliable as OpenAI's native support.`
+        );
+      }
+    }
   }
 
   return {

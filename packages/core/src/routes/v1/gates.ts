@@ -21,7 +21,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
-    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis } = req.body as CreateGateRequest;
+    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis, responseFormatEnabled, responseFormatType, responseFormatSchema } = req.body as CreateGateRequest;
 
     if (!name || !model) {
       res.status(400).json({ error: 'bad_request', message: 'Missing required fields: name and model' });
@@ -57,6 +57,9 @@ router.post('/', async (req: Request, res: Response) => {
       qualityWeight,
       reanalysisPeriod,
       taskAnalysis,
+      responseFormatEnabled,
+      responseFormatType,
+      responseFormatSchema,
     });
 
     res.status(201).json(gate);
@@ -221,7 +224,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations } = req.body as UpdateGateRequest;
+    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations, responseFormatEnabled, responseFormatType, responseFormatSchema } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateById(req.params.id);
 
@@ -258,6 +261,9 @@ router.patch('/:id', async (req: Request, res: Response) => {
       analysisMethod,
       reanalysisPeriod,
       autoApplyRecommendations,
+      responseFormatEnabled,
+      responseFormatType,
+      responseFormatSchema,
     });
 
     const updated = await db.updateGate(req.params.id, {
@@ -280,6 +286,9 @@ router.patch('/:id', async (req: Request, res: Response) => {
       reanalysisPeriod,
       taskAnalysis,
       autoApplyRecommendations,
+      responseFormatEnabled,
+      responseFormatType,
+      responseFormatSchema,
     });
 
     // Only create history snapshot if significant changes were detected

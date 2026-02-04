@@ -239,6 +239,88 @@ async function testContentAndToolCalls() {
   console.log('✅ Content + tool calls test passed\n');
 }
 
+async function testStructuredOutputJsonObject() {
+  console.log('Testing structured output - JSON Object mode...');
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'gpt-4o',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Generate a JSON user profile with name, age, and city fields' }
+      ],
+      responseFormat: 'json_object',
+      maxTokens: 100,
+    }
+  };
+
+  const response = await adapter.call(request);
+  console.log('Response:', response.content);
+
+  // Try to parse as JSON
+  try {
+    const parsed = JSON.parse(response.content || '');
+    console.log('Parsed JSON:', parsed);
+    console.log('✅ JSON Object mode test passed\n');
+  } catch (error) {
+    throw new Error(`Response was not valid JSON: ${response.content}`);
+  }
+}
+
+async function testStructuredOutputJsonSchema() {
+  console.log('Testing structured output - JSON Schema mode...');
+
+  const schema = {
+    type: 'json_schema' as const,
+    json_schema: {
+      name: 'user_profile',
+      strict: true,
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number' },
+          city: { type: 'string' },
+        },
+        required: ['name', 'age', 'city'],
+        additionalProperties: false,
+      },
+    },
+  };
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'gpt-4o',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Create a profile for John Doe, age 30, from New York' }
+      ],
+      responseFormat: schema,
+      maxTokens: 100,
+    }
+  };
+
+  const response = await adapter.call(request);
+  console.log('Response:', response.content);
+
+  // Try to parse as JSON and validate schema
+  try {
+    const parsed = JSON.parse(response.content || '');
+    console.log('Parsed JSON:', parsed);
+
+    // Validate required fields
+    if (!parsed.name || typeof parsed.age !== 'number' || !parsed.city) {
+      throw new Error('Response does not match schema');
+    }
+
+    console.log('✅ JSON Schema mode test passed\n');
+  } catch (error) {
+    throw new Error(`Schema validation failed: ${error}`);
+  }
+}
+
 async function runTests() {
   try {
     await testChatCompletion();
@@ -251,6 +333,10 @@ async function runTests() {
 
     console.log('Testing content + tool calls...');
     await testContentAndToolCalls();
+
+    console.log('Testing structured output...');
+    await testStructuredOutputJsonObject();
+    await testStructuredOutputJsonSchema();
 
     await testImageGeneration();
     await testEmbeddings();
