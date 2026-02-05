@@ -77,6 +77,18 @@ export class MistralAdapter extends BaseProviderAdapter {
     }
   }
 
+  async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
+    const resolved = await resolveApiKey(this.provider, userId, process.env.MISTRAL_API_KEY);
+
+    switch (request.type) {
+      case 'chat':
+        yield* this.handleChatStream(request, resolved.key, resolved.usedPlatformKey);
+        break;
+      default:
+        throw new Error(`Streaming not supported for type: ${(request as any).type}`);
+    }
+  }
+
   private async handleChat(
     request: Extract<LayerRequest, { type: 'chat' }>,
     apiKey: string,
@@ -267,6 +279,246 @@ export class MistralAdapter extends BaseProviderAdapter {
       latencyMs: Date.now() - startTime,
       usedPlatformKey,
       raw: response,
+    };
+  }
+
+  private async *handleChatStream(
+    request: Extract<LayerRequest, { type: 'chat' }>,
+    apiKey: string,
+    usedPlatformKey: boolean
+  ): AsyncIterable<LayerResponse> {
+    const startTime = Date.now();
+    const mistral = getMistralClient(apiKey);
+    const { data: chat, model } = request;
+
+    if (!model) {
+      throw new Error('Model is required for chat completion');
+    }
+
+    // Build messages array (same as non-streaming)
+    const messages: Array<{
+      role: 'system' | 'user' | 'assistant' | 'tool';
+      content: string | Array<{ type: string; text?: string; imageUrl?: string }>;
+      toolCallId?: string;
+      name?: string;
+      toolCalls?: Array<{
+        id: string;
+        type: 'function';
+        function: { name: string; arguments: string };
+      }>;
+    }> = [];
+
+    // Handle system prompt
+    if (chat.systemPrompt) {
+      messages.push({ role: 'system', content: chat.systemPrompt });
+    }
+
+    // Convert messages to Mistral format
+    for (const msg of chat.messages) {
+      const role = this.mapRole(msg.role) as 'system' | 'user' | 'assistant' | 'tool';
+
+      // Handle vision messages (content + images)
+      if (msg.images && msg.images.length > 0 && role === 'user') {
+        const content: Array<{ type: string; text?: string; imageUrl?: string }> = [];
+
+        if (msg.content) {
+          content.push({ type: 'text', text: msg.content });
+        }
+
+        for (const image of msg.images) {
+          const imageUrl =
+            image.url || `data:${image.mimeType || 'image/jpeg'};base64,${image.base64}`;
+          content.push({
+            type: 'image_url',
+            imageUrl: imageUrl,
+          });
+        }
+
+        messages.push({ role, content });
+      }
+      // Handle tool responses
+      else if (msg.toolCallId && role === 'tool') {
+        messages.push({
+          role: 'tool',
+          content: msg.content || '',
+          toolCallId: msg.toolCallId,
+          name: msg.name,
+        });
+      }
+      // Handle assistant messages with tool calls
+      else if (msg.toolCalls && msg.toolCalls.length > 0) {
+        messages.push({
+          role: 'assistant',
+          content: msg.content || '',
+          toolCalls: msg.toolCalls.map((tc) => ({
+            id: tc.id,
+            type: 'function' as const,
+            function: {
+              name: tc.function.name,
+              arguments: tc.function.arguments,
+            },
+          })),
+        });
+      }
+      // Handle regular text messages
+      else {
+        messages.push({
+          role,
+          content: msg.content || '',
+        });
+      }
+    }
+
+    // Convert tools to Mistral format
+    let tools: Array<{
+      type: 'function';
+      function: {
+        name: string;
+        description?: string;
+        parameters: Record<string, unknown>;
+      };
+    }> | undefined;
+
+    if (chat.tools && chat.tools.length > 0) {
+      tools = chat.tools.map((tool) => ({
+        type: 'function' as const,
+        function: {
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: (tool.function.parameters as Record<string, unknown>) || {},
+        },
+      }));
+    }
+
+    // Map tool choice
+    let toolChoice: 'auto' | 'none' | 'any' | 'required' | { type: 'function'; function: { name: string } } | undefined;
+    if (chat.toolChoice) {
+      if (typeof chat.toolChoice === 'object') {
+        toolChoice = chat.toolChoice as { type: 'function'; function: { name: string } };
+      } else {
+        const mapped = this.mapToolChoice(chat.toolChoice);
+        if (mapped === 'auto' || mapped === 'none' || mapped === 'any' || mapped === 'required') {
+          toolChoice = mapped;
+        }
+      }
+    }
+
+    const stream = await mistral.chat.stream({
+      model,
+      messages: messages as any,
+      ...(chat.temperature !== undefined && { temperature: chat.temperature }),
+      ...(chat.maxTokens !== undefined && { maxTokens: chat.maxTokens }),
+      ...(chat.topP !== undefined && { topP: chat.topP }),
+      ...(chat.stopSequences !== undefined && { stop: chat.stopSequences }),
+      ...(chat.frequencyPenalty !== undefined && { frequencyPenalty: chat.frequencyPenalty }),
+      ...(chat.presencePenalty !== undefined && { presencePenalty: chat.presencePenalty }),
+      ...(chat.seed !== undefined && { randomSeed: chat.seed }),
+      ...(tools && { tools }),
+      ...(toolChoice && { toolChoice }),
+      ...(chat.responseFormat && {
+        responseFormat:
+          typeof chat.responseFormat === 'string'
+            ? { type: chat.responseFormat }
+            : chat.responseFormat,
+      }),
+    });
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let totalTokens = 0;
+    let fullContent = '';
+    let currentToolCalls: LayerResponse['toolCalls'] = [];
+    let finishReason: string | null = null;
+    let modelVersion: string | undefined;
+
+    for await (const chunk of stream) {
+      // Mistral CompletionEvent can be of type 'chunk' or 'usage'
+      const event = chunk as any;
+
+      // Handle chunk events with choices
+      if (event.data?.choices) {
+        const choice = event.data.choices[0];
+        const delta = choice?.delta;
+
+        // Handle text content
+        if (delta?.content) {
+          const contentStr = typeof delta.content === 'string'
+            ? delta.content
+            : Array.isArray(delta.content)
+              ? delta.content.map((c: any) => c.text || c.content || '').join('')
+              : '';
+
+          if (contentStr) {
+            fullContent += contentStr;
+            yield {
+              content: contentStr,
+              model: model,
+              stream: true,
+            };
+          }
+        }
+
+        // Handle tool calls
+        if (delta?.toolCalls && delta.toolCalls.length > 0) {
+          for (const tc of delta.toolCalls) {
+            const existingCall = currentToolCalls.find(call => call.id === tc.id);
+            if (existingCall) {
+              // Append to existing tool call arguments
+              if (tc.function?.arguments) {
+                existingCall.function.arguments += tc.function.arguments;
+              }
+            } else {
+              // New tool call
+              currentToolCalls.push({
+                id: tc.id || `call_${currentToolCalls.length}`,
+                type: 'function',
+                function: {
+                  name: tc.function?.name || '',
+                  arguments: tc.function?.arguments || '',
+                },
+              });
+            }
+          }
+        }
+
+        // Handle finish reason
+        if (choice?.finishReason) {
+          finishReason = choice.finishReason;
+        }
+
+        // Handle model version
+        if (event.data.model) {
+          modelVersion = event.data.model;
+        }
+      }
+
+      // Handle usage events
+      if (event.data?.usage) {
+        promptTokens = event.data.usage.promptTokens || 0;
+        completionTokens = event.data.usage.completionTokens || 0;
+        totalTokens = event.data.usage.totalTokens || 0;
+      }
+    }
+
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
+    const latencyMs = Date.now() - startTime;
+
+    // Yield final chunk with metadata
+    yield {
+      content: '',
+      model: modelVersion || model,
+      toolCalls: currentToolCalls.length > 0 ? currentToolCalls : undefined,
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+      },
+      cost,
+      latencyMs,
+      usedPlatformKey,
+      stream: true,
+      finishReason: this.mapFinishReason(finishReason || 'stop'),
+      rawFinishReason: finishReason || undefined,
     };
   }
 

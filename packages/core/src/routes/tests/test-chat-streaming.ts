@@ -447,6 +447,94 @@ async function testGeminiToolCallsStreaming() {
   }
 }
 
+// Test 10: Mistral streaming
+async function testMistralStreaming() {
+  console.log('Test 10: Mistral Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'mistral-small-2501',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Say "mistral test passed" and nothing else.' }
+      ],
+      maxTokens: 20,
+      stream: true,
+    }
+  };
+
+  let chunkCount = 0;
+  let fullContent = '';
+
+  for await (const chunk of callAdapterStream(request)) {
+    chunkCount++;
+    if (chunk.content) {
+      fullContent += chunk.content;
+    }
+  }
+
+  console.log(`  Chunks received: ${chunkCount}`);
+  console.log(`  Content: ${fullContent.trim()}`);
+  console.log('  ✅ Mistral streaming test passed\n');
+}
+
+// Test 11: Mistral with tool calls streaming
+async function testMistralToolCallsStreaming() {
+  console.log('Test 11: Mistral Tool Calls Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'mistral-small-2501',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'What is the weather in Berlin?' }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get weather for a location',
+            parameters: {
+              type: 'object',
+              properties: {
+                location: { type: 'string' },
+              },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+      stream: true,
+    }
+  };
+
+  let toolCallsFound = false;
+  let finishReason = null;
+
+  for await (const chunk of callAdapterStream(request)) {
+    if (chunk.toolCalls && chunk.toolCalls.length > 0) {
+      toolCallsFound = true;
+    }
+    if (chunk.finishReason) {
+      finishReason = chunk.finishReason;
+    }
+  }
+
+  console.log(`  Tool calls found: ${toolCallsFound}`);
+  console.log(`  Finish reason: ${finishReason}`);
+
+  if (toolCallsFound) {
+    console.log('  ✅ Mistral tool calls streaming test passed\n');
+  } else {
+    console.log('  ⚠️  Tool calls may not have been invoked (model chose not to use tools)\n');
+  }
+}
+
 // Run all tests
 (async () => {
   try {
@@ -459,6 +547,8 @@ async function testGeminiToolCallsStreaming() {
     await testMultiProviderFallback();
     await testGeminiStreaming();
     await testGeminiToolCallsStreaming();
+    await testMistralStreaming();
+    await testMistralToolCallsStreaming();
 
     console.log('='.repeat(80));
     console.log('✅ ALL STREAMING ROUTE TESTS PASSED');
