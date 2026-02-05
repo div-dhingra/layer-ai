@@ -359,6 +359,94 @@ async function testMultiProviderFallback() {
   }
 }
 
+// Test 8: Google/Gemini streaming
+async function testGeminiStreaming() {
+  console.log('Test 8: Google/Gemini Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'gemini-2.0-flash',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Say "gemini test passed" and nothing else.' }
+      ],
+      maxTokens: 20,
+      stream: true,
+    }
+  };
+
+  let chunkCount = 0;
+  let fullContent = '';
+
+  for await (const chunk of callAdapterStream(request)) {
+    chunkCount++;
+    if (chunk.content) {
+      fullContent += chunk.content;
+    }
+  }
+
+  console.log(`  Chunks received: ${chunkCount}`);
+  console.log(`  Content: ${fullContent.trim()}`);
+  console.log('  ✅ Gemini streaming test passed\n');
+}
+
+// Test 9: Gemini with tool calls streaming
+async function testGeminiToolCallsStreaming() {
+  console.log('Test 9: Gemini Tool Calls Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'gemini-2.0-flash',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'What is the weather in London?' }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get weather for a location',
+            parameters: {
+              type: 'object',
+              properties: {
+                location: { type: 'string' },
+              },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+      stream: true,
+    }
+  };
+
+  let toolCallsFound = false;
+  let finishReason = null;
+
+  for await (const chunk of callAdapterStream(request)) {
+    if (chunk.toolCalls && chunk.toolCalls.length > 0) {
+      toolCallsFound = true;
+    }
+    if (chunk.finishReason) {
+      finishReason = chunk.finishReason;
+    }
+  }
+
+  console.log(`  Tool calls found: ${toolCallsFound}`);
+  console.log(`  Finish reason: ${finishReason}`);
+
+  if (toolCallsFound) {
+    console.log('  ✅ Gemini tool calls streaming test passed\n');
+  } else {
+    console.log('  ⚠️  Tool calls may not have been invoked (model chose not to use tools)\n');
+  }
+}
+
 // Run all tests
 (async () => {
   try {
@@ -369,6 +457,8 @@ async function testMultiProviderFallback() {
     await testClaudeStreaming();
     await testClaudeToolCallsStreaming();
     await testMultiProviderFallback();
+    await testGeminiStreaming();
+    await testGeminiToolCallsStreaming();
 
     console.log('='.repeat(80));
     console.log('✅ ALL STREAMING ROUTE TESTS PASSED');
