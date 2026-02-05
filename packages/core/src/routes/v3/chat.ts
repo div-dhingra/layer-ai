@@ -5,6 +5,7 @@ import { authenticate } from '../../middleware/auth.js';
 import { callAdapter, callAdapterStream, normalizeModelId, getProviderForModel, PROVIDER } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig, ChatRequest } from '@layer-ai/sdk';
 import { OverrideField } from '@layer-ai/sdk';
+import { spendingTracker } from '../../lib/spending-tracker.js';
 
 const router: RouterType = Router();
 
@@ -349,6 +350,10 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
           },
         }).catch(err => console.error('Failed to log request:', err));
 
+        spendingTracker.trackSpending(userId, totalCost).catch(err => {
+          console.error('Failed to track spending:', err);
+        });
+
       } catch (streamError) {
         const errorMessage = streamError instanceof Error ? streamError.message : 'Unknown streaming error';
         res.write(`data: ${JSON.stringify({ error: 'stream_error', message: errorMessage })}\n\n`);
@@ -417,6 +422,10 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         finishReason: result.finishReason,
       },
     }).catch(err => console.error('Failed to log request:', err));
+
+    spendingTracker.trackSpending(userId, result.cost || 0).catch(err => {
+      console.error('Failed to track spending:', err);
+    });
 
     const response: LayerResponse = {
       ...result,

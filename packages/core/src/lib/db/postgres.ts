@@ -96,6 +96,94 @@ export const db = {
     return result.rows[0]?.status || null;
   },
 
+  // ===== SPENDING MANAGEMENT =====
+
+  async getUserSpending(userId: string): Promise<{ currentSpending: number; limit: number | null; periodStart: Date; status: string; limitEnforcementType: string } | null> {
+    const result = await getPool().query(
+      'SELECT current_month_spending, monthly_spending_limit, spending_period_start, status, limit_enforcement_type FROM users WHERE id = $1',
+      [userId]
+    );
+    if (!result.rows[0]) return null;
+    return {
+      currentSpending: parseFloat(result.rows[0].current_month_spending) || 0,
+      limit: result.rows[0].monthly_spending_limit ? parseFloat(result.rows[0].monthly_spending_limit) : null,
+      periodStart: result.rows[0].spending_period_start,
+      status: result.rows[0].status,
+      limitEnforcementType: result.rows[0].limit_enforcement_type,
+    };
+  },
+
+  async updateUserSpending(userId: string, newSpending: number): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET current_month_spending = $1, updated_at = NOW() WHERE id = $2',
+      [newSpending, userId]
+    );
+  },
+
+  async incrementUserSpending(userId: string, cost: number): Promise<{ newSpending: number; limit: number | null; exceeded: boolean }> {
+    const result = await getPool().query(
+      `UPDATE users
+       SET current_month_spending = current_month_spending + $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING current_month_spending, monthly_spending_limit`,
+      [cost, userId]
+    );
+    const row = result.rows[0];
+    const newSpending = parseFloat(row.current_month_spending);
+    const limit = row.monthly_spending_limit ? parseFloat(row.monthly_spending_limit) : null;
+    const exceeded = limit !== null && newSpending > limit;
+    return { newSpending, limit, exceeded };
+  },
+
+  async setUserStatus(userId: string, status: string): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET status = $1, updated_at = NOW() WHERE id = $2',
+      [status, userId]
+    );
+  },
+
+  async setUserSpendingLimit(userId: string, limit: number | null): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET monthly_spending_limit = $1, updated_at = NOW() WHERE id = $2',
+      [limit, userId]
+    );
+  },
+
+  async setUserEnforcementType(userId: string, enforcementType: string): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET limit_enforcement_type = $1, updated_at = NOW() WHERE id = $2',
+      [enforcementType, userId]
+    );
+  },
+
+  async resetUserSpending(userId: string): Promise<void> {
+    await getPool().query(
+      `UPDATE users
+       SET current_month_spending = 0,
+           spending_period_start = NOW(),
+           status = CASE WHEN status = 'over_limit' THEN 'active' ELSE status END,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId]
+    );
+  },
+
+  async getUsersToResetSpending(): Promise<string[]> {
+    const result = await getPool().query(
+      `SELECT id FROM users
+       WHERE spending_period_start < NOW() - INTERVAL '30 days'
+       AND status IN ('active', 'over_limit')`
+    );
+    return result.rows.map(row => row.id);
+  },
+
+  async recordSpendingAlert(userId: string): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET last_spending_alert_sent_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [userId]
+    );
+  },
+
   // API Keys
   async getApiKeyByHash(keyHash: string): Promise<ApiKey | null> {
     const result = await getPool().query(

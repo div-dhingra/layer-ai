@@ -92,6 +92,18 @@ export async function authenticate(
         return;
       }
 
+      // Check spending limits if user has exceeded and enforcement is set to block
+      if (userStatus === 'over_limit') {
+        const spendingInfo = await db.getUserSpending(apiKeyRecord.userId);
+        if (spendingInfo?.limitEnforcementType === 'block') {
+          res.status(403).json({
+            error: 'spending_limit_exceeded',
+            message: 'You have exceeded your spending limit. Requests are blocked until your next billing period or until you increase your limit.',
+          });
+          return;
+        }
+      }
+
       // Attach userId to request for downstream handlers
       req.userId = apiKeyRecord.userId;
       req.apiKeyId = apiKeyRecord.id;
@@ -127,6 +139,18 @@ export async function authenticate(
           message: 'Your account has been banned.',
         });
         return;
+      }
+
+      // Check spending limits if user has exceeded and enforcement is set to block
+      if (userStatus === 'over_limit') {
+        const spendingInfo = await db.getUserSpending(sessionKey.userId);
+        if (spendingInfo?.limitEnforcementType === 'block') {
+          res.status(403).json({
+            error: 'spending_limit_exceeded',
+            message: 'You have exceeded your spending limit. Requests are blocked until your next billing period or until you increase your limit.',
+          });
+          return;
+        }
       }
 
       req.userId = sessionKey.userId;

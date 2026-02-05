@@ -4,6 +4,7 @@ export { default as gatesRouter } from './routes/v1/gates.js';
 export { default as keysRouter } from './routes/v1/keys.js';
 export { default as logsRouter } from './routes/v1/logs.js';
 export { default as chatCompletionsRouter } from './routes/v1/chat-completions.js';
+export { default as spendingRouter } from './routes/v1/spending.js';
 
 // v2 routes
 export { default as completeRouter } from './routes/v2/complete.js';
@@ -44,3 +45,7 @@ export * from './services/task-analysis.js';
 
 // Provider Factory
 export { PROVIDER, PROVIDERS, type Provider, callAdapter, normalizeModelId, getProviderForModel } from './lib/provider-factory.js';
+
+// Spending Management
+export { spendingTracker } from './lib/spending-tracker.js';
+export { spendingJobs } from './lib/spending-jobs.js';
