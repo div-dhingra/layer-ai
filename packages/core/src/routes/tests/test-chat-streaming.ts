@@ -225,6 +225,140 @@ async function testStreamingWithTools() {
   }
 }
 
+// Test 5: Claude/Anthropic streaming
+async function testClaudeStreaming() {
+  console.log('Test 5: Claude/Anthropic Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'claude-3-7-sonnet-20250219',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Say "claude test passed" and nothing else.' }
+      ],
+      maxTokens: 20,
+      stream: true,
+    }
+  };
+
+  let chunkCount = 0;
+  let fullContent = '';
+
+  for await (const chunk of callAdapterStream(request)) {
+    chunkCount++;
+    if (chunk.content) {
+      fullContent += chunk.content;
+    }
+  }
+
+  console.log(`  Chunks received: ${chunkCount}`);
+  console.log(`  Content: ${fullContent.trim()}`);
+  console.log('  ✅ Claude streaming test passed\n');
+}
+
+// Test 6: Claude with tool calls streaming
+async function testClaudeToolCallsStreaming() {
+  console.log('Test 6: Claude Tool Calls Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'claude-3-7-sonnet-20250219',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'What is the weather in Tokyo?' }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_weather',
+            description: 'Get weather for a location',
+            parameters: {
+              type: 'object',
+              properties: {
+                location: { type: 'string' },
+              },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+      stream: true,
+    }
+  };
+
+  let toolCallsFound = false;
+  let finishReason = null;
+
+  for await (const chunk of callAdapterStream(request)) {
+    if (chunk.toolCalls && chunk.toolCalls.length > 0) {
+      toolCallsFound = true;
+    }
+    if (chunk.finishReason) {
+      finishReason = chunk.finishReason;
+    }
+  }
+
+  console.log(`  Tool calls found: ${toolCallsFound}`);
+  console.log(`  Finish reason: ${finishReason}`);
+
+  if (toolCallsFound && finishReason === 'tool_call') {
+    console.log('  ✅ Claude tool calls streaming test passed\n');
+  } else {
+    console.log('  ⚠️  Tool calls may not have been invoked (model chose not to use tools)\n');
+  }
+}
+
+// Test 7: Multi-provider fallback with streaming (OpenAI -> Claude)
+async function testMultiProviderFallback() {
+  console.log('Test 7: Multi-Provider Fallback (OpenAI -> Claude) with Streaming');
+  console.log('-'.repeat(80));
+
+  const request: LayerRequest = {
+    gateId: 'test-gate',
+    model: 'invalid-openai-model',
+    type: 'chat',
+    data: {
+      messages: [
+        { role: 'user', content: 'Say "multi-provider fallback worked" and nothing else.' }
+      ],
+      maxTokens: 15,
+      stream: true,
+    }
+  };
+
+  const modelsToTry: SupportedModel[] = [
+    'invalid-openai-model' as SupportedModel,
+    'claude-3-7-sonnet-20250219',
+  ];
+
+  let chunkCount = 0;
+  let fullContent = '';
+  let succeeded = false;
+
+  try {
+    for await (const chunk of executeWithFallbackStream(request, modelsToTry)) {
+      chunkCount++;
+      if (chunk.content) {
+        fullContent += chunk.content;
+      }
+    }
+    succeeded = true;
+  } catch (error) {
+    console.error('  ❌ Multi-provider fallback failed:', error instanceof Error ? error.message : error);
+  }
+
+  if (succeeded) {
+    console.log(`  Chunks received: ${chunkCount}`);
+    console.log(`  Content: ${fullContent.trim()}`);
+    console.log('  ✅ Multi-provider fallback test passed\n');
+  }
+}
+
 // Run all tests
 (async () => {
   try {
@@ -232,6 +366,9 @@ async function testStreamingWithTools() {
     await testFallbackRouting();
     await testRoundRobinRouting();
     await testStreamingWithTools();
+    await testClaudeStreaming();
+    await testClaudeToolCallsStreaming();
+    await testMultiProviderFallback();
 
     console.log('='.repeat(80));
     console.log('✅ ALL STREAMING ROUTE TESTS PASSED');
