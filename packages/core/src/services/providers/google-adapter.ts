@@ -23,12 +23,10 @@ import { resolveApiKey } from '../../lib/key-resolver.js';
 let client: GoogleGenAI | null = null;
 
 function getGoogleClient(apiKey?: string): GoogleGenAI {
-  // If custom API key provided, create new client
   if (apiKey) {
     return new GoogleGenAI({ apiKey });
   }
 
-  // Otherwise use singleton with platform key
   if (!client) {
     client = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || '' });
   }
@@ -48,7 +46,6 @@ export class GoogleAdapter extends BaseProviderAdapter {
     developer: 'system',
   };
 
-  // Map Google finish reasons to Layer finish reasons
   protected finishReasonMappings: Record<string, FinishReason> = {
     STOP: 'completed',
     MAX_TOKENS: 'length_limit',
@@ -64,7 +61,6 @@ export class GoogleAdapter extends BaseProviderAdapter {
     required: FunctionCallingConfigMode.ANY,
   };
 
-  // Map Layer VideoSize to Veo aspect ratio and resolution
   protected videoSizeConfig: Record<
     VideoSize,
     { aspectRatio: string; resolution: string }
@@ -76,7 +72,6 @@ export class GoogleAdapter extends BaseProviderAdapter {
   };
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
-    // Resolve API key (BYOK → Platform key)
     const resolved = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
 
     switch (request.type) {
@@ -92,6 +87,18 @@ export class GoogleAdapter extends BaseProviderAdapter {
         return this.handleVideoGeneration(request, resolved.key, resolved.usedPlatformKey);
       default:
         throw new Error(`Unknown modality: ${(request as any).type}`);
+    }
+  }
+
+  async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
+    const resolved = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
+
+    switch (request.type) {
+      case 'chat':
+        yield* this.handleChatStream(request, resolved.key, resolved.usedPlatformKey);
+        break;
+      default:
+        throw new Error(`Streaming not supported for type: ${(request as any).type}`);
     }
   }
 
@@ -276,6 +283,217 @@ export class GoogleAdapter extends BaseProviderAdapter {
       latencyMs: Date.now() - startTime,
       usedPlatformKey,
       raw: response,
+    };
+  }
+
+  private async *handleChatStream(
+    request: Extract<LayerRequest, { type: 'chat' }>,
+    apiKey: string,
+    usedPlatformKey: boolean
+  ): AsyncIterable<LayerResponse> {
+    const startTime = Date.now();
+    const client = getGoogleClient(apiKey);
+    const { data: chat, model } = request;
+
+    if (!model) {
+      throw new Error('Model is required for chat completion');
+    }
+
+    const contents: Content[] = [];
+    let systemInstruction: string | undefined;
+
+    if (chat.systemPrompt) {
+      systemInstruction = chat.systemPrompt;
+    }
+
+    for (const msg of chat.messages) {
+      const role = this.mapRole(msg.role);
+
+      if (role === 'system') {
+        systemInstruction = systemInstruction
+          ? `${systemInstruction}\n${msg.content}`
+          : msg.content;
+        continue;
+      }
+
+      const parts: Part[] = [];
+
+      if (msg.content) {
+        parts.push({ text: msg.content });
+      }
+
+      if (msg.images && msg.images.length > 0) {
+        for (const image of msg.images) {
+          if (image.base64) {
+            parts.push({
+              inlineData: {
+                mimeType: image.mimeType || 'image/jpeg',
+                data: image.base64,
+              },
+            });
+          } else if (image.url) {
+            parts.push({
+              fileData: {
+                mimeType: image.mimeType || 'image/jpeg',
+                fileUri: image.url,
+              },
+            });
+          }
+        }
+      }
+
+      if (msg.toolCallId && msg.role === 'tool') {
+        if (!msg.name) {
+          throw new Error('Tool response messages must include the function name');
+        }
+        parts.push({
+          functionResponse: {
+            name: msg.name || msg.toolCallId,
+            response: { result: msg.content },
+          },
+        });
+      }
+
+      if (msg.toolCalls && msg.toolCalls.length > 0) {
+        for (const toolCall of msg.toolCalls) {
+          parts.push({
+            functionCall: {
+              name: toolCall.function.name,
+              args: JSON.parse(toolCall.function.arguments),
+            },
+          });
+        }
+      }
+
+      if (parts.length > 0) {
+        contents.push({
+          role: role === 'model' ? 'model' : 'user',
+          parts,
+        });
+      }
+    }
+
+    let googleTools: GoogleTool[] | undefined;
+    if (chat.tools && chat.tools.length > 0) {
+      googleTools = [
+        {
+          functionDeclarations: chat.tools.map((tool) => ({
+            name: tool.function.name,
+            description: tool.function.description,
+            parametersJsonSchema: tool.function.parameters as Record<string, unknown>,
+          })),
+        },
+      ];
+    }
+
+    let toolConfig:
+      | { functionCallingConfig?: { mode: FunctionCallingConfigMode } }
+      | undefined;
+    if (chat.toolChoice) {
+      const mode = this.mapToolChoice(chat.toolChoice);
+      if (typeof mode === 'string') {
+        toolConfig = {
+          functionCallingConfig: { mode: mode as FunctionCallingConfigMode },
+        };
+      }
+    }
+
+    const stream = await client.models.generateContentStream({
+      model: model,
+      contents,
+      config: {
+        ...(systemInstruction && { systemInstruction }),
+        ...(googleTools && { tools: googleTools }),
+        ...(toolConfig && { toolConfig }),
+        ...(chat.temperature !== undefined && { temperature: chat.temperature }),
+        ...(chat.maxTokens !== undefined && { maxOutputTokens: chat.maxTokens }),
+        ...(chat.topP !== undefined && { topP: chat.topP }),
+        ...(chat.stopSequences !== undefined && { stopSequences: chat.stopSequences }),
+      }
+    });
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let totalTokens = 0;
+    let fullContent = '';
+    let currentToolCalls: LayerResponse['toolCalls'] = [];
+    let finishReason: string | null = null;
+    let modelVersion: string | undefined;
+
+    for await (const chunk of stream) {
+      const candidate = chunk.candidates?.[0];
+      const content = candidate?.content;
+
+      const textChunk = content?.parts
+        ?.filter((part: Part) => 'text' in part)
+        .map((part: Part) => (part as { text: string }).text)
+        .join('');
+
+      if (textChunk) {
+        fullContent += textChunk;
+        yield {
+          content: textChunk,
+          model: model,
+          stream: true,
+        };
+      }
+
+      const toolCallParts = content?.parts?.filter((part: Part) => 'functionCall' in part);
+      if (toolCallParts && toolCallParts.length > 0) {
+        for (const part of toolCallParts) {
+          const fc = (
+            part as {
+              functionCall: { name: string; args: Record<string, unknown> };
+            }
+          ).functionCall;
+
+          const existingCall = currentToolCalls.find(tc => tc.function.name === fc.name);
+          if (!existingCall) {
+            currentToolCalls.push({
+              id: `call_${currentToolCalls.length}_${fc.name}`,
+              type: 'function',
+              function: {
+                name: fc.name,
+                arguments: JSON.stringify(fc.args),
+              },
+            });
+          }
+        }
+      }
+
+      if (chunk.usageMetadata) {
+        promptTokens = chunk.usageMetadata.promptTokenCount || 0;
+        completionTokens = chunk.usageMetadata.candidatesTokenCount || 0;
+        totalTokens = chunk.usageMetadata.totalTokenCount || 0;
+      }
+
+      if (candidate?.finishReason) {
+        finishReason = candidate.finishReason;
+      }
+
+      if (chunk.modelVersion) {
+        modelVersion = chunk.modelVersion;
+      }
+    }
+
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
+    const latencyMs = Date.now() - startTime;
+
+    yield {
+      content: '',
+      model: modelVersion || model,
+      toolCalls: currentToolCalls.length > 0 ? currentToolCalls : undefined,
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+      },
+      cost,
+      latencyMs,
+      usedPlatformKey,
+      stream: true,
+      finishReason: this.mapFinishReason(finishReason || 'STOP'),
+      rawFinishReason: finishReason || undefined,
     };
   }
 

@@ -55,6 +55,7 @@ export class Layer {
    */
   async chat(request: {
     gateId: string;
+    gateName?: string;
     data: ChatRequest;
     model?: string;
     metadata?: Record<string, unknown>;
@@ -72,6 +73,7 @@ export class Layer {
    */
   async image(request: {
     gateId: string;
+    gateName?: string;
     data: ImageGenerationRequest;
     model?: string;
     metadata?: Record<string, unknown>;
@@ -89,6 +91,7 @@ export class Layer {
    */
   async video(request: {
     gateId: string;
+    gateName?: string;
     data: VideoGenerationRequest;
     model?: string;
     metadata?: Record<string, unknown>;
@@ -106,6 +109,7 @@ export class Layer {
    */
   async embeddings(request: {
     gateId: string;
+    gateName?: string;
     data: EmbeddingsRequest;
     model?: string;
     metadata?: Record<string, unknown>;
@@ -123,6 +127,7 @@ export class Layer {
    */
   async tts(request: {
     gateId: string;
+    gateName?: string;
     data: TextToSpeechRequest;
     model?: string;
     metadata?: Record<string, unknown>;
@@ -140,6 +145,7 @@ export class Layer {
    */
   async ocr(request: {
     gateId: string;
+    gateName?: string;
     data: OCRRequest;
     model?: string;
     metadata?: Record<string, unknown>;
