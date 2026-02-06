@@ -96,6 +96,94 @@ export const db = {
     return result.rows[0]?.status || null;
   },
 
+  // ===== SPENDING MANAGEMENT =====
+
+  async getUserSpending(userId: string): Promise<{ currentSpending: number; limit: number | null; periodStart: Date; status: string; limitEnforcementType: string } | null> {
+    const result = await getPool().query(
+      'SELECT current_month_spending, monthly_spending_limit, spending_period_start, status, limit_enforcement_type FROM users WHERE id = $1',
+      [userId]
+    );
+    if (!result.rows[0]) return null;
+    return {
+      currentSpending: parseFloat(result.rows[0].current_month_spending) || 0,
+      limit: result.rows[0].monthly_spending_limit ? parseFloat(result.rows[0].monthly_spending_limit) : null,
+      periodStart: result.rows[0].spending_period_start,
+      status: result.rows[0].status,
+      limitEnforcementType: result.rows[0].limit_enforcement_type,
+    };
+  },
+
+  async updateUserSpending(userId: string, newSpending: number): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET current_month_spending = $1, updated_at = NOW() WHERE id = $2',
+      [newSpending, userId]
+    );
+  },
+
+  async incrementUserSpending(userId: string, cost: number): Promise<{ newSpending: number; limit: number | null; exceeded: boolean }> {
+    const result = await getPool().query(
+      `UPDATE users
+       SET current_month_spending = current_month_spending + $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING current_month_spending, monthly_spending_limit`,
+      [cost, userId]
+    );
+    const row = result.rows[0];
+    const newSpending = parseFloat(row.current_month_spending);
+    const limit = row.monthly_spending_limit ? parseFloat(row.monthly_spending_limit) : null;
+    const exceeded = limit !== null && newSpending > limit;
+    return { newSpending, limit, exceeded };
+  },
+
+  async setUserStatus(userId: string, status: string): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET status = $1, updated_at = NOW() WHERE id = $2',
+      [status, userId]
+    );
+  },
+
+  async setUserSpendingLimit(userId: string, limit: number | null): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET monthly_spending_limit = $1, updated_at = NOW() WHERE id = $2',
+      [limit, userId]
+    );
+  },
+
+  async setUserEnforcementType(userId: string, enforcementType: string): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET limit_enforcement_type = $1, updated_at = NOW() WHERE id = $2',
+      [enforcementType, userId]
+    );
+  },
+
+  async resetUserSpending(userId: string): Promise<void> {
+    await getPool().query(
+      `UPDATE users
+       SET current_month_spending = 0,
+           spending_period_start = NOW(),
+           status = CASE WHEN status = 'over_limit' THEN 'active' ELSE status END,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId]
+    );
+  },
+
+  async getUsersToResetSpending(): Promise<string[]> {
+    const result = await getPool().query(
+      `SELECT id FROM users
+       WHERE spending_period_start < NOW() - INTERVAL '30 days'
+       AND status IN ('active', 'over_limit')`
+    );
+    return result.rows.map(row => row.id);
+  },
+
+  async recordSpendingAlert(userId: string): Promise<void> {
+    await getPool().query(
+      'UPDATE users SET last_spending_alert_sent_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [userId]
+    );
+  },
+
   // API Keys
   async getApiKeyByHash(keyHash: string): Promise<ApiKey | null> {
     const result = await getPool().query(
@@ -163,8 +251,8 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis, response_format_enabled, response_format_type, response_format_schema)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *`,
+      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis, response_format_enabled, response_format_type, response_format_schema, spending_limit, spending_limit_period, spending_enforcement)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26) RETURNING *`,
        [
          userId,
          data.name,
@@ -188,7 +276,10 @@ export const db = {
          data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
          data.responseFormatEnabled ?? false,
          data.responseFormatType || null,
-         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null
+         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null,
+         data.spendingLimit ?? null,
+         data.spendingLimitPeriod || 'monthly',
+         data.spendingEnforcement || 'alert_only'
        ]
     );
     return toCamelCase(result.rows[0]);
@@ -227,6 +318,9 @@ export const db = {
         response_format_enabled = COALESCE($21, response_format_enabled),
         response_format_type = COALESCE($22, response_format_type),
         response_format_schema = COALESCE($23, response_format_schema),
+        spending_limit = COALESCE($24, spending_limit),
+        spending_limit_period = COALESCE($25, spending_limit_period),
+        spending_enforcement = COALESCE($26, spending_enforcement),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
       [
@@ -253,6 +347,9 @@ export const db = {
         data.responseFormatEnabled,
         data.responseFormatType,
         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null,
+        data.spendingLimit !== undefined ? data.spendingLimit : null,
+        data.spendingLimitPeriod,
+        data.spendingEnforcement,
       ]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;
@@ -663,6 +760,149 @@ export const db = {
     }
 
     return rolledBackGate;
+  },
+
+  // Gate spending management
+  async getGateSpending(gateId: string): Promise<{
+    spendingLimit: number | null;
+    spendingLimitPeriod: 'monthly' | 'daily';
+    spendingCurrent: number;
+    spendingPeriodStart: string;
+    spendingEnforcement: 'alert_only' | 'block';
+    spendingStatus: 'active' | 'suspended';
+    percentUsed: number | null;
+  } | null> {
+    const result = await getPool().query(
+      `SELECT
+        spending_limit,
+        spending_limit_period,
+        spending_current,
+        spending_period_start,
+        spending_enforcement,
+        spending_status
+      FROM gates
+      WHERE id = $1 AND deleted_at IS NULL`,
+      [gateId]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    const spendingLimit = row.spending_limit ? parseFloat(row.spending_limit) : null;
+    const spendingCurrent = parseFloat(row.spending_current || 0);
+    const percentUsed = spendingLimit ? Math.round((spendingCurrent / spendingLimit) * 100) : null;
+
+    return {
+      spendingLimit,
+      spendingLimitPeriod: row.spending_limit_period,
+      spendingCurrent,
+      spendingPeriodStart: row.spending_period_start,
+      spendingEnforcement: row.spending_enforcement,
+      spendingStatus: row.spending_status,
+      percentUsed,
+    };
+  },
+
+  async setGateSpendingLimit(gateId: string, limit: number | null): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_limit = $2, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, limit]
+    );
+  },
+
+  async setGateSpendingEnforcement(gateId: string, enforcement: 'alert_only' | 'block'): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_enforcement = $2, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, enforcement]
+    );
+  },
+
+  async setGateSpendingPeriod(gateId: string, period: 'monthly' | 'daily'): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_limit_period = $2, spending_period_start = NOW(), spending_current = 0, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, period]
+    );
+  },
+
+  async trackGateSpending(gateId: string, cost: number): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_current = spending_current + $2, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, cost]
+    );
+  },
+
+  async resetGateSpending(gateId: string): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_current = 0, spending_period_start = NOW(), updated_at = NOW()
+       WHERE id = $1`,
+      [gateId]
+    );
+  },
+
+  async checkGateSpendingLimit(gateId: string): Promise<{
+    allowed: boolean;
+    reason?: string;
+    currentSpending: number;
+    limit: number | null;
+    enforcement: 'alert_only' | 'block';
+  }> {
+    const spending = await this.getGateSpending(gateId);
+
+    if (!spending) {
+      return { allowed: true, currentSpending: 0, limit: null, enforcement: 'alert_only' };
+    }
+
+    // If suspended, block regardless of enforcement type
+    if (spending.spendingStatus === 'suspended') {
+      return {
+        allowed: false,
+        reason: 'Gate spending is suspended',
+        currentSpending: spending.spendingCurrent,
+        limit: spending.spendingLimit,
+        enforcement: spending.spendingEnforcement,
+      };
+    }
+
+    // If no limit set, allow
+    if (!spending.spendingLimit) {
+      return {
+        allowed: true,
+        currentSpending: spending.spendingCurrent,
+        limit: null,
+        enforcement: spending.spendingEnforcement,
+      };
+    }
+
+    // Check if limit exceeded
+    const limitExceeded = spending.spendingCurrent >= spending.spendingLimit;
+
+    if (limitExceeded && spending.spendingEnforcement === 'block') {
+      return {
+        allowed: false,
+        reason: `Gate spending limit of $${spending.spendingLimit.toFixed(2)} exceeded`,
+        currentSpending: spending.spendingCurrent,
+        limit: spending.spendingLimit,
+        enforcement: spending.spendingEnforcement,
+      };
+    }
+
+    return {
+      allowed: true,
+      currentSpending: spending.spendingCurrent,
+      limit: spending.spendingLimit,
+      enforcement: spending.spendingEnforcement,
+    };
   },
 };
 

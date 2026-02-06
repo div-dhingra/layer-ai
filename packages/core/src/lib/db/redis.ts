@@ -121,13 +121,67 @@ export const cache = {
     }
   }, 
 
-  // health check 
   async ping(): Promise<boolean> {
     try {
-      const result = await redis.ping(); 
-      return result === 'PONG'; 
+      const result = await redis.ping();
+      return result === 'PONG';
     } catch (error) {
       return false
+    }
+  },
+
+  // ===== SPENDING CACHE =====
+
+  async getUserSpending(userId: string): Promise<number | null> {
+    try {
+      const key = `spending:${userId}`;
+      const spending = await redis.get(key);
+      return spending ? parseFloat(spending) : null;
+    } catch (error) {
+      console.error('Redis getUserSpending error:', error);
+      return null;
+    }
+  },
+
+  async incrementUserSpending(userId: string, cost: number): Promise<number> {
+    try {
+      const key = `spending:${userId}`;
+      const newSpending = await redis.incrbyfloat(key, cost);
+      await redis.expire(key, 3600);
+      return parseFloat(newSpending);
+    } catch (error) {
+      console.error('Redis incrementUserSpending error:', error);
+      throw error;
+    }
+  },
+
+  async setUserSpending(userId: string, spending: number): Promise<void> {
+    try {
+      const key = `spending:${userId}`;
+      await redis.set(key, spending.toString());
+      await redis.expire(key, 3600);
+    } catch (error) {
+      console.error('Redis setUserSpending error:', error);
+    }
+  },
+
+  async invalidateUserSpending(userId: string): Promise<void> {
+    try {
+      const key = `spending:${userId}`;
+      await redis.del(key);
+    } catch (error) {
+      console.error('Redis invalidateUserSpending error:', error);
+    }
+  },
+
+  async getAllCachedSpendingUsers(): Promise<string[]> {
+    try {
+      const pattern = 'spending:*';
+      const keys = await redis.keys(pattern);
+      return keys.map(key => key.replace('spending:', ''));
+    } catch (error) {
+      console.error('Redis getAllCachedSpendingUsers error:', error);
+      return [];
     }
   },
 };

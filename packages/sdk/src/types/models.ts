@@ -4,13 +4,20 @@ import type { ModelType } from "./model-registry.js";
 import type { AnalysisMethod, RoutingStrategy, ReanalysisPeriod } from "./history.js";
 import type { ResponseFormatType } from "./api-v3.js";
 
-// User 
+// User
 export interface User {
-  id: string; 
-  email: string; 
+  id: string;
+  email: string;
   passwordHash: string;
   createdAt: Date;
-  updatedAt: Date; 
+  updatedAt: Date;
+  status: string;
+  monthlySpendingLimit: number | null;
+  currentMonthSpending: number;
+  spendingPeriodStart: Date;
+  alertThresholdPercentage: number;
+  limitEnforcementType: string;
+  lastSpendingAlertSentAt: Date | null;
 }
 
 // API Key
@@ -56,13 +63,21 @@ export interface GateBase {
   responseFormatEnabled?: boolean;
   responseFormatType?: ResponseFormatType;
   responseFormatSchema?: unknown;
+
+  // Gate-level spending limits
+  spendingLimit?: number | null;
+  spendingLimitPeriod?: 'monthly' | 'daily';
+  spendingEnforcement?: 'alert_only' | 'block';
 }
 
 export interface Gate extends GateBase {
   id: string;
   userId: string;
-  createdAt: Date; 
+  createdAt: Date;
   updatedAt: Date;
+  spendingCurrent?: number;
+  spendingPeriodStart?: string;
+  spendingStatus?: 'active' | 'suspended';
 }
 
 export interface OverrideConfig {

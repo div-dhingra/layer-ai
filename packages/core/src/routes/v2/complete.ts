@@ -6,6 +6,7 @@ import { authenticate } from '../../middleware/auth.js';
 import { callAdapter, normalizeModelId } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig } from '@layer-ai/sdk';
 import { MODEL_REGISTRY, OverrideField } from '@layer-ai/sdk';
+import { spendingTracker } from '../../lib/spending-tracker.js';
 
 
 const router: RouterType = Router();
@@ -311,6 +312,10 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       userAgent: req.headers['user-agent'] || null,
       ipAddress: req.ip || null,
     }).catch(err => console.error('Failed to log request:', err));
+
+    spendingTracker.trackSpending(userId, result.cost || 0).catch(err => {
+      console.error('Failed to track spending:', err);
+    });
 
     // Return LayerResponse with additional metadata
     const response: LayerResponse = {
