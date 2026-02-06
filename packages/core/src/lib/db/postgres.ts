@@ -752,6 +752,149 @@ export const db = {
 
     return rolledBackGate;
   },
+
+  // Gate spending management
+  async getGateSpending(gateId: string): Promise<{
+    spendingLimit: number | null;
+    spendingLimitPeriod: 'monthly' | 'daily';
+    spendingCurrent: number;
+    spendingPeriodStart: string;
+    spendingEnforcement: 'alert_only' | 'block';
+    spendingStatus: 'active' | 'suspended';
+    percentUsed: number | null;
+  } | null> {
+    const result = await getPool().query(
+      `SELECT
+        spending_limit,
+        spending_limit_period,
+        spending_current,
+        spending_period_start,
+        spending_enforcement,
+        spending_status
+      FROM gates
+      WHERE id = $1 AND deleted_at IS NULL`,
+      [gateId]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    const spendingLimit = row.spending_limit ? parseFloat(row.spending_limit) : null;
+    const spendingCurrent = parseFloat(row.spending_current || 0);
+    const percentUsed = spendingLimit ? Math.round((spendingCurrent / spendingLimit) * 100) : null;
+
+    return {
+      spendingLimit,
+      spendingLimitPeriod: row.spending_limit_period,
+      spendingCurrent,
+      spendingPeriodStart: row.spending_period_start,
+      spendingEnforcement: row.spending_enforcement,
+      spendingStatus: row.spending_status,
+      percentUsed,
+    };
+  },
+
+  async setGateSpendingLimit(gateId: string, limit: number | null): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_limit = $2, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, limit]
+    );
+  },
+
+  async setGateSpendingEnforcement(gateId: string, enforcement: 'alert_only' | 'block'): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_enforcement = $2, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, enforcement]
+    );
+  },
+
+  async setGateSpendingPeriod(gateId: string, period: 'monthly' | 'daily'): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_limit_period = $2, spending_period_start = NOW(), spending_current = 0, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, period]
+    );
+  },
+
+  async trackGateSpending(gateId: string, cost: number): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_current = spending_current + $2, updated_at = NOW()
+       WHERE id = $1`,
+      [gateId, cost]
+    );
+  },
+
+  async resetGateSpending(gateId: string): Promise<void> {
+    await getPool().query(
+      `UPDATE gates
+       SET spending_current = 0, spending_period_start = NOW(), updated_at = NOW()
+       WHERE id = $1`,
+      [gateId]
+    );
+  },
+
+  async checkGateSpendingLimit(gateId: string): Promise<{
+    allowed: boolean;
+    reason?: string;
+    currentSpending: number;
+    limit: number | null;
+    enforcement: 'alert_only' | 'block';
+  }> {
+    const spending = await this.getGateSpending(gateId);
+
+    if (!spending) {
+      return { allowed: true, currentSpending: 0, limit: null, enforcement: 'alert_only' };
+    }
+
+    // If suspended, block regardless of enforcement type
+    if (spending.spendingStatus === 'suspended') {
+      return {
+        allowed: false,
+        reason: 'Gate spending is suspended',
+        currentSpending: spending.spendingCurrent,
+        limit: spending.spendingLimit,
+        enforcement: spending.spendingEnforcement,
+      };
+    }
+
+    // If no limit set, allow
+    if (!spending.spendingLimit) {
+      return {
+        allowed: true,
+        currentSpending: spending.spendingCurrent,
+        limit: null,
+        enforcement: spending.spendingEnforcement,
+      };
+    }
+
+    // Check if limit exceeded
+    const limitExceeded = spending.spendingCurrent >= spending.spendingLimit;
+
+    if (limitExceeded && spending.spendingEnforcement === 'block') {
+      return {
+        allowed: false,
+        reason: `Gate spending limit of $${spending.spendingLimit.toFixed(2)} exceeded`,
+        currentSpending: spending.spendingCurrent,
+        limit: spending.spendingLimit,
+        enforcement: spending.spendingEnforcement,
+      };
+    }
+
+    return {
+      allowed: true,
+      currentSpending: spending.spendingCurrent,
+      limit: spending.spendingLimit,
+      enforcement: spending.spendingEnforcement,
+    };
+  },
 };
 
 export default getPool; 

@@ -49,3 +49,4 @@ export { PROVIDER, PROVIDERS, type Provider, callAdapter, normalizeModelId, getP
 // Spending Management
 export { spendingTracker } from './lib/spending-tracker.js';
 export { spendingJobs } from './lib/spending-jobs.js';
+export { gateSpendingTracker } from './lib/gate-spending-tracker.js';
