@@ -51,6 +51,9 @@ export function detectSignificantChanges(existing: any, updates: any): string[] 
     responseFormatEnabled: 'responseFormatEnabled',
     responseFormatType: 'responseFormatType',
     responseFormatSchema: 'responseFormatSchema',
+    spendingLimit: 'spendingLimit',
+    spendingLimitPeriod: 'spendingLimitPeriod',
+    spendingEnforcement: 'spendingEnforcement',
   };
 
   for (const [field, displayName] of Object.entries(significantFields)) {

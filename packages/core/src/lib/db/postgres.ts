@@ -251,8 +251,8 @@ export const db = {
 
   async createGate(userId: string, data: any): Promise<Gate> {
     const result = await getPool().query(
-      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis, response_format_enabled, response_format_type, response_format_schema)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *`,
+      `INSERT INTO gates (user_id, name, description, task_type, model, system_prompt, allow_overrides, temperature, max_tokens, top_p, tags, routing_strategy, fallback_models, cost_weight, latency_weight, quality_weight, analysis_method, reanalysis_period, auto_apply_recommendations, task_analysis, response_format_enabled, response_format_type, response_format_schema, spending_limit, spending_limit_period, spending_enforcement)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26) RETURNING *`,
        [
          userId,
          data.name,
@@ -276,7 +276,10 @@ export const db = {
          data.taskAnalysis ? JSON.stringify(data.taskAnalysis) : null,
          data.responseFormatEnabled ?? false,
          data.responseFormatType || null,
-         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null
+         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null,
+         data.spendingLimit ?? null,
+         data.spendingLimitPeriod || 'monthly',
+         data.spendingEnforcement || 'alert_only'
        ]
     );
     return toCamelCase(result.rows[0]);
@@ -315,6 +318,9 @@ export const db = {
         response_format_enabled = COALESCE($21, response_format_enabled),
         response_format_type = COALESCE($22, response_format_type),
         response_format_schema = COALESCE($23, response_format_schema),
+        spending_limit = COALESCE($24, spending_limit),
+        spending_limit_period = COALESCE($25, spending_limit_period),
+        spending_enforcement = COALESCE($26, spending_enforcement),
         updated_at = NOW()
       WHERE id = $1 RETURNING *`,
       [
@@ -341,6 +347,9 @@ export const db = {
         data.responseFormatEnabled,
         data.responseFormatType,
         data.responseFormatSchema ? JSON.stringify(data.responseFormatSchema) : null,
+        data.spendingLimit !== undefined ? data.spendingLimit : null,
+        data.spendingLimitPeriod,
+        data.spendingEnforcement,
       ]
     );
     return result.rows[0] ? toCamelCase(result.rows[0]) : null;

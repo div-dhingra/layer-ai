@@ -63,13 +63,21 @@ export interface GateBase {
   responseFormatEnabled?: boolean;
   responseFormatType?: ResponseFormatType;
   responseFormatSchema?: unknown;
+
+  // Gate-level spending limits
+  spendingLimit?: number | null;
+  spendingLimitPeriod?: 'monthly' | 'daily';
+  spendingEnforcement?: 'alert_only' | 'block';
 }
 
 export interface Gate extends GateBase {
   id: string;
   userId: string;
-  createdAt: Date; 
+  createdAt: Date;
   updatedAt: Date;
+  spendingCurrent?: number;
+  spendingPeriodStart?: string;
+  spendingStatus?: 'active' | 'suspended';
 }
 
 export interface OverrideConfig {
