@@ -476,7 +476,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
   }
 
   try {
-    const { description, costWeight, latencyWeight, qualityWeight } = req.body;
+    const { description, costWeight, latencyWeight, qualityWeight, availableProviders } = req.body;
 
     if (!description) {
       res.status(400).json({ error: 'bad_request', message: 'Gate must have a description for AI recommendations' });
@@ -487,6 +487,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       costWeight: parseFloat(costWeight ?? '0.33'),
       latencyWeight: parseFloat(latencyWeight ?? '0.33'),
       qualityWeight: parseFloat(qualityWeight ?? '0.34'),
+      availableProviders: Array.isArray(availableProviders) ? availableProviders : undefined,
     };
 
     const { analyzeTask } = await import('../../services/task-analysis.js');

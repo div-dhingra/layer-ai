@@ -64,6 +64,7 @@ export async function analyzeTask(
     costWeight?: number;
     latencyWeight?: number;
     qualityWeight?: number;
+    availableProviders?: string[];
   }
 ): Promise<TaskAnalysis> {
   const anthropic = new Anthropic({
@@ -73,6 +74,7 @@ export async function analyzeTask(
   const costWeight = userPreferences?.costWeight ?? 0.33;
   const latencyWeight = userPreferences?.latencyWeight ?? 0.33;
   const qualityWeight = userPreferences?.qualityWeight ?? 0.33;
+  const availableProviders = userPreferences?.availableProviders;
 
   let taskType: ModelType = 'chat';
 
@@ -84,9 +86,19 @@ export async function analyzeTask(
 
   const filteredRegistry: Record<string, ModelEntry> = {};
   for (const [key, model] of Object.entries(MODEL_REGISTRY)) {
-    if (model.type === taskType) {
-      filteredRegistry[key] = model;
+    // Filter by task type
+    if (model.type !== taskType) {
+      continue;
     }
+
+    // Filter by BYOK providers if specified
+    if (availableProviders && availableProviders.length > 0) {
+      if (!availableProviders.includes(model.provider)) {
+        continue;
+      }
+    }
+
+    filteredRegistry[key] = model;
   }
 
   const registryContext = JSON.stringify(filteredRegistry, null, 2);
