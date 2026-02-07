@@ -88,6 +88,65 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// GET /openclaw - Get gates tagged with "openclaw" with analytics
+router.get('/openclaw', async (req: Request, res: Response) => {
+  if (!req.userId) {
+    res.status(401).json({ error: 'unauthorized', message: 'Missing user ID'});
+    return;
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT
+        g.id,
+        g.user_id,
+        g.name,
+        g.model,
+        g.task_type,
+        g.description,
+        g.created_at,
+        g.updated_at,
+        g.spending_limit,
+        g.spending_current,
+        g.spending_status,
+        COALESCE(COUNT(r.id), 0)::integer as request_count,
+        COALESCE(SUM(r.cost_usd), 0)::numeric as total_cost,
+        COALESCE(AVG(r.latency_ms), 0)::integer as avg_latency,
+        MAX(r.created_at) as last_request
+       FROM gates g
+       LEFT JOIN requests r ON g.id = r.gate_id
+       WHERE g.user_id = $1
+         AND g.tags @> '["openclaw"]'::jsonb
+       GROUP BY g.id
+       ORDER BY g.created_at DESC`,
+      [req.userId]
+    );
+
+    const gates = result.rows.map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      name: row.name,
+      model: row.model,
+      taskType: row.task_type,
+      description: row.description,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      spendingLimit: row.spending_limit,
+      spendingCurrent: row.spending_current ? parseFloat(row.spending_current) : undefined,
+      spendingStatus: row.spending_status,
+      requestCount: row.request_count,
+      totalCost: parseFloat(row.total_cost),
+      avgLatency: row.avg_latency,
+      lastRequest: row.last_request,
+    }));
+
+    res.json(gates);
+  } catch (error) {
+    console.error('List OpenClaw gates error:', error);
+    res.status(500).json({ error: 'internal_error', message: 'Failed to list OpenClaw gates'});
+  }
+});
+
 // GET /name/:name - Get a single gate by name
 router.get('/name/:name', async (req: Request, res: Response) => {
   if (!req.userId) {
