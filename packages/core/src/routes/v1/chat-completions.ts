@@ -46,11 +46,24 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   try {
     const openaiReq = req.body as OpenAIChatCompletionRequest;
 
-    const gateId = openaiReq.gateId || req.headers['x-layer-gate-id'] as string;
+    // Extract gate ID from multiple possible sources
+    let gateId = openaiReq.gateId || req.headers['x-layer-gate-id'] as string;
+
+    // If not found in body or header, try to extract from model field
+    if (!gateId && openaiReq.model) {
+      const modelStr = openaiReq.model;
+      // Try to extract UUID from model field (e.g., "layer/82ab7591-..." or "layer:82ab7591-..." or just "82ab7591-...")
+      const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+      const match = modelStr.match(uuidPattern);
+      if (match) {
+        gateId = match[0];
+      }
+    }
+
     if (!gateId) {
       const error: OpenAIError = {
         error: {
-          message: 'Missing required field: gateId (provide in request body or X-Layer-Gate-Id header)',
+          message: 'Missing required field: gateId (provide in request body, X-Layer-Gate-Id header, or as part of model field)',
           type: 'invalid_request_error',
           param: 'gateId',
           code: 'missing_field',
