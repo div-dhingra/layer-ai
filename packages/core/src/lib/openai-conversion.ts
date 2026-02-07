@@ -121,7 +121,8 @@ export function convertOpenAIRequestToLayer(
   const layerRequest: LayerRequest = {
     gateId,
     type: 'chat',
-    model: openaiReq.model,
+    // NOTE: We intentionally do NOT pass openaiReq.model here
+    // The gate's configured model takes precedence for OpenClaw integration
     data: {
       messages,
       systemPrompt,
