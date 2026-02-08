@@ -303,6 +303,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
       model: model,
       messages,
       stream: true,
+      stream_options: { include_usage: true },
       ...(chat.temperature !== undefined && { temperature: chat.temperature }),
       ...(chat.maxTokens !== undefined && { max_completion_tokens: chat.maxTokens }),
       ...(chat.topP !== undefined && { top_p: chat.topP }),
