@@ -1,14 +1,21 @@
-import { Request, Response, NextFunction } from 'express'; 
-import crypto from 'crypto'; 
-import { db } from '../lib/db/postgres.js'; 
+import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
+import { db } from '../lib/db/postgres.js';
+
+// Auth type enum
+export enum AuthType {
+  API_KEY = 'api_key',
+  SESSION = 'session'
+}
 
 // Extend Express Request type to include userId
 declare global {
   namespace Express {
     interface Request {
-      userId?: string; 
+      userId?: string;
       apiKeyId?: string;
       apiKeyHash?: string;
+      authType?: AuthType;
     }
   }
 }
@@ -108,6 +115,7 @@ export async function authenticate(
       req.userId = apiKeyRecord.userId;
       req.apiKeyId = apiKeyRecord.id;
       req.apiKeyHash = tokenHash;
+      req.authType = AuthType.API_KEY;
 
       // Update last_used_at timestamp (async, dont await)
       db.updateApiKeyLastUsed(tokenHash).catch((err) => {
@@ -154,6 +162,16 @@ export async function authenticate(
       }
 
       req.userId = sessionKey.userId;
+      req.authType = AuthType.SESSION;
+
+      // Extend session expiration (sliding window) - async, don't await
+      db.query(
+        "UPDATE session_keys SET expires_at = NOW() + INTERVAL '24 hours' WHERE key_hash = $1",
+        [tokenHash]
+      ).catch((err) => {
+        console.error('Failed to extend session expiration:', err);
+      });
+
       next();
       return;
     }
