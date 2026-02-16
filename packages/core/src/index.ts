@@ -19,7 +19,7 @@ export { default as ttsRouter } from './routes/v3/tts.js';
 export { default as ocrRouter } from './routes/v3/ocr.js';
 
 // Middleware
-export { authenticate } from './middleware/auth.js';
+export { authenticate, authenticateAnthropicCompatible } from './middleware/auth.js';
 export type {} from './middleware/auth.js';
 
 // Database
