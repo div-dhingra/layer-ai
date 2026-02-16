@@ -4,6 +4,7 @@ export { default as gatesRouter } from './routes/v1/gates.js';
 export { default as keysRouter } from './routes/v1/keys.js';
 export { default as logsRouter } from './routes/v1/logs.js';
 export { default as chatCompletionsRouter } from './routes/v1/chat-completions.js';
+export { default as messagesRouter } from './routes/v1/messages.js';
 export { default as spendingRouter } from './routes/v1/spending.js';
 
 // v2 routes
