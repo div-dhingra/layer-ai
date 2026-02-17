@@ -177,6 +177,25 @@ export const db = {
     return result.rows.map(row => row.id);
   },
 
+  async resetDailyUsage(): Promise<void> {
+    await getPool().query(
+      `UPDATE users
+       SET daily_requests_used = 0,
+           last_daily_reset = NOW()
+       WHERE last_daily_reset < NOW() - INTERVAL '1 day'`
+    );
+  },
+
+  async resetMonthlyUsage(): Promise<void> {
+    await getPool().query(
+      `UPDATE users
+       SET monthly_requests_used = 0,
+           monthly_tokens_used = 0,
+           billing_cycle_start = CURRENT_DATE
+       WHERE billing_cycle_start < DATE_TRUNC('month', CURRENT_DATE)`
+    );
+  },
+
   async recordSpendingAlert(userId: string): Promise<void> {
     await getPool().query(
       'UPDATE users SET last_spending_alert_sent_at = NOW(), updated_at = NOW() WHERE id = $1',
@@ -844,10 +863,23 @@ export const db = {
   async resetGateSpending(gateId: string): Promise<void> {
     await getPool().query(
       `UPDATE gates
-       SET spending_current = 0, spending_period_start = NOW(), updated_at = NOW()
+       SET spending_current = 0, spending_period_start = NOW(), spending_status = 'active', updated_at = NOW()
        WHERE id = $1`,
       [gateId]
     );
+  },
+
+  async getGatesToResetSpending(): Promise<string[]> {
+    const result = await getPool().query(
+      `SELECT id FROM gates
+       WHERE spending_limit IS NOT NULL
+       AND (
+         (spending_limit_period = 'daily' AND spending_period_start < NOW() - INTERVAL '1 day')
+         OR
+         (spending_limit_period = 'monthly' AND spending_period_start < NOW() - INTERVAL '30 days')
+       )`
+    );
+    return result.rows.map(row => row.id);
   },
 
   async checkGateSpendingLimit(gateId: string): Promise<{
