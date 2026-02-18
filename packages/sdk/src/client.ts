@@ -68,6 +68,58 @@ export class Layer {
   }
 
   /**
+   * v3 Chat completion endpoint with streaming support - yields chunks as they arrive
+   * @param request - Chat request with gateId and ChatRequest data (stream: true is set automatically)
+   */
+  async *chatStream(request: {
+    gateId: string;
+    gateName?: string;
+    data: Omit<ChatRequest, 'stream'>;
+    model?: string;
+    metadata?: Record<string, unknown>;
+  }): AsyncGenerator<LayerResponse> {
+    const url = `${this.baseUrl}/v3/chat`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({ ...request, data: { ...request.data, stream: true } }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || error.error);
+    }
+
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const payload = line.slice(6).trim();
+        if (payload === '[DONE]') return;
+        try {
+          yield JSON.parse(payload) as LayerResponse;
+        } catch {
+          // skip malformed lines
+        }
+      }
+    }
+  }
+
+  /**
    * v3 Image generation endpoint - Type-safe image requests
    * @param request - Image request with gateId and ImageGenerationRequest data
    */
