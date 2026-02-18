@@ -145,9 +145,20 @@ router.post('/', authenticateAnthropicCompatible, async (req: Request, res: Resp
       let modelUsed = finalRequest.model;
 
       try {
-        const streamGenerator = executeWithRoutingStream(gateConfig, finalRequest, userId) as AsyncGenerator<any>;
+        const rawStream = executeWithRoutingStream(gateConfig, finalRequest, userId) as AsyncGenerator<any>;
 
-        for await (const event of convertLayerStreamToAnthropicEvents(streamGenerator)) {
+        // Wrap the raw stream to capture usedPlatformKey before Anthropic conversion
+        let usedPlatformKey = false;
+        async function* captureMetadata(stream: AsyncGenerator<any>): AsyncGenerator<any> {
+          for await (const chunk of stream) {
+            if (chunk.usedPlatformKey !== undefined) {
+              usedPlatformKey = chunk.usedPlatformKey;
+            }
+            yield chunk;
+          }
+        }
+
+        for await (const event of convertLayerStreamToAnthropicEvents(captureMetadata(rawStream))) {
           // Track usage from message_start and message_delta events
           if (event.type === 'message_start' && event.message.usage) {
             promptTokens = event.message.usage.input_tokens;
@@ -163,6 +174,10 @@ router.post('/', authenticateAnthropicCompatible, async (req: Request, res: Resp
           res.write(`event: ${event.type}\n`);
           res.write(`data: ${JSON.stringify(event)}\n\n`);
         }
+
+        // Send Layer-specific metadata as a custom event so internal middleware can track it
+        res.write(`event: layer_metadata\n`);
+        res.write(`data: ${JSON.stringify({ usedPlatformKey })}\n\n`);
 
         res.end();
 
@@ -283,7 +298,7 @@ router.post('/', authenticateAnthropicCompatible, async (req: Request, res: Resp
     });
 
     const anthropicResponse = convertLayerResponseToAnthropic(result);
-    res.json(anthropicResponse);
+    res.json({ ...anthropicResponse, usedPlatformKey: result.usedPlatformKey ?? false });
 
   } catch(error) {
     const latencyMs = Date.now() - startTime;
