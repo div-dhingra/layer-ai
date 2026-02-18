@@ -177,6 +177,59 @@ export const db = {
     return result.rows.map(row => row.id);
   },
 
+  async resetDailyUsage(): Promise<void> {
+    // Resets at midnight America/Los_Angeles. The job runs hourly so it fires
+    // within an hour of PT midnight. We detect "a new PT day has started since
+    // last reset" by comparing the PT calendar date of last_daily_reset to today's PT date.
+    await getPool().query(
+      `UPDATE users u
+       SET daily_requests_used = COALESCE((
+             SELECT SUM(ue.request_count)
+             FROM usage_events ue
+             WHERE ue.user_id = u.id
+               AND ue.used_platform_key = true
+               AND ue.created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'America/Los_Angeles') AT TIME ZONE 'America/Los_Angeles'
+           ), 0),
+           last_daily_reset = NOW()
+       WHERE (last_daily_reset AT TIME ZONE 'America/Los_Angeles')::date
+           < (NOW() AT TIME ZONE 'America/Los_Angeles')::date`
+    );
+  },
+
+  async resetMonthlyUsage(): Promise<void> {
+    // Resets at midnight PT on the same day-of-month as billing_cycle_start,
+    // matching Stripe-style same-day-each-month anchoring.
+    // End-of-month: if billing day > days in current month, fires on last day of month.
+    await getPool().query(
+      `UPDATE users u
+       SET monthly_requests_used = COALESCE((
+             SELECT SUM(ue.request_count)
+             FROM usage_events ue
+             WHERE ue.user_id = u.id
+               AND ue.created_at >= u.billing_cycle_start AT TIME ZONE 'America/Los_Angeles'
+           ), 0),
+           monthly_tokens_used = COALESCE((
+             SELECT SUM(ue.token_count)
+             FROM usage_events ue
+             WHERE ue.user_id = u.id
+               AND ue.used_platform_key = true
+               AND ue.created_at >= u.billing_cycle_start AT TIME ZONE 'America/Los_Angeles'
+           ), 0),
+           billing_cycle_start = (DATE_TRUNC('day', NOW() AT TIME ZONE 'America/Los_Angeles'))::date
+       WHERE (
+         -- Same day-of-month as original cycle start has passed in PT, and it's been at least 28 days
+         EXTRACT(DAY FROM billing_cycle_start) <= EXTRACT(DAY FROM (NOW() AT TIME ZONE 'America/Los_Angeles'))
+         AND billing_cycle_start < (NOW() AT TIME ZONE 'America/Los_Angeles')::date - INTERVAL '28 days'
+       )
+       OR (
+         -- End-of-month clamping: billing day doesn't exist this month, fire on last day of month
+         EXTRACT(DAY FROM billing_cycle_start) > EXTRACT(DAY FROM DATE_TRUNC('month', NOW() AT TIME ZONE 'America/Los_Angeles') + INTERVAL '1 month' - INTERVAL '1 day')
+         AND (NOW() AT TIME ZONE 'America/Los_Angeles')::date = (DATE_TRUNC('month', NOW() AT TIME ZONE 'America/Los_Angeles') + INTERVAL '1 month' - INTERVAL '1 day')::date
+         AND billing_cycle_start < (NOW() AT TIME ZONE 'America/Los_Angeles')::date - INTERVAL '28 days'
+       )`
+    );
+  },
+
   async recordSpendingAlert(userId: string): Promise<void> {
     await getPool().query(
       'UPDATE users SET last_spending_alert_sent_at = NOW(), updated_at = NOW() WHERE id = $1',
@@ -844,10 +897,23 @@ export const db = {
   async resetGateSpending(gateId: string): Promise<void> {
     await getPool().query(
       `UPDATE gates
-       SET spending_current = 0, spending_period_start = NOW(), updated_at = NOW()
+       SET spending_current = 0, spending_period_start = NOW(), spending_status = 'active', updated_at = NOW()
        WHERE id = $1`,
       [gateId]
     );
+  },
+
+  async getGatesToResetSpending(): Promise<string[]> {
+    const result = await getPool().query(
+      `SELECT id FROM gates
+       WHERE spending_limit IS NOT NULL
+       AND (
+         (spending_limit_period = 'daily' AND spending_period_start < NOW() - INTERVAL '1 day')
+         OR
+         (spending_limit_period = 'monthly' AND spending_period_start < NOW() - INTERVAL '30 days')
+       )`
+    );
+    return result.rows.map(row => row.id);
   },
 
   async checkGateSpendingLimit(gateId: string): Promise<{

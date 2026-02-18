@@ -36,6 +36,40 @@ export const spendingJobs = {
     }
   },
 
+  async resetGateSpendingPeriodsJob(): Promise<void> {
+    console.log('[Spending Job] Checking for gate spending periods to reset...');
+    try {
+      const gatesToReset = await db.getGatesToResetSpending();
+
+      if (gatesToReset.length === 0) {
+        console.log('[Spending Job] No gates need reset');
+        return;
+      }
+
+      console.log(`[Spending Job] Resetting ${gatesToReset.length} gates`);
+
+      for (const gateId of gatesToReset) {
+        await db.resetGateSpending(gateId);
+        console.log(`[Spending Job] Reset gate ${gateId}`);
+      }
+
+      console.log('[Spending Job] Gate reset complete');
+    } catch (error) {
+      console.error('[Spending Job] Gate reset failed:', error);
+    }
+  },
+
+  async resetUsageCountersJob(): Promise<void> {
+    console.log('[Spending Job] Checking for usage counters to reset...');
+    try {
+      await db.resetDailyUsage();
+      await db.resetMonthlyUsage();
+      console.log('[Spending Job] Usage counters reset complete');
+    } catch (error) {
+      console.error('[Spending Job] Usage counter reset failed:', error);
+    }
+  },
+
   startScheduledJobs(): void {
     // Sync Redis to DB every 5 minutes
     setInterval(() => {
@@ -49,6 +83,12 @@ export const spendingJobs = {
       this.resetSpendingPeriodsJob().catch(err => {
         console.error('[Spending Job] Reset interval error:', err);
       });
+      this.resetGateSpendingPeriodsJob().catch(err => {
+        console.error('[Spending Job] Gate reset interval error:', err);
+      });
+      this.resetUsageCountersJob().catch(err => {
+        console.error('[Spending Job] Usage counter reset interval error:', err);
+      });
     }, 60 * 60 * 1000);
 
     // Run once on startup
@@ -57,6 +97,12 @@ export const spendingJobs = {
     });
     this.resetSpendingPeriodsJob().catch(err => {
       console.error('[Spending Job] Initial reset error:', err);
+    });
+    this.resetGateSpendingPeriodsJob().catch(err => {
+      console.error('[Spending Job] Initial gate reset error:', err);
+    });
+    this.resetUsageCountersJob().catch(err => {
+      console.error('[Spending Job] Initial usage counter reset error:', err);
     });
 
     console.log('[Spending Job] Scheduled jobs started');

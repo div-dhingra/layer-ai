@@ -189,22 +189,52 @@ export async function authenticate(
 }
 
 /**
+ * Auth middleware that supports both Layer format (Authorization: Bearer) and Anthropic format (x-api-key)
+ * Used for the /v1/messages endpoint to support Anthropic SDK clients
+ */
+export async function authenticateAnthropicCompatible(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Check for x-api-key header first (Anthropic SDK format)
+    const xApiKey = req.headers['x-api-key'] as string;
+
+    if (xApiKey) {
+      // Convert x-api-key to Authorization header format and process
+      req.headers.authorization = `Bearer ${xApiKey}`;
+      return authenticate(req, res, next);
+    }
+
+    // Fall back to standard Authorization header
+    return authenticate(req, res, next);
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(500).json({
+      error: 'internal_error',
+      message: 'Authentication failed'
+    });
+  }
+}
+
+/**
  * Optional middleware for endpoints that don't require auth
  * like the health check public endpoints etc.
  */
 export function optionalAuth(
-  req: Request, 
-  res: Response, 
+  req: Request,
+  res: Response,
   next: NextFunction
 ): void {
-  const authHeader = req.headers.authorization; 
+  const authHeader = req.headers.authorization;
 
   if (!authHeader) {
     // No auth header = proceed without userId
-    next(); 
-    return; 
+    next();
+    return;
   }
 
-  // if auth header exists, validate it 
+  // if auth header exists, validate it
   authenticate(req, res, next);
 }

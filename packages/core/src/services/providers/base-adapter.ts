@@ -175,15 +175,21 @@ export abstract class BaseProviderAdapter {
       return 0;
     }
 
-    const imagePricing = modelInfo.imagePricing as Record<string, number>;
+    const imagePricing = modelInfo.imagePricing;
+
+    // Flat-rate pricing (e.g. Google Imagen models)
+    if (typeof imagePricing === 'number') {
+      return imagePricing * count;
+    }
 
     // Build pricing key from quality and size (e.g., 'hd-1024x1024' or 'standard-1024x1024')
+    const pricingTable = imagePricing as Record<string, number>;
     const pricingKey = quality && size ? `${quality}-${size}` : size || 'standard-1024x1024';
-    const pricePerImage = imagePricing[pricingKey];
+    const pricePerImage = pricingTable[pricingKey];
 
     if (!pricePerImage) {
       // If exact match not found, try without quality prefix
-      const fallbackPrice = imagePricing[size || '1024x1024'];
+      const fallbackPrice = pricingTable[size || '1024x1024'];
       return (fallbackPrice || 0) * count;
     }
 
