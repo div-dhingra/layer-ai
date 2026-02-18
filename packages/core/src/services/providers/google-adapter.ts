@@ -525,9 +525,12 @@ export class GoogleAdapter extends BaseProviderAdapter {
         base64: img.image?.imageBytes,
       })) || [];
 
+    const cost = this.calculateImageCost(model, undefined, undefined, image.count || 1);
+
     return {
       images,
       model: model,
+      cost,
       latencyMs: Date.now() - startTime,
       usedPlatformKey,
       raw: response,
