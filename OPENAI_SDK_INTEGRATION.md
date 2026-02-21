@@ -64,36 +64,48 @@ const openai = new OpenAI({
 
 ### 5. Make Requests
 
-**Option A: Use `gateId` field (recommended)**
+**Option A: Use `gateId` field (recommended for TypeScript)**
+```typescript
+// @ts-ignore - gateId is a Layer AI extension
+const response = await openai.chat.completions.create({
+  gateId: process.env.GATE_ID,  // ← Layer extension (requires @ts-ignore)
+  messages: [
+    { role: 'user', content: 'Hello!' }
+  ],
+  // Remove model - Layer uses the model configured in your gate
+  // Remove max_tokens, temperature - Layer uses gate configuration (or you can override)
+});
+```
+
+**Option B: Use `model` field (no TypeScript errors)**
 ```typescript
 const response = await openai.chat.completions.create({
-  gateId: process.env.GATE_ID,  // ← Layer extension
+  model: process.env.GATE_ID,  // ← Gate UUID as model (no @ts-ignore needed)
   messages: [
     { role: 'user', content: 'Hello!' }
   ],
 });
 ```
 
-**Option B: Use `model` field**
-```typescript
-const response = await openai.chat.completions.create({
-  model: process.env.GATE_ID,  // ← Gate UUID as model
-  messages: [
-    { role: 'user', content: 'Hello!' }
-  ],
-});
-```
-
-**Option C: Use header (set once)**
+**Option C: Use header (set once, cleanest for TypeScript)**
 ```typescript
 const openai = new OpenAI({
   baseURL: 'https://api.uselayer.ai/v1',
   apiKey: process.env.LAYER_API_KEY,
   defaultHeaders: {
-    'X-Layer-Gate-Id': process.env.GATE_ID,
+    'X-Layer-Gate-Id': process.env.GATE_ID,  // ← Gate specified in header
   },
 });
+
+// Then make requests without specifying model or gateId
+const response = await openai.chat.completions.create({
+  messages: [
+    { role: 'user', content: 'Hello!' }
+  ],
+});
 ```
+
+> **Note:** Layer uses the model, `max_tokens`, `temperature`, and other parameters configured in your gate. You can override them in individual requests if needed.
 
 ---
 
