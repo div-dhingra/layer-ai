@@ -13,6 +13,7 @@ import {
   LayerResponse,
   Role,
   FinishReason,
+  ImageSize,
   VideoSize,
 } from '@layer-ai/sdk';
 import { BaseProviderAdapter } from './base-adapter.js';
@@ -59,6 +60,16 @@ export class GoogleAdapter extends BaseProviderAdapter {
     auto: FunctionCallingConfigMode.AUTO,
     none: FunctionCallingConfigMode.NONE,
     required: FunctionCallingConfigMode.ANY,
+  };
+
+  protected imageSizeConfig: Record<ImageSize, { aspectRatio: string }> = {
+    '256x256': { aspectRatio: '1:1' },
+    '512x512': { aspectRatio: '1:1' },
+    '1024x1024': { aspectRatio: '1:1' },
+    '1792x1024': { aspectRatio: '16:9' },
+    '1024x1792': { aspectRatio: '9:16' },
+    '1536x1024': { aspectRatio: '3:2' },
+    '1024x1536': { aspectRatio: '2:3' },
   };
 
   protected videoSizeConfig: Record<
@@ -510,6 +521,10 @@ export class GoogleAdapter extends BaseProviderAdapter {
       throw new Error('Model is required for chat completion');
     }
 
+    // Derive aspect ratio from size if provided
+    const sizeConfig = image.size ? this.imageSizeConfig[image.size] : null;
+    const aspectRatio = sizeConfig?.aspectRatio;
+
     // Google's Imagen API via generateImages
     const response = await client.models.generateImages({
       model: model,
@@ -517,6 +532,7 @@ export class GoogleAdapter extends BaseProviderAdapter {
       config: {
         numberOfImages: image.count || 1,
         ...(image.seed !== undefined && { seed: image.seed }),
+        ...(aspectRatio && { aspectRatio }),
       },
     });
 
