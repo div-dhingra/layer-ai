@@ -8,7 +8,7 @@
 // Total models: 198
 
 // Providers we support with adapters
-export const SUPPORTED_PROVIDERS = ['openai', 'anthropic', 'google', 'mistral'] as const;
+export const SUPPORTED_PROVIDERS = ['openai', 'anthropic', 'google', 'mistral', 'cohere'] as const;
 export type SupportedProvider = typeof SUPPORTED_PROVIDERS[number];
 
 export type ModelType =
@@ -4024,6 +4024,36 @@ export const MODEL_REGISTRY = {
     deprecated: false,
     isAvailable: true,
     lastUpdated: '2026-03-01',
+  },
+  'command-r': {
+    type: 'chat' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Command R',
+    description: 'A highly scalable, 128k context model optimized for long-context tasks such as retrieval augmented generation (RAG) and using external APIs and tools.',
+    pricing: { input: 0.15, output: 0.60 },
+    contextLength: 128000,
+    context: {
+      input: { text: true, audio: false, image: false, video: false },
+      output: { text: true, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-25',
+  },
+  'command-r-plus': {
+    type: 'chat' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Command R+',
+    description: 'A powerful, scalable model for enterprise-grade AI applications, featuring 128k context and high performance across complex reasoning tasks.',
+    pricing: { input: 2.50, output: 10.00 },
+    contextLength: 128000,
+    context: {
+      input: { text: true, audio: false, image: false, video: false },
+      output: { text: true, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-01-25',
   }
 } as const;
 
