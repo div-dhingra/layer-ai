@@ -10,6 +10,7 @@ import { OpenAIAdapter } from '../services/providers/openai-adapter.js';
 import { AnthropicAdapter } from '../services/providers/anthropic-adapter.js';
 import { GoogleAdapter } from '../services/providers/google-adapter.js';
 import { MistralAdapter } from '../services/providers/mistral-adapter.js';
+import { CohereAdapter } from '../services/providers/cohere-adapter.js';
 import type { LayerRequest, LayerResponse, SupportedModel } from '@layer-ai/sdk';
 import { PROVIDER, PROVIDERS, type Provider } from './provider-constants.js';
 import { getModel, hasModel } from './registry.js';
@@ -26,6 +27,7 @@ const PROVIDER_ADAPTERS = {
   [PROVIDER.ANTHROPIC]: AnthropicAdapter,
   [PROVIDER.GOOGLE]: GoogleAdapter,
   [PROVIDER.MISTRAL]: MistralAdapter,
+  [PROVIDER.COHERE]: CohereAdapter,
 } as const;
 
 /**

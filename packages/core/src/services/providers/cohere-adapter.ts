@@ -1,0 +1,270 @@
+import { CohereClientV2 } from 'cohere-ai';
+import { BaseProviderAdapter } from './base-adapter.js';
+import {
+  LayerRequest,
+  LayerResponse,
+  Role,
+  FinishReason,
+} from '@layer-ai/sdk';
+import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
+import { resolveApiKey } from '../../lib/key-resolver.js';
+import { 
+  ChatMessageV2, 
+  UserMessageV2Content, 
+  ResponseFormatV2 
+} from 'cohere-ai/api/index.js';
+
+let client: CohereClientV2 | null = null;
+
+function getCohereClient(apiKey?: string): CohereClientV2 {
+  // If custom API key provided, create new client
+  if (apiKey) {
+    return new CohereClientV2({ token: apiKey });
+  }
+
+  // Otherwise use singleton with platform key
+  if (!client) {
+    client = new CohereClientV2({
+      token: process.env.COHERE_API_KEY || '',
+    });
+  }
+  return client;
+}
+
+export class CohereAdapter extends BaseProviderAdapter {
+  protected provider: Provider = PROVIDER.COHERE;
+
+  protected roleMappings: Record<Role, string> = {
+    system: 'system',
+    user: 'user',
+    assistant: 'assistant',
+    tool: 'tool',
+    function: 'tool',
+    model: 'assistant',
+    developer: 'system',
+  };
+
+  // Map Cohere finish reasons to Layer finish reasons
+  protected finishReasonMappings: Record<string, FinishReason> = {
+    COMPLETE: 'completed',
+    STOP_SEQUENCE: 'completed',
+    MAX_TOKENS: 'length_limit',
+    TOOL_CALL: 'tool_call',
+    ERROR: 'error',
+    TIMEOUT: 'error'
+  };
+
+  protected toolChoiceMappings: Record<string, string> = {
+    none: 'NONE',
+    required: 'REQUIRED',
+  };
+
+  async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
+    // Resolve API key (BYOK → Platform key)
+    const resolved = await resolveApiKey(this.provider, userId, process.env.COHERE_API_KEY);
+
+    switch (request.type) {
+      case 'chat':
+        return this.handleChat(request, resolved.key, resolved.usedPlatformKey);
+      // TODO (cohere): implement embeddings
+      // case 'embeddings':
+      //   return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
+      // TODO (cohere): implement rerank
+      // case 'rerank':
+      //   return this.handleRerank(request, resolved.key, resolved.usedPlatformKey);
+      case 'image':
+        throw new Error('Image generation not supported by Cohere');
+      case 'tts':
+        throw new Error('Text-to-speech not supported by Cohere');
+      case 'video':
+        throw new Error('Video generation not supported by Cohere');
+      default:
+        throw new Error(`Unknown modality: ${(request as any).type}`);
+    }
+  }
+
+  private async handleChat(
+    request: Extract<LayerRequest, { type: 'chat' }>,
+    apiKey: string,
+    usedPlatformKey: boolean
+  ): Promise<LayerResponse> {
+    const startTime = Date.now();
+    const cohere = getCohereClient(apiKey);
+    const { data: chat, model } = request;
+
+    if (!model) {
+      throw new Error('Model is required for chat completion');
+    }
+
+    // Build messages array
+    const messages: ChatMessageV2[] = [];
+
+    // Handle system prompt
+    if (chat.systemPrompt) {
+      messages.push({ role: 'system', content: chat.systemPrompt });
+    }
+
+    // Convert messages to Cohere format
+    for (const msg of chat.messages) {
+      const role = this.mapRole(msg.role) as 'system' | 'user' | 'assistant' | 'tool';
+
+      // Handle vision messages (content + images together)
+      if (msg.images && msg.images.length > 0 && role === 'user') {
+        const content: UserMessageV2Content = [];
+
+        if (msg.content) { // text (from layer req)
+          content.push({ type: 'text', text: msg.content });
+        }
+
+        for (const image of msg.images) { // images (from layer req)
+          const imageUrl =
+            image.url || `data:${image.mimeType || 'image/jpeg'};base64,${image.base64}`;
+          content.push({
+            type: 'image_url',
+            imageUrl: {
+              url: imageUrl
+            },
+          });
+        }
+
+        messages.push({ role, content });
+      }
+      // Handle tool responses
+      else if (role === 'tool') {
+        if (msg.toolCallId) { // tool requires toolCallId
+          messages.push({
+            role: 'tool',
+            content: msg.content || '',
+            toolCallId: msg.toolCallId
+          });
+        }
+      }
+      // Handle assistant messages with tool calls
+      else if (msg.toolCalls && msg.toolCalls.length > 0) {
+        messages.push({
+          role: 'assistant',
+          content: msg.content || '',
+          toolCalls: msg.toolCalls.map((tc) => ({
+            id: tc.id,
+            type: 'function' as const,
+            function: {
+              name: tc.function.name,
+              arguments: tc.function.arguments,
+            },
+          })),
+        });
+      }
+      // Handle regular text messages
+      else {
+        messages.push({
+          role,
+          content: msg.content || '',
+        });
+      }
+    }
+
+    // Convert tools to Cohere format - ensure parameters is always defined
+    let tools: Array<{
+      type: 'function';
+      function: {
+        name: string;
+        description?: string;
+        parameters: Record<string, unknown>;
+      };
+    }> | undefined;
+
+    if (chat.tools && chat.tools.length > 0) {
+      tools = chat.tools.map((tool) => ({
+        type: 'function' as const,
+        function: {
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: (tool.function.parameters as Record<string, unknown>) || {},
+        },
+      }));
+    }
+
+    // Map tool choice - Cohere uses 'NONE', 'REQUIRED' (else defaults)
+    let toolChoice: 'NONE'| 'REQUIRED' | undefined;
+    if (chat.toolChoice) {
+      const mapped = this.mapToolChoice(chat.toolChoice);
+      if (mapped === 'NONE' || mapped === 'REQUIRED') {
+        toolChoice = mapped;
+      }
+    }
+
+    const responseFormat: ResponseFormatV2 | undefined = 
+      chat.responseFormat ? (
+        chat.responseFormat === 'text'
+          ? { type: chat.responseFormat } 
+          : ( typeof chat.responseFormat === 'object' && chat.responseFormat.type === "json_object" 
+                ? { 
+                    type: chat.responseFormat.type,
+                    ...(chat.responseFormat.json_schema ? { jsonSchema: chat.responseFormat.json_schema as Record<string, unknown> } : {})
+                  }
+                : undefined)
+      ) : undefined; 
+          
+    const response = await cohere.chat({
+      model,
+      messages,
+      ...(chat.temperature !== undefined && { temperature: chat.temperature }),
+      ...(chat.maxTokens !== undefined && { maxTokens: chat.maxTokens }),
+      ...(chat.topP !== undefined && { p: chat.topP }),
+      ...(chat.stopSequences !== undefined && { stopSequences: chat.stopSequences }),
+      ...(chat.frequencyPenalty !== undefined && { frequencyPenalty: chat.frequencyPenalty }),
+      ...(chat.presencePenalty !== undefined && { presencePenalty: chat.presencePenalty }),
+      ...(chat.seed !== undefined && { seed: chat.seed }),
+      ...(tools && { tools }),
+      ...(toolChoice && { toolChoice }),
+      ...(responseFormat && { responseFormat })
+    });
+
+    const message = response.message; // Extract response (to map back to LayerAI resp-format)
+
+    // Extract tool calls if present - normalize arguments to string
+    const toolCalls = message?.toolCalls?.map((tc) => ({
+      id: tc.id || '',
+      type: 'function' as const,
+      function: {
+        name: tc.function?.name || '',
+        arguments: typeof tc.function?.arguments === 'string'
+          ? tc.function.arguments
+          : JSON.stringify(tc.function?.arguments || {}),
+      },
+    }));
+
+    const promptTokens = response.usage?.tokens?.inputTokens || 0;
+    const completionTokens = response.usage?.tokens?.outputTokens || 0;
+    const totalTokens = promptTokens + completionTokens;
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
+
+    // Extract + format content from ContentChunk array to string 
+    let contentStr: string | undefined;
+    if (message?.content) {
+      // ContentChunk array - extract text parts
+      contentStr = message.content
+        .map((chunk: any) => chunk.text || chunk.content || '')
+        .filter(Boolean)
+        .join('');
+    }
+
+    // Map back to Layer response format
+    return {
+      content: contentStr || undefined,
+      toolCalls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
+      model: model,
+      finishReason: this.mapFinishReason(response.finishReason),
+      rawFinishReason: response.finishReason,
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+      },
+      cost,
+      latencyMs: Date.now() - startTime,
+      usedPlatformKey,
+      raw: response,
+    };
+  }
+}

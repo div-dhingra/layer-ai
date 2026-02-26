@@ -126,6 +126,7 @@ export type LayerRequest =
   | (BaseRequest & { type: 'embeddings'; data: EmbeddingsRequest })
   | (BaseRequest & { type: 'tts'; data: TextToSpeechRequest })
   | (BaseRequest & { type: 'ocr'; data: OCRRequest });
+  //  TODO (cohere): Add rerrank request type
 
 /**
  * User-facing LayerRequest type with optional type field.
