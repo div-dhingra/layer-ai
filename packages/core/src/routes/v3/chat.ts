@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
-import { authenticate } from '../../middleware/auth.js';
 import { callAdapter, callAdapterStream, normalizeModelId, getProviderForModel, PROVIDER } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig, ChatRequest } from '@layer-ai/sdk';
 import { OverrideField } from '@layer-ai/sdk';
@@ -231,7 +230,7 @@ async function* executeWithRoutingStream(gateConfig: Gate, request: LayerRequest
 
 // MARK:- Route Handler
 
-router.post('/', authenticate, async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const startTime = Date.now();
 
   if (!req.userId) {

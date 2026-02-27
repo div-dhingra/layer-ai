@@ -1,12 +1,9 @@
 import { Router, Request, Response } from 'express';
-import type { Router as RouterType } from 'express';
+import type { Router as RouterType} from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
-import { authenticate } from '../../middleware/auth.js';
 
 const router: RouterType = Router();
-
-router.use(authenticate);
 
 // GET /spending - Get current spending information
 router.get('/', async (req: Request, res: Response) => {

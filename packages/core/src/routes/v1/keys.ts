@@ -2,12 +2,8 @@ import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import crypto from 'crypto';
 import { db } from '../../lib/db/postgres.js';
-import { authenticate } from '../../middleware/auth.js';
 
 const router: RouterType = Router();
-
-// All routes require sdk authentication
-router.use(authenticate);
 
 // Generate a random API key
 function generateApiKey(): string {
