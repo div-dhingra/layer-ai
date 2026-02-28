@@ -18,9 +18,8 @@ export { default as embeddingsRouter } from './routes/v3/embeddings.js';
 export { default as ttsRouter } from './routes/v3/tts.js';
 export { default as ocrRouter } from './routes/v3/ocr.js';
 
-// Middleware
-export { authenticate, authenticateAnthropicCompatible, AuthType } from './middleware/auth.js';
-export type {} from './middleware/auth.js';
+// Auth Types
+export { AuthType } from './types/auth.js';
 
 // Database
 export { db } from './lib/db/postgres.js';
