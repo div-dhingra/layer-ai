@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import { nanoid } from 'nanoid';
 import { db } from '../../lib/db/postgres.js';
-import { authenticateAnthropicCompatible } from '../../middleware/auth.js';
 import type { AnthropicMessageCreateParams, AnthropicError, Gate, LayerRequest } from '@layer-ai/sdk';
 import { spendingTracker } from '../../lib/spending-tracker.js';
 import {
@@ -24,7 +23,7 @@ async function executeWithRouting(gateConfig: Gate, request: LayerRequest, userI
   return { result, modelUsed: request.model };
 }
 
-router.post('/', authenticateAnthropicCompatible, async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const startTime = Date.now();
 
   if (!req.userId) {

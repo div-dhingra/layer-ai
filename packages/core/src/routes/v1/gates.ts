@@ -2,16 +2,12 @@ import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
-import { authenticate } from '../../middleware/auth.js';
 import { callAdapter } from '../../lib/provider-factory.js';
 import type { CreateGateRequest, UpdateGateRequest, LayerRequest } from '@layer-ai/sdk';
 import { MODEL_REGISTRY } from '@layer-ai/sdk';
 import { detectSignificantChanges } from '../../lib/gate-utils.js';
 
-const router: RouterType = Router(); 
-
-// All routes require authentication (SDK auth with Bearer token)
-router.use(authenticate);
+const router: RouterType = Router();
 
 // POST / - Create a new gate
 router.post('/', async (req: Request, res: Response) => {

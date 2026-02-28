@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
-import { authenticate } from '../../middleware/auth.js';
 import { callAdapter, normalizeModelId } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig } from '@layer-ai/sdk';
 import { MODEL_REGISTRY, OverrideField } from '@layer-ai/sdk';
@@ -199,7 +198,7 @@ async function executeWithRouting(gateConfig: Gate, request: LayerRequest, userI
 
 // MARK:- Route Handler
 
-router.post('/', authenticate, async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const startTime = Date.now();
 
   if (!req.userId) {
