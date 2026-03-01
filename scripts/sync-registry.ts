@@ -33,7 +33,6 @@ interface ModelEntry {
     timeToFirstToken?: number;
   };
   contextLength?: number;
-  maxTokens?: number;
   context?: {
     window?: number;
     input: {
@@ -98,7 +97,9 @@ function formatObjectLiteral(obj: any, indent: string = '    ', depth: number = 
 
     const props = keys.map(key => {
       const value = formatObjectLiteral(obj[key], indent, depth + 1);
-      return `${nextIndent}${key}: ${value}`;
+      // Quote keys that aren't valid JS identifiers (contain hyphens, dots, etc.)
+      const formattedKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? key : `'${key}'`;
+      return `${nextIndent}${formattedKey}: ${value}`;
     }).join(',\n');
 
     return `{\n${props}\n${currentIndent}}`;
@@ -111,11 +112,15 @@ function formatModelEntry(model: ModelEntry, indent: string = '    '): string {
   const lines: string[] = [];
 
   // Helper to escape single quotes in strings
-  const escapeString = (str: string) => str.replace(/'/g, "\\'");
+  const escapeString = (str: string | null | undefined) => (str ?? '').replace(/'/g, "\\'");
 
   lines.push(`${indent}type: '${model.type}' as const,`);
   lines.push(`${indent}provider: '${model.provider}' as const,`);
   lines.push(`${indent}displayName: '${escapeString(model.displayName)}',`);
+
+  if (model.subtype) {
+    lines.push(`${indent}subtype: '${escapeString(model.subtype)}',`);
+  }
 
   if (model.description) {
     lines.push(`${indent}description: '${escapeString(model.description)}',`);
@@ -219,7 +224,8 @@ export type ModelType =
   | 'tts'            // Text-to-speech
   | 'stt'            // Speech-to-text (Whisper)
   | 'embeddings'     // Text embeddings
-  | 'document'       // Document processing (OCR)
+  | 'ocr'            // Document processing (OCR)
+  | 'moderation'     // Content moderation
   | 'responses'      // Reasoning models (o3-pro)
   | 'language-completion';  // Legacy completion API
 
@@ -229,10 +235,12 @@ interface BaseModelEntry {
   provider: string;
   displayName: string;
   description?: string;
+  subtype?: string;
   pricing?: {
-    input?: number;   // Cost per 1K input tokens/units
-    output?: number;  // Cost per 1K output tokens/units
+    input?: number;   // Cost per 1M input tokens/units
+    output?: number;  // Cost per 1M output tokens/units
   };
+  unitPricing?: Record<string, any>;  // Non-token pricing (per_image, per_second, per_video, etc.)
   deprecated?: boolean;           // Model is deprecated, prevent new usage
   deprecationDate?: string;       // When the model was/will be deprecated
   shutdownDate?: string;          // When the model will be shut down
@@ -244,9 +252,7 @@ interface BaseModelEntry {
 // Chat/completion models with benchmarks and performance
 export interface ChatModelEntry extends BaseModelEntry {
   type: 'chat' | 'responses' | 'language-completion';
-  subtype?: string;
   contextLength?: number;
-  maxTokens?: number;
   benchmarks?: {
     intelligence?: number;
     coding?: number;
@@ -278,7 +284,6 @@ export interface ChatModelEntry extends BaseModelEntry {
 // Image generation models
 export interface ImageModelEntry extends BaseModelEntry {
   type: 'image';
-  unitPricing?: Record<string, any>;  // e.g. { per_image: { "standard-1024x1024": 0.04 } }
 }
 
 // Video generation models
@@ -307,9 +312,14 @@ export interface EmbeddingsModelEntry extends BaseModelEntry {
   contextLength?: number;
 }
 
-// Document processing models
-export interface DocumentModelEntry extends BaseModelEntry {
-  type: 'document';
+// OCR/document processing models
+export interface OCRModelEntry extends BaseModelEntry {
+  type: 'ocr';
+}
+
+// Content moderation models
+export interface ModerationModelEntry extends BaseModelEntry {
+  type: 'moderation';
 }
 
 // Union type for all model entries
@@ -321,7 +331,8 @@ export type ModelEntry =
   | TTSModelEntry
   | STTModelEntry
   | EmbeddingsModelEntry
-  | DocumentModelEntry;
+  | OCRModelEntry
+  | ModerationModelEntry;
 
 export const MODEL_REGISTRY = {
 ${modelsEntries}
@@ -336,29 +347,17 @@ export type Provider = SupportedProvider;
 }
 
 async function syncRegistry() {
-  console.log('🔄 Fetching latest model registry from internal API...\n');
+  console.log('🔄 Fetching latest model registry...\n');
 
-  const internalApiUrl = process.env.INTERNAL_API_URL;
-  const internalApiKey = process.env.INTERNAL_API_KEY;
+  const apiUrl = process.env.API_URL;
 
-  if (!internalApiUrl) {
-    throw new Error('INTERNAL_API_URL environment variable is required');
-  }
-
-  if (!internalApiKey) {
-    throw new Error('INTERNAL_API_KEY environment variable is required');
+  if (!apiUrl) {
+    throw new Error('API_URL environment variable is required (e.g. https://api.uselayer.ai)');
   }
 
   try {
-    // 1. Fetch from internal API
-    const response = await fetch(
-      `${internalApiUrl}/api/model-registry/latest`,
-      {
-        headers: {
-          'Authorization': `Bearer ${internalApiKey}`,
-        },
-      }
-    );
+    // 1. Fetch from public registry endpoint
+    const response = await fetch(`${apiUrl}/v1/registry`);
 
     if (!response.ok) {
       const errorText = await response.text();
