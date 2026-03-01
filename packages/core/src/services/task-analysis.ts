@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { MODEL_REGISTRY, TaskAnalysis, type ModelType, type ModelEntry } from '@layer-ai/sdk';
+import { TaskAnalysis, type ModelType, type ModelEntry } from '@layer-ai/sdk';
+import { getModelEntries } from '../lib/registry.js';
 
 async function detectTaskType(description: string, anthropic: Anthropic): Promise<ModelType> {
   const prompt = `Analyze this task description and determine what TYPE of AI task it is.
@@ -85,7 +86,7 @@ export async function analyzeTask(
   }
 
   const filteredRegistry: Record<string, ModelEntry> = {};
-  for (const [key, model] of Object.entries(MODEL_REGISTRY)) {
+  for (const [key, model] of getModelEntries()) {
     // Filter by task type
     if (model.type !== taskType) {
       continue;

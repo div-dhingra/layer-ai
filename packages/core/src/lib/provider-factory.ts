@@ -11,8 +11,8 @@ import { AnthropicAdapter } from '../services/providers/anthropic-adapter.js';
 import { GoogleAdapter } from '../services/providers/google-adapter.js';
 import { MistralAdapter } from '../services/providers/mistral-adapter.js';
 import type { LayerRequest, LayerResponse, SupportedModel } from '@layer-ai/sdk';
-import { MODEL_REGISTRY } from '@layer-ai/sdk';
 import { PROVIDER, PROVIDERS, type Provider } from './provider-constants.js';
+import { getModel, hasModel } from './registry.js';
 
 // Re-export for convenience
 export { PROVIDER, PROVIDERS, type Provider };
@@ -33,7 +33,7 @@ const PROVIDER_ADAPTERS = {
  * Supports both full IDs (e.g., "openai/gpt-4") and short IDs (e.g., "gpt-4").
  */
 export function normalizeModelId(modelId: string): SupportedModel {
-  if (MODEL_REGISTRY[modelId as SupportedModel]) {
+  if (hasModel(modelId)) {
     return modelId as SupportedModel;
   }
 
@@ -45,7 +45,7 @@ export function normalizeModelId(modelId: string): SupportedModel {
   ];
   for (const provider of providers) {
     const fullId = `${provider}/${modelId}`;
-    if (MODEL_REGISTRY[fullId as SupportedModel]) {
+    if (hasModel(fullId)) {
       return fullId as SupportedModel;
     }
   }
@@ -57,7 +57,7 @@ export function normalizeModelId(modelId: string): SupportedModel {
  * Gets the provider type for a given model
  */
 export function getProviderForModel(model: SupportedModel): Provider {
-  const modelInfo = MODEL_REGISTRY[model];
+  const modelInfo = getModel(model);
   if (!modelInfo) {
     throw new Error(`Model "${model}" not found in registry`);
   }

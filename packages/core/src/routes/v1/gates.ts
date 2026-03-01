@@ -4,7 +4,7 @@ import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
 import { callAdapter } from '../../lib/provider-factory.js';
 import type { CreateGateRequest, UpdateGateRequest, LayerRequest } from '@layer-ai/sdk';
-import { MODEL_REGISTRY } from '@layer-ai/sdk';
+import { hasModel } from '../../lib/registry.js';
 import { detectSignificantChanges } from '../../lib/gate-utils.js';
 
 const router: RouterType = Router();
@@ -24,7 +24,7 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    if (!MODEL_REGISTRY[model]) {
+    if (!hasModel(model)) {
       res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
       return;
     }
@@ -296,7 +296,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    if (model && !MODEL_REGISTRY[model]) {
+    if (model && !hasModel(model)) {
       res.status(400).json({ error: 'bad_request', message: `Unsupported model: ${model}` });
       return;
     }

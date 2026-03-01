@@ -14,10 +14,9 @@ import {
   ToolChoice,
   EncodingFormat,
   ADAPTER_HANDLED,
-  MODEL_REGISTRY,
-  SupportedModel,
 } from '@layer-ai/sdk';
 import type { Provider } from "../../lib/provider-constants.js";
+import { getModel } from '../../lib/registry.js';
 
 export { ADAPTER_HANDLED };
 
@@ -154,7 +153,7 @@ export abstract class BaseProviderAdapter {
     promptTokens: number,
     completionTokens: number
   ): number {
-    const modelInfo = MODEL_REGISTRY[model as SupportedModel];
+    const modelInfo = getModel(model);
     if (!modelInfo || !('pricing' in modelInfo) || !modelInfo.pricing?.input) {
       return 0;
     }
@@ -170,20 +169,27 @@ export abstract class BaseProviderAdapter {
     size?: string,
     count: number = 1
   ): number {
-    const modelInfo = MODEL_REGISTRY[model as SupportedModel];
-    if (!modelInfo || !('imagePricing' in modelInfo) || !modelInfo.imagePricing) {
-      return 0;
+    const modelInfo = getModel(model);
+    if (!modelInfo) return 0;
+
+    // Support new unitPricing format (per_image key) and legacy imagePricing
+    let perImagePricing: Record<string, number> | number | undefined;
+
+    if ('unitPricing' in modelInfo && modelInfo.unitPricing?.per_image) {
+      perImagePricing = modelInfo.unitPricing.per_image;
+    } else if ('imagePricing' in modelInfo && modelInfo.imagePricing) {
+      perImagePricing = modelInfo.imagePricing as Record<string, number> | number;
     }
 
-    const imagePricing = modelInfo.imagePricing;
+    if (!perImagePricing) return 0;
 
     // Flat-rate pricing (e.g. Google Imagen models)
-    if (typeof imagePricing === 'number') {
-      return imagePricing * count;
+    if (typeof perImagePricing === 'number') {
+      return perImagePricing * count;
     }
 
     // Build pricing key from quality and size (e.g., 'hd-1024x1024' or 'standard-1024x1024')
-    const pricingTable = imagePricing as Record<string, number>;
+    const pricingTable = perImagePricing as Record<string, number>;
     const pricingKey = quality && size ? `${quality}-${size}` : size || 'standard-1024x1024';
     const pricePerImage = pricingTable[pricingKey];
 
@@ -201,7 +207,7 @@ export abstract class BaseProviderAdapter {
     duration?: number,
     count: number = 1
   ): number {
-    const modelInfo = MODEL_REGISTRY[model as SupportedModel];
+    const modelInfo = getModel(model);
     if (!modelInfo || !('videoPricing' in modelInfo) || !modelInfo.videoPricing) {
       return 0;
     }
