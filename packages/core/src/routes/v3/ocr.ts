@@ -157,7 +157,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Warn if gate is configured for a different task type
-    if (gateConfig.taskType && gateConfig.taskType !== 'document') {
+    if (gateConfig.taskType && gateConfig.taskType !== 'ocr') {
       console.warn(
         `[Type Mismatch] Gate "${gateConfig.name}" (${gateConfig.id}) configured for taskType="${gateConfig.taskType}" ` +
         `but received request to /v3/ocr endpoint. Processing as OCR request.`

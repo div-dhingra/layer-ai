@@ -170,26 +170,19 @@ export abstract class BaseProviderAdapter {
     count: number = 1
   ): number {
     const modelInfo = getModel(model);
-    if (!modelInfo) return 0;
-
-    // Support new unitPricing format (per_image key) and legacy imagePricing
-    let perImagePricing: Record<string, number> | number | undefined;
-
-    if ('unitPricing' in modelInfo && modelInfo.unitPricing?.per_image) {
-      perImagePricing = modelInfo.unitPricing.per_image;
-    } else if ('imagePricing' in modelInfo && modelInfo.imagePricing) {
-      perImagePricing = modelInfo.imagePricing as Record<string, number> | number;
+    if (!modelInfo || !('unitPricing' in modelInfo) || !modelInfo.unitPricing) {
+      return 0;
     }
 
-    if (!perImagePricing) return 0;
+    const unitPricing = modelInfo.unitPricing;
 
-    // Flat-rate pricing (e.g. Google Imagen models)
-    if (typeof perImagePricing === 'number') {
-      return perImagePricing * count;
+    // Flat-rate pricing (e.g. Google Imagen: unitPricing = 0.02)
+    if (typeof unitPricing === 'number') {
+      return unitPricing * count;
     }
 
-    // Build pricing key from quality and size (e.g., 'hd-1024x1024' or 'standard-1024x1024')
-    const pricingTable = perImagePricing as Record<string, number>;
+    // Object pricing (e.g. DALL-E: unitPricing = { "hd-1024x1024": 0.08, ... })
+    const pricingTable = unitPricing as Record<string, number>;
     const pricingKey = quality && size ? `${quality}-${size}` : size || 'standard-1024x1024';
     const pricePerImage = pricingTable[pricingKey];
 
@@ -208,19 +201,32 @@ export abstract class BaseProviderAdapter {
     count: number = 1
   ): number {
     const modelInfo = getModel(model);
-    if (!modelInfo || !('videoPricing' in modelInfo) || !modelInfo.videoPricing) {
+    if (!modelInfo || !('unitPricing' in modelInfo) || !modelInfo.unitPricing) {
       return 0;
     }
 
-    const videoPricing = modelInfo.videoPricing as any;
+    const unitPricing = modelInfo.unitPricing;
 
-    // Video pricing might be per-second or per-video
-    const pricePerUnit = videoPricing.perVideo || videoPricing.perSecond || 0;
-
-    if (videoPricing.perSecond && duration) {
-      return pricePerUnit * duration * count;
+    // Flat-rate pricing (e.g. unitPricing = 0.50 per video)
+    if (typeof unitPricing === 'number') {
+      return unitPricing * count;
     }
 
-    return pricePerUnit * count;
+    // Object pricing with per_second or per_video keys
+    const pricing = unitPricing as Record<string, number>;
+
+    if (pricing.per_second && duration) {
+      return pricing.per_second * duration * count;
+    }
+
+    if (pricing.per_video) {
+      return pricing.per_video * count;
+    }
+
+    if (pricing.per_minute && duration) {
+      return pricing.per_minute * (duration / 60) * count;
+    }
+
+    return 0;
   }
 }
