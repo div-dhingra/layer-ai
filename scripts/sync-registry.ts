@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 interface ModelEntry {
   type: string;
+  subtype?: string;
   provider: string;
   displayName: string;
   description?: string;
@@ -19,7 +20,7 @@ interface ModelEntry {
     input?: number;
     output?: number;
   };
-  imagePricing?: Record<string, number> | number;
+  unitPricing?: Record<string, any>;
   benchmarks?: {
     intelligence?: number;
     coding?: number;
@@ -28,9 +29,8 @@ interface ModelEntry {
     gpqa?: number;
   };
   performance?: {
-    outputTokenPerSecond?: number;
-    timeTofirstToken?: number;
-    intelligenceScore?: number;
+    outputTokensPerSecond?: number;
+    timeToFirstToken?: number;
   };
   contextLength?: number;
   maxTokens?: number;
@@ -125,17 +125,12 @@ function formatModelEntry(model: ModelEntry, indent: string = '    '): string {
     lines.push(`${indent}pricing: { ${model.pricing.input !== undefined ? `input: ${model.pricing.input}` : ''}${model.pricing.input !== undefined && model.pricing.output !== undefined ? ', ' : ''}${model.pricing.output !== undefined ? `output: ${model.pricing.output}` : ''} },`);
   }
 
-  if (model.imagePricing !== undefined) {
-    if (typeof model.imagePricing === 'number') {
-      // Flat rate pricing
-      lines.push(`${indent}imagePricing: ${model.imagePricing},`);
-    } else {
-      // Structured pricing per size/quality
-      const pricingParts = Object.entries(model.imagePricing)
-        .map(([key, value]) => `'${key}': ${value}`)
-        .join(', ');
-      lines.push(`${indent}imagePricing: { ${pricingParts} },`);
-    }
+  if (model.unitPricing !== undefined) {
+    const unitPricingLiteral = formatObjectLiteral(model.unitPricing, '  ', 0);
+    const formattedPricing = unitPricingLiteral.split('\n').map((line: string, i: number) =>
+      i === 0 ? line : `${indent}${line}`
+    ).join('\n');
+    lines.push(`${indent}unitPricing: ${formattedPricing},`);
   }
 
   if (model.benchmarks) {
@@ -157,9 +152,8 @@ function formatModelEntry(model: ModelEntry, indent: string = '    '): string {
 
   if (model.performance) {
     const perfParts: string[] = [];
-    if (model.performance.outputTokenPerSecond !== undefined) perfParts.push(`outputTokenPerSecond: ${model.performance.outputTokenPerSecond}`);
-    if (model.performance.timeTofirstToken !== undefined) perfParts.push(`timeTofirstToken: ${model.performance.timeTofirstToken}`);
-    if (model.performance.intelligenceScore !== undefined) perfParts.push(`intelligenceScore: ${model.performance.intelligenceScore}`);
+    if (model.performance.outputTokensPerSecond !== undefined) perfParts.push(`outputTokensPerSecond: ${model.performance.outputTokensPerSecond}`);
+    if (model.performance.timeToFirstToken !== undefined) perfParts.push(`timeToFirstToken: ${model.performance.timeToFirstToken}`);
 
     if (perfParts.length > 0) {
       lines.push(`${indent}performance: {`);
@@ -250,6 +244,7 @@ interface BaseModelEntry {
 // Chat/completion models with benchmarks and performance
 export interface ChatModelEntry extends BaseModelEntry {
   type: 'chat' | 'responses' | 'language-completion';
+  subtype?: string;
   contextLength?: number;
   maxTokens?: number;
   benchmarks?: {
@@ -260,9 +255,8 @@ export interface ChatModelEntry extends BaseModelEntry {
     gpqa?: number;
   };
   performance?: {
-    outputTokenPerSecond?: number;
-    timeTofirstToken?: number;
-    intelligenceScore?: number;
+    outputTokensPerSecond?: number;
+    timeToFirstToken?: number;
   };
   context?: {
     window?: number;
@@ -284,7 +278,7 @@ export interface ChatModelEntry extends BaseModelEntry {
 // Image generation models
 export interface ImageModelEntry extends BaseModelEntry {
   type: 'image';
-  imagePricing?: number | Record<string, number>;  // Flat rate or per-size/quality pricing
+  unitPricing?: Record<string, any>;  // e.g. { per_image: { "standard-1024x1024": 0.04 } }
 }
 
 // Video generation models
