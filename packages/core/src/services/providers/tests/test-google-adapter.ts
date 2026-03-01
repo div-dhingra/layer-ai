@@ -63,7 +63,7 @@ async function testImageGeneration() {
 
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'imagen-4.0-generate-001',
+    model: 'imagen-4.0-fast-generate-001',
     type: 'image',
     data: {
       prompt: 'A cute cat playing with a ball of yarn',
@@ -75,6 +75,12 @@ async function testImageGeneration() {
   console.log('Generated images:', response.images?.length);
   console.log('Image base64 length:', response.images?.[0]?.base64?.length);
   console.log('Latency:', response.latencyMs + 'ms');
+  console.log('Cost:', response.cost);
+
+  if (!response.cost || response.cost <= 0) {
+    throw new Error(`Expected image generation cost > 0, got ${response.cost}`);
+  }
+
   console.log('✅ Image generation test passed\n');
 }
 
@@ -226,6 +232,14 @@ async function testVideoGeneration() {
   console.log('Video URL:', response.videos?.[0]?.url);
   console.log('Video duration:', response.videos?.[0]?.duration);
   console.log('Latency:', response.latencyMs + 'ms');
+  console.log('Cost:', response.cost);
+
+  // Note: video cost may be 0 if unitPricing is not set for this model in the registry
+  if (response.cost && response.cost > 0) {
+    console.log('✅ Video cost calculation working');
+  } else {
+    console.warn('⚠️  Video cost is 0 (unitPricing may not be set for this model)');
+  }
   console.log('✅ Video generation test passed\n');
 }
 
@@ -234,10 +248,6 @@ async function runTests() {
     console.log('Chat completion tests...');
     await testChatCompletion();
     await testChatWithVision();
-
-    console.log('Embeddings...');
-    await testEmbeddings();
-    await testEmbeddingsMultiple();
 
     console.log('Image generation...');
     await testImageGeneration();
@@ -250,6 +260,10 @@ async function runTests() {
 
     console.log('Tool calling...');
     await testToolCalling();
+
+    console.log('Embeddings...');
+    await testEmbeddings();
+    await testEmbeddingsMultiple();
 
     console.log('✅ All tests passed!');
   } catch (error) {

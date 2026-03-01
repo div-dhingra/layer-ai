@@ -8,7 +8,7 @@ async function testChatCompletion() {
 
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [
@@ -33,7 +33,7 @@ async function testChatWithVision() {
 
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [
@@ -75,6 +75,12 @@ async function testImageGeneration() {
   console.log('Generated images:', response.images?.length);
   console.log('Image URL:', response.images?.[0]?.url);
   console.log('Revised prompt:', response.images?.[0]?.revisedPrompt);
+  console.log('Cost:', response.cost);
+
+  if (!response.cost || response.cost <= 0) {
+    throw new Error(`Expected image generation cost > 0, got ${response.cost}`);
+  }
+
   console.log('✅ Image generation test passed\n');
 }
 
@@ -124,7 +130,7 @@ async function testToolCalling() {
   // Step 1: Initial request with tool available
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [
@@ -169,7 +175,7 @@ async function testToolCalling() {
   // Step 2: Send tool response back
   const toolResponseRequest: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [
@@ -200,7 +206,7 @@ async function testContentAndToolCalls() {
   // This tests the fix we made - assistant messages can have BOTH content and toolCalls
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [

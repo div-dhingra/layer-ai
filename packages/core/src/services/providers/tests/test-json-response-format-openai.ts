@@ -20,7 +20,7 @@ async function testJsonObjectMode() {
 
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [
@@ -134,7 +134,7 @@ async function testTextMode() {
 
   const request: LayerRequest = {
     gateId: 'test-gate',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     type: 'chat',
     data: {
       messages: [
