@@ -1,0 +1,1 @@
+ALTER TABLE gates ADD COLUMN task_subtype VARCHAR(20);
