@@ -1,6 +1,6 @@
 import type { SupportedModel } from "./gates.js";
 import { TaskAnalysis } from "./smart-routing.js";
-import type { ModelType } from "./model-registry.js";
+import type { ModelType, ModelSubtype } from "./model-registry.js";
 import type { AnalysisMethod, RoutingStrategy, ReanalysisPeriod } from "./history.js";
 import type { ResponseFormatType } from "./api-v3.js";
 
@@ -38,6 +38,7 @@ export interface GateBase {
   name: string;
   model: SupportedModel;
   taskType: ModelType; // Required: determines what kind of task this gate handles
+  taskSubtype?: ModelSubtype | null; // Optional: specialization (reasoning, code, realtime)
 
   // Optional public fields
   description?: string;

@@ -24,6 +24,8 @@ export type ModelType =
   | 'responses'      // Reasoning models (o3-pro)
   | 'language-completion';  // Legacy completion API
 
+export type ModelSubtype = 'reasoning' | 'code' | 'realtime';
+
 // Base interface for all models
 interface BaseModelEntry {
   type: ModelType;
