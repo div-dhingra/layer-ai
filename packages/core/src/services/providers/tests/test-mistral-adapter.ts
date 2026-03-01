@@ -13,7 +13,7 @@ async function testChatCompletion() {
   const request: LayerRequest = {
     gateId: 'test-gate',
     type: 'chat',
-    model: 'mistral-small-latest',
+    model: 'mistral-small-2501',
     data: {
       messages: [
         {
@@ -41,7 +41,7 @@ async function testChatWithSystemPrompt() {
   const request: LayerRequest = {
     gateId: 'test-gate',
     type: 'chat',
-    model: 'mistral-small-latest',
+    model: 'mistral-small-2501',
     data: {
       systemPrompt: 'You are a helpful assistant that responds in JSON format only.',
       messages: [
@@ -67,7 +67,7 @@ async function testChatWithTools() {
   const request: LayerRequest = {
     gateId: 'test-gate',
     type: 'chat',
-    model: 'mistral-small-latest',
+    model: 'mistral-small-2501',
     data: {
       messages: [
         {
@@ -118,7 +118,7 @@ async function testToolResponse() {
   const initialRequest: LayerRequest = {
     gateId: 'test-gate',
     type: 'chat',
-    model: 'mistral-small-latest',
+    model: 'mistral-small-2501',
     data: {
       messages: [
         {
@@ -164,7 +164,7 @@ async function testToolResponse() {
     const followUpRequest: LayerRequest = {
       gateId: 'test-gate',
       type: 'chat',
-      model: 'mistral-small-latest',
+      model: 'mistral-small-2501',
       data: {
         messages: [
           {
@@ -253,7 +253,7 @@ async function testResponseFormat() {
   const request: LayerRequest = {
     gateId: 'test-gate',
     type: 'chat',
-    model: 'mistral-small-latest',
+    model: 'mistral-small-2501',
     data: {
       messages: [
         {
@@ -277,7 +277,7 @@ async function testMultiTurn() {
   const request: LayerRequest = {
     gateId: 'test-gate',
     type: 'chat',
-    model: 'mistral-small-latest',
+    model: 'mistral-small-2501',
     data: {
       messages: [
         {
@@ -332,7 +332,7 @@ async function testUnsupportedModality() {
   const request = {
     gateId: 'test-gate',
     type: 'image',
-    model: 'mistral-large-latest',
+    model: 'mistral-large-2512',
     data: {
       prompt: 'A sunset over the ocean',
     },

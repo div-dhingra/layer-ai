@@ -16,7 +16,8 @@ AVAILABLE TASK TYPES:
 - tts: Text-to-speech, voice synthesis
 - stt: Speech-to-text, audio transcription
 - embeddings: Text embeddings, semantic search
-- document: Document processing, OCR
+- ocr: Document processing, OCR
+- moderation: Content moderation
 - responses: Complex reasoning tasks (o3-pro style models)
 - language-completion: Legacy text completion
 
@@ -46,7 +47,7 @@ Return ONLY the task type as a single word, nothing else.`;
 
     const detectedType = responseContent.text.trim().toLowerCase();
 
-    const validTypes: ModelType[] = ['chat', 'image', 'video', 'audio', 'tts', 'stt', 'embeddings', 'document', 'responses', 'language-completion'];
+    const validTypes: ModelType[] = ['chat', 'image', 'video', 'audio', 'tts', 'stt', 'embeddings', 'ocr', 'moderation', 'responses', 'language-completion'];
 
     if (validTypes.includes(detectedType as ModelType)) {
       return detectedType as ModelType;
@@ -123,6 +124,7 @@ USER PREFERENCES (0.0 = doesn't care, 1.0 = very important):
 Analyze this task and recommend the BEST models from our registry that match BOTH the task requirements AND user preferences.
 
 Consider:
+- Model subtype (prefer "reasoning" subtype for complex multi-step reasoning, "code" subtype for programming, "realtime" subtype for low-latency streaming)
 - Math benchmarks (for quantitative tasks)
 - Coding benchmarks (for programming tasks)
 - Intelligence scores (for reasoning)

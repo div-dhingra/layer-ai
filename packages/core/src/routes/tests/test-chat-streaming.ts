@@ -333,7 +333,7 @@ async function testMultiProviderFallback() {
 
   const modelsToTry: SupportedModel[] = [
     'invalid-openai-model' as SupportedModel,
-    'claude-3-7-sonnet-20250219',
+    'claude-sonnet-4-20250514',
   ];
 
   let chunkCount = 0;
