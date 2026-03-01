@@ -43,6 +43,9 @@ export const deleteSessionKeysForUser = async (userId: string): Promise<void> =>
 // Services
 export * from './services/task-analysis.js';
 
+// Model Registry
+export { initializeRegistry, getRegistry, getModel, hasModel, getModelEntries } from './lib/registry.js';
+
 // Provider Factory
 export { PROVIDER, PROVIDERS, type Provider, callAdapter, normalizeModelId, getProviderForModel } from './lib/provider-factory.js';
 

@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { completeRouter, gatesRouter, keysRouter, authRouter, logsRouter, messagesRouter } from '@layer-ai/core';
+import { completeRouter, gatesRouter, keysRouter, authRouter, logsRouter, messagesRouter, initializeRegistry } from '@layer-ai/core';
 
 const app = express()
 const PORT = process.env.PORT || 3001;
@@ -62,6 +62,14 @@ app.use('/v1/logs', logsRouter);
 app.use('/v1/messages', messagesRouter);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Layer API is running on port ${PORT}`); 
-})
+async function start() {
+  await initializeRegistry({ refreshIntervalMs: 60 * 60 * 1000 }); // refresh hourly
+  app.listen(PORT, () => {
+    console.log(`Layer API is running on port ${PORT}`);
+  });
+}
+
+start().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});

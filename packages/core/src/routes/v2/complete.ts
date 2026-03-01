@@ -4,7 +4,7 @@ import { db } from '../../lib/db/postgres.js';
 import { cache } from '../../lib/db/redis.js';
 import { callAdapter, normalizeModelId } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig } from '@layer-ai/sdk';
-import { MODEL_REGISTRY, OverrideField } from '@layer-ai/sdk';
+import { OverrideField } from '@layer-ai/sdk';
 import { spendingTracker } from '../../lib/spending-tracker.js';
 
 
