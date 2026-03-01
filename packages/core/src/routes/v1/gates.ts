@@ -17,7 +17,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
-    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis, responseFormatEnabled, responseFormatType, responseFormatSchema, spendingLimit, spendingLimitPeriod, spendingEnforcement } = req.body as CreateGateRequest;
+    const { name, description, taskType, taskSubtype, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, reanalysisPeriod, taskAnalysis, responseFormatEnabled, responseFormatType, responseFormatSchema, spendingLimit, spendingLimitPeriod, spendingEnforcement } = req.body as CreateGateRequest;
 
     if (!name || !model) {
       res.status(400).json({ error: 'bad_request', message: 'Missing required fields: name and model' });
@@ -39,6 +39,7 @@ router.post('/', async (req: Request, res: Response) => {
       name,
       description,
       taskType,
+      taskSubtype,
       model,
       systemPrompt,
       allowOverrides,
@@ -282,7 +283,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const { name, description, taskType, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations, responseFormatEnabled, responseFormatType, responseFormatSchema, spendingLimit, spendingLimitPeriod, spendingEnforcement } = req.body as UpdateGateRequest;
+    const { name, description, taskType, taskSubtype, model, systemPrompt, allowOverrides, temperature, maxTokens, topP, tags, routingStrategy, fallbackModels, costWeight, latencyWeight, qualityWeight, analysisMethod, reanalysisPeriod, taskAnalysis, autoApplyRecommendations, responseFormatEnabled, responseFormatType, responseFormatSchema, spendingLimit, spendingLimitPeriod, spendingEnforcement } = req.body as UpdateGateRequest;
 
     const existing = await db.getGateById(req.params.id);
 
@@ -306,6 +307,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       name,
       description,
       taskType,
+      taskSubtype,
       model,
       systemPrompt,
       temperature,
@@ -331,6 +333,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
       name,
       description,
       taskType,
+      taskSubtype,
       model,
       systemPrompt,
       allowOverrides,
