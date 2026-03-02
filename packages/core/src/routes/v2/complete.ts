@@ -120,6 +120,15 @@ function resolveFinalRequest(
       };
     }
 
+    case 'rerank' : {
+      // Similar to embeddings, reranking is deterministic and doesn't typically need gate-level defaults
+      // beyond model selection (already handled)
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };  
+    }
+
     default: {
       // This will cause a TypeScript error if we miss a case
       const exhaustiveCheck: never = request;

@@ -79,9 +79,8 @@ export class CohereAdapter extends BaseProviderAdapter {
         return this.handleChat(request, resolved.key, resolved.usedPlatformKey);
       case 'embeddings':
         return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
-      // TODO (cohere): implement rerank
-      // case 'rerank':
-      //   return this.handleRerank(request, resolved.key, resolved.usedPlatformKey);
+      case 'rerank':
+        return this.handleRerank(request, resolved.key, resolved.usedPlatformKey);
       case 'image':
         throw new Error('Image generation not supported by Cohere');
       case 'tts':
@@ -531,6 +530,7 @@ export class CohereAdapter extends BaseProviderAdapter {
     const cohere = getCohereClient(apiKey);
     const { data: embedding, model } = request;
 
+    // Missing Cohere "Embed" model 
     if (!model) {
       throw new Error('Model is required for embeddings');
     }
@@ -592,7 +592,54 @@ export class CohereAdapter extends BaseProviderAdapter {
     const cost = this.calculateCost(model, promptTokens, completionTokens);
 
     return {
+      id: response.id,
       embeddings,
+      model: model,
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+      },
+      cost,
+      latencyMs: Date.now() - startTime,
+      usedPlatformKey,
+      raw: response,
+    };
+  }
+
+  private async handleRerank(
+    request: Extract<LayerRequest, { type: 'rerank' }>,
+    apiKey: string,
+    usedPlatformKey: boolean
+  ): Promise<LayerResponse> { 
+    const startTime = Date.now();
+    const cohere = getCohereClient(apiKey);
+    const { data: rerank, model } = request;
+
+    // Missing Cohere "Rerank" model 
+     if (!model) {
+      throw new Error('Model is required for reranking'); 
+    }
+
+    const response = await cohere.rerank({
+      model,
+      query: rerank.query,
+      documents: rerank.documents,
+      ...(rerank.topN && {topN: rerank.topN}),
+      ...(rerank.maxTokensPerDocument && {maxTokensPerDoc: rerank.maxTokensPerDocument}),
+      ...(rerank.priority && {priority: rerank.priority}),
+    });
+    
+    const promptTokens = response.meta?.tokens?.inputTokens || 0; 
+    const completionTokens = response.meta?.tokens?.outputTokens || 0; 
+    const totalTokens = promptTokens + completionTokens;
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
+
+    return {
+      ...(response.id && { id: response.id }),
+      rerank: {
+        results: response.results,
+      },
       model: model,
       usage: {
         promptTokens,
