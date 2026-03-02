@@ -60,9 +60,11 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (!gateId) {
+      const msg = 'Missing required field: gateId (provide in request body, X-Layer-Gate-Id header, or as part of model field)';
+      db.logRequest({ userId, gateId: null, gateName: null, modelRequested: null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: openaiReq, responsePayload: null }).catch(() => {});
       const error: OpenAIError = {
         error: {
-          message: 'Missing required field: gateId (provide in request body, X-Layer-Gate-Id header, or as part of model field)',
+          message: msg,
           type: 'invalid_request_error',
           param: 'gateId',
           code: 'missing_field',
@@ -74,9 +76,11 @@ router.post('/', async (req: Request, res: Response) => {
 
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gateId);
     if (!isUUID) {
+      const msg = 'gateId must be a valid UUID';
+      db.logRequest({ userId, gateId, gateName: null, modelRequested: null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: openaiReq, responsePayload: null }).catch(() => {});
       const error: OpenAIError = {
         error: {
-          message: 'gateId must be a valid UUID',
+          message: msg,
           type: 'invalid_request_error',
           param: 'gateId',
           code: 'invalid_format',
@@ -88,9 +92,11 @@ router.post('/', async (req: Request, res: Response) => {
 
     gateConfig = await db.getGateByUserAndId(userId, gateId);
     if (!gateConfig) {
+      const msg = `Gate with ID "${gateId}" not found`;
+      db.logRequest({ userId, gateId, gateName: null, modelRequested: openaiReq.model || null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: openaiReq, responsePayload: null }).catch(() => {});
       const error: OpenAIError = {
         error: {
-          message: `Gate with ID "${gateId}" not found`,
+          message: msg,
           type: 'invalid_request_error',
           param: 'gateId',
           code: 'not_found',
@@ -101,9 +107,11 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (!openaiReq.messages || !Array.isArray(openaiReq.messages) || openaiReq.messages.length === 0) {
+      const msg = 'Missing required field: messages (must be a non-empty array)';
+      db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: openaiReq.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: openaiReq, responsePayload: null }).catch(() => {});
       const error: OpenAIError = {
         error: {
-          message: 'Missing required field: messages (must be a non-empty array)',
+          message: msg,
           type: 'invalid_request_error',
           param: 'messages',
           code: 'missing_field',

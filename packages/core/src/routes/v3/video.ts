@@ -141,25 +141,33 @@ router.post('/', async (req: Request, res: Response) => {
     const rawRequest = req.body;
 
     if (!rawRequest.gateId) {
-      res.status(400).json({ error: 'bad_request', message: 'Missing required field: gateId' });
+      const msg = 'Missing required field: gateId';
+      db.logRequest({ userId, gateId: null, gateName: null, modelRequested: null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(400).json({ error: 'bad_request', message: msg });
       return;
     }
 
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawRequest.gateId);
     if (!isUUID) {
-      res.status(400).json({ error: 'bad_request', message: 'gateId must be a valid UUID' });
+      const msg = 'gateId must be a valid UUID';
+      db.logRequest({ userId, gateId: rawRequest.gateId, gateName: null, modelRequested: null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(400).json({ error: 'bad_request', message: msg });
       return;
     }
 
     gateConfig = await db.getGateByUserAndId(userId, rawRequest.gateId);
     if (!gateConfig) {
-      res.status(404).json({ error: 'not_found', message: `Gate with ID "${rawRequest.gateId}" not found` });
+      const msg = `Gate with ID "${rawRequest.gateId}" not found`;
+      db.logRequest({ userId, gateId: rawRequest.gateId, gateName: null, modelRequested: rawRequest.model || null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(404).json({ error: 'not_found', message: msg });
       return;
     }
 
     // Validate video-specific fields
     if (!rawRequest.data?.prompt || typeof rawRequest.data.prompt !== 'string' || rawRequest.data.prompt.trim().length === 0) {
-      res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.prompt (must be a non-empty string)' });
+      const msg = 'Missing required field: data.prompt (must be a non-empty string)';
+      db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(400).json({ error: 'bad_request', message: msg });
       return;
     }
 

@@ -101,8 +101,8 @@ export interface Request {
   userId: string; 
   gateId: string | null; 
   gateName: string | null; 
-  modelRequested: string; 
-  modelUsed: string; 
+  modelRequested: string | null;
+  modelUsed: string | null;
   promptTokens: number; 
   completionTokens: number; 
   totalTokens: number; 

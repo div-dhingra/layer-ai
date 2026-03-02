@@ -214,19 +214,25 @@ router.post('/', async (req: Request, res: Response) => {
     const rawRequest = req.body;
 
     if (!rawRequest.gateId) {
-      res.status(400).json({ error: 'bad_request', message: 'Missing required field: gateId' });
+      const msg = 'Missing required field: gateId';
+      db.logRequest({ userId, gateId: null, gateName: null, modelRequested: null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(400).json({ error: 'bad_request', message: msg });
       return;
     }
 
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawRequest.gateId);
     if (!isUUID) {
-      res.status(400).json({ error: 'bad_request', message: 'gateId must be a valid UUID. Gate names are no longer supported.' });
+      const msg = 'gateId must be a valid UUID. Gate names are no longer supported.';
+      db.logRequest({ userId, gateId: rawRequest.gateId, gateName: null, modelRequested: null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(400).json({ error: 'bad_request', message: msg });
       return;
     }
 
     gateConfig = await db.getGateByUserAndId(userId, rawRequest.gateId);
     if (!gateConfig) {
-      res.status(404).json({ error: 'not_found', message: `Gate with ID "${rawRequest.gateId}" not found` });
+      const msg = `Gate with ID "${rawRequest.gateId}" not found`;
+      db.logRequest({ userId, gateId: rawRequest.gateId, gateName: null, modelRequested: rawRequest.model || null, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+      res.status(404).json({ error: 'not_found', message: msg });
       return;
     }
 
@@ -253,37 +259,49 @@ router.post('/', async (req: Request, res: Response) => {
     switch (request.type) {
       case 'chat':
         if (!request.data.messages || !Array.isArray(request.data.messages) || request.data.messages.length === 0) {
-          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.messages' });
+          const msg = 'Missing required field: data.messages';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
           return;
         }
         break;
       case 'image':
         if (!request.data.prompt) {
-          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.prompt' });
+          const msg = 'Missing required field: data.prompt';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
           return;
         }
         break;
       case 'video':
         if (!request.data.prompt) {
-          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.prompt' });
+          const msg = 'Missing required field: data.prompt';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
           return;
         }
         break;
       case 'embeddings':
         if (!request.data.input) {
-          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.input' });
+          const msg = 'Missing required field: data.input';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
           return;
         }
         break;
       case 'tts':
         if (!request.data.input) {
-          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data.input' });
+          const msg = 'Missing required field: data.input';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
           return;
         }
         break;
       case 'ocr':
         if (!request.data.documentUrl && !request.data.imageUrl && !request.data.base64) {
-          res.status(400).json({ error: 'bad_request', message: 'Missing required field: data must contain one of documentUrl, imageUrl, or base64' });
+          const msg = 'Missing required field: data must contain one of documentUrl, imageUrl, or base64';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
           return;
         }
         break;
