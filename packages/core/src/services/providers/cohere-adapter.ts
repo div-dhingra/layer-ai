@@ -1,10 +1,11 @@
-import { CohereClientV2 } from 'cohere-ai';
+import { CohereClientV2, Cohere } from 'cohere-ai';
 import { BaseProviderAdapter } from './base-adapter.js';
 import {
   LayerRequest,
   LayerResponse,
   Role,
-  FinishReason,
+  FinishReason, 
+  EmbedInputType,
 } from '@layer-ai/sdk';
 import { PROVIDER, type Provider } from "../../lib/provider-constants.js";
 import { resolveApiKey } from '../../lib/key-resolver.js';
@@ -12,6 +13,7 @@ import {
   ChatMessageV2, 
   UserMessageV2Content, 
   ResponseFormatV2, 
+  EmbedInput,
 } from 'cohere-ai/api/index.js';
 
 let client: CohereClientV2 | null = null;
@@ -59,6 +61,15 @@ export class CohereAdapter extends BaseProviderAdapter {
     required: 'REQUIRED',
   };
 
+  protected embeddingInputTypeMappings: Record<EmbedInputType, string> = {
+    'text': 'search_document',     
+    'document': 'search_document',
+    'query': 'search_query',       
+    'image': 'image',              
+    'clustering': 'clustering',     
+    'classification': 'classification' 
+  };
+
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
     // Resolve API key (BYOK → Platform key)
     const resolved = await resolveApiKey(this.provider, userId, process.env.COHERE_API_KEY);
@@ -66,9 +77,8 @@ export class CohereAdapter extends BaseProviderAdapter {
     switch (request.type) {
       case 'chat':
         return this.handleChat(request, resolved.key, resolved.usedPlatformKey);
-      // TODO (cohere): implement embeddings
-      // case 'embeddings':
-      //   return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
+      case 'embeddings':
+        return this.handleEmbeddings(request, resolved.key, resolved.usedPlatformKey);
       // TODO (cohere): implement rerank
       // case 'rerank':
       //   return this.handleRerank(request, resolved.key, resolved.usedPlatformKey);
@@ -509,6 +519,90 @@ export class CohereAdapter extends BaseProviderAdapter {
       stream: true,
       finishReason: this.mapFinishReason(finishReason || 'stop'),
       rawFinishReason: finishReason || undefined,
+    };
+  }
+
+  private async handleEmbeddings(
+    request: Extract<LayerRequest, { type: 'embeddings' }>,
+    apiKey: string,
+    usedPlatformKey: boolean
+  ): Promise<LayerResponse> {
+    const startTime = Date.now();
+    const cohere = getCohereClient(apiKey);
+    const { data: embedding, model } = request;
+
+    if (!model) {
+      throw new Error('Model is required for embeddings');
+    }
+
+    const inputs = Array.isArray(embedding.input) ? embedding.input : [embedding.input];
+
+    // Fallback for missing embedding input-type
+    const isLikelyImageUrl = (s: string): boolean => (
+      /^https?:\/\/.+\.(?:jpe?g|png|gif|webp)(?:\?.*)?$/.test(s)
+        || /^data:image\//.test(s)
+    );
+
+    // Convert inputs, input type to Cohere format
+    let inputType: Cohere.EmbedInputType = 'search_document'; // / default for normal text embeddings OR mixed inputs (image + text embeddings)
+    if (embedding.inputType) {
+      inputType = this.mapEmbeddingInputType(embedding.inputType) as Cohere.EmbedInputType;
+    } else if (inputs.every(isLikelyImageUrl)) { // Handle missing embedding input type (smart fallback)
+        inputType = 'image'; 
+    }
+    const cohereInputs: EmbedInput[] = inputs.map((item: string) => { // text, image, or mixed
+      if (inputType === 'image' || isLikelyImageUrl(item)) {
+        return { 
+          content: [{
+            type: 'image_url',
+            imageUrl: {
+              url: item,
+            },
+          }]
+        }
+      } else {
+        return {
+          content: [{
+            type: 'text',
+            text: item,
+          }]
+        }
+      }
+    });
+
+    const response = await cohere.embed({
+      model,
+      inputType,
+      inputs: cohereInputs,
+      ...(embedding.dimensions && { outputDimension: embedding.dimensions }),
+      ...(embedding.encodingFormat && { embeddingTypes: [embedding.encodingFormat  as 'float' | 'base64'] }),
+    });
+
+    const embeddings = response.embeddings.float 
+      || response.embeddings.int8 
+      || response.embeddings.uint8
+      || response.embeddings.binary
+      || response.embeddings.ubinary 
+      || response.embeddings.base64
+      || [];
+
+    const promptTokens = response.meta?.tokens?.inputTokens || 0;
+    const completionTokens = response.meta?.tokens?.outputTokens || 0;
+    const totalTokens = promptTokens + completionTokens;
+    const cost = this.calculateCost(model, promptTokens, completionTokens);
+
+    return {
+      embeddings,
+      model: model,
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+      },
+      cost,
+      latencyMs: Date.now() - startTime,
+      usedPlatformKey,
+      raw: response,
     };
   }
 }

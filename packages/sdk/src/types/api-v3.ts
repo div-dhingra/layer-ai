@@ -249,10 +249,13 @@ export interface VideoGenerationRequest {
 
 // ====== EMBEDDINGS REQUEST ======
 
+export type EmbedInputType = 'text' | 'image' | 'query' | 'document' | 'clustering' | 'classification';
+
 export interface EmbeddingsRequest {
   input: string | string[];
   dimensions?: number;
   encodingFormat?: EncodingFormat;
+  inputType?: EmbedInputType;
 }
 
 // ====== TEXT-TO-SPEECH REQUEST ======
@@ -329,7 +332,7 @@ export interface LayerResponse {
   images?: ImageOutput[];
   videos?: VideoOutput[];
   audio?: AudioOutput;
-  embeddings?: number[][];
+  embeddings?: number[][] | string[];
   ocr?: OCROutput;
   toolCalls?: ToolCall[];
   model?: string;
