@@ -70,7 +70,7 @@ export async function analyzeTask(
   }
 ): Promise<TaskAnalysis> {
   const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY
+    apiKey: process.env.LAYER_PLATFORM_ANTHROPIC_API_KEY
   });
 
   const costWeight = userPreferences?.costWeight ?? 0.33;

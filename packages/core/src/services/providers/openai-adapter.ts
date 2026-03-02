@@ -24,7 +24,7 @@ function getOpenAIClient(apiKey?: string): OpenAI {
 
   if (!openai) {
     openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.LAYER_PLATFORM_OPENAI_API_KEY,
     });
   }
   return openai;
@@ -93,7 +93,7 @@ export class OpenAIAdapter extends BaseProviderAdapter {
   };
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.OPENAI_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_OPENAI_API_KEY);
 
     switch (request.type) {
       case 'chat':
@@ -112,10 +112,10 @@ export class OpenAIAdapter extends BaseProviderAdapter {
   }
 
   async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.OPENAI_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_OPENAI_API_KEY);
 
     switch (request.type) {
-      case 'chat': 
+      case 'chat':
         yield* this.handleChatStream(request, resolved.key, resolved.usedPlatformKey);
         break;
       default: 

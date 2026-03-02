@@ -21,7 +21,7 @@ function getMistralClient(apiKey?: string): Mistral {
   // Otherwise use singleton with platform key
   if (!client) {
     client = new Mistral({
-      apiKey: process.env.MISTRAL_API_KEY || '',
+      apiKey: process.env.LAYER_PLATFORM_MISTRAL_API_KEY || '',
     });
   }
   return client;
@@ -57,7 +57,7 @@ export class MistralAdapter extends BaseProviderAdapter {
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
     // Resolve API key (BYOK → Platform key)
-    const resolved = await resolveApiKey(this.provider, userId, process.env.MISTRAL_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_MISTRAL_API_KEY);
 
     switch (request.type) {
       case 'chat':
@@ -78,7 +78,7 @@ export class MistralAdapter extends BaseProviderAdapter {
   }
 
   async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.MISTRAL_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_MISTRAL_API_KEY);
 
     switch (request.type) {
       case 'chat':
