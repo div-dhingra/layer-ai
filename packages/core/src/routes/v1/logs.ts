@@ -35,20 +35,30 @@ router.get('/', async (req: Request, res: Response) => {
       WHERE user_id = $1
     `;
 
-    const params: any[] = [userId];
+    const filterParams: any[] = [userId];
+    let filterClause = '';
 
     if (gate) {
-      query += ` AND gate_id = $2`;
-      params.push(gate);
+      filterClause += ` AND gate_id = $${filterParams.length + 1}`;
+      filterParams.push(gate);
     }
 
     if (success !== undefined) {
-      query += ` AND success = $${params.length + 1}`;
-      params.push(success === 'true');
+      filterClause += ` AND success = $${filterParams.length + 1}`;
+      filterParams.push(success === 'true');
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit, offset);
+    // Get total count
+    const countResult = await db.query(
+      `SELECT COUNT(*) FROM requests WHERE user_id = $1${filterClause}`,
+      filterParams
+    );
+    const total = parseInt(countResult.rows[0].count);
+
+    // Get paginated data
+    query += filterClause;
+    query += ` ORDER BY created_at DESC LIMIT $${filterParams.length + 1} OFFSET $${filterParams.length + 2}`;
+    const params = [...filterParams, limit, offset];
 
     const result = await db.query(query, params);
 
@@ -70,7 +80,15 @@ router.get('/', async (req: Request, res: Response) => {
       loggedAt: row.logged_at,
     }));
 
-    res.json(logs);
+    res.json({
+      logs,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total,
+      },
+    });
   } catch (error) {
     console.error('Logs list error:', error);
     res.status(500).json({ error: 'internal_error', message: 'Failed to fetch logs' });
