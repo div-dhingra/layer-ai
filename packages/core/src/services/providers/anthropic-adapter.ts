@@ -19,7 +19,7 @@ function getAnthropicClient(apiKey?: string): Anthropic {
 
   if (!anthropic) {
     anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.LAYER_PLATFORM_ANTHROPIC_API_KEY,
     });
   }
   return anthropic;
@@ -66,7 +66,7 @@ export class AnthropicAdapter extends BaseProviderAdapter {
   }
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.ANTHROPIC_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_ANTHROPIC_API_KEY);
 
     switch (request.type) {
       case 'chat':
@@ -85,7 +85,7 @@ export class AnthropicAdapter extends BaseProviderAdapter {
   }
 
   async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.ANTHROPIC_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_ANTHROPIC_API_KEY);
 
     switch (request.type) {
       case 'chat':

@@ -29,7 +29,7 @@ function getGoogleClient(apiKey?: string): GoogleGenAI {
   }
 
   if (!client) {
-    client = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || '' });
+    client = new GoogleGenAI({ apiKey: process.env.LAYER_PLATFORM_GOOGLE_API_KEY || '' });
   }
   return client;
 }
@@ -83,7 +83,7 @@ export class GoogleAdapter extends BaseProviderAdapter {
   };
 
   async call(request: LayerRequest, userId?: string): Promise<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_GOOGLE_API_KEY);
 
     switch (request.type) {
       case 'chat':
@@ -102,7 +102,7 @@ export class GoogleAdapter extends BaseProviderAdapter {
   }
 
   async *callStream(request: LayerRequest, userId?: string): AsyncIterable<LayerResponse> {
-    const resolved = await resolveApiKey(this.provider, userId, process.env.GOOGLE_API_KEY);
+    const resolved = await resolveApiKey(this.provider, userId, process.env.LAYER_PLATFORM_GOOGLE_API_KEY);
 
     switch (request.type) {
       case 'chat':
