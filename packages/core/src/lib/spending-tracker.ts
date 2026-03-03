@@ -8,7 +8,15 @@ interface SpendingUpdate {
   newSpending?: number;
 }
 
+type AlertCallback = (userId: string, threshold: number, currentSpending: number, limit: number) => Promise<void>;
+
+let onAlertCallback: AlertCallback | null = null;
+
 export const spendingTracker = {
+  setAlertCallback(callback: AlertCallback): void {
+    onAlertCallback = callback;
+  },
+
   async trackSpending(userId: string, cost: number): Promise<SpendingUpdate> {
     try {
       const newSpending = await cache.incrementUserSpending(userId, cost);
@@ -57,7 +65,7 @@ export const spendingTracker = {
     if (!limit || limit === 0) return;
 
     const percentage = (currentSpending / limit) * 100;
-    const thresholds = [50, 80, 95, 100];
+    const thresholds = [100, 95, 80, 50];
 
     for (const threshold of thresholds) {
       if (percentage >= threshold) {
@@ -68,8 +76,24 @@ export const spendingTracker = {
   },
 
   async sendAlertIfNeeded(userId: string, threshold: number, currentSpending: number, limit: number): Promise<void> {
+    const spendingInfo = await db.getUserSpending(userId);
+    if (!spendingInfo) return;
+
+    if (spendingInfo.limitEnforcementType !== 'alert_only') return;
+
+    const lastThreshold = spendingInfo.lastAlertThreshold;
+    if (lastThreshold !== null && threshold <= lastThreshold) return;
+
     console.log(`[Spending] Alert: User ${userId} at ${threshold}% of limit ($${currentSpending}/$${limit})`);
-    await db.recordSpendingAlert(userId);
+    await db.recordSpendingAlert(userId, threshold);
+
+    if (onAlertCallback) {
+      try {
+        await onAlertCallback(userId, threshold, currentSpending, limit);
+      } catch (error) {
+        console.error(`[Spending] Alert callback error for user ${userId}:`, error);
+      }
+    }
   },
 
   async syncSpendingToDB(userId: string): Promise<void> {
