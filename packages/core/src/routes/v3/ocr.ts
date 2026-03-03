@@ -4,6 +4,7 @@ import { db } from '../../lib/db/postgres.js';
 import { callAdapter, normalizeModelId } from '../../lib/provider-factory.js';
 import type { LayerRequest, LayerResponse, Gate, SupportedModel, OverrideConfig, OCRRequest } from '@layer-ai/sdk';
 import { OverrideField } from '@layer-ai/sdk';
+import { spendingTracker } from '../../lib/spending-tracker.js';
 
 const router: RouterType = Router();
 
@@ -215,6 +216,10 @@ router.post('/', async (req: Request, res: Response) => {
         cost: result.cost,
       },
     }).catch(err => console.error('Failed to log request:', err));
+
+    spendingTracker.trackSpending(userId, result.cost || 0).catch(err => {
+      console.error('Failed to track spending:', err);
+    });
 
     // Return LayerResponse with additional metadata
     const response: LayerResponse = {
