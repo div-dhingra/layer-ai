@@ -98,9 +98,9 @@ export const db = {
 
   // ===== SPENDING MANAGEMENT =====
 
-  async getUserSpending(userId: string): Promise<{ currentSpending: number; limit: number | null; periodStart: Date; status: string; limitEnforcementType: string } | null> {
+  async getUserSpending(userId: string): Promise<{ currentSpending: number; limit: number | null; periodStart: Date; status: string; limitEnforcementType: string; lastAlertThreshold: number | null } | null> {
     const result = await getPool().query(
-      'SELECT current_month_spending, monthly_spending_limit, spending_period_start, status, limit_enforcement_type FROM users WHERE id = $1',
+      'SELECT current_month_spending, monthly_spending_limit, spending_period_start, status, limit_enforcement_type, last_spending_alert_threshold FROM users WHERE id = $1',
       [userId]
     );
     if (!result.rows[0]) return null;
@@ -110,6 +110,7 @@ export const db = {
       periodStart: result.rows[0].spending_period_start,
       status: result.rows[0].status,
       limitEnforcementType: result.rows[0].limit_enforcement_type,
+      lastAlertThreshold: result.rows[0].last_spending_alert_threshold ? parseInt(result.rows[0].last_spending_alert_threshold) : null,
     };
   },
 
@@ -162,6 +163,7 @@ export const db = {
        SET current_month_spending = 0,
            spending_period_start = NOW(),
            status = CASE WHEN status = 'over_limit' THEN 'active' ELSE status END,
+           last_spending_alert_threshold = NULL,
            updated_at = NOW()
        WHERE id = $1`,
       [userId]
@@ -230,10 +232,10 @@ export const db = {
     );
   },
 
-  async recordSpendingAlert(userId: string): Promise<void> {
+  async recordSpendingAlert(userId: string, threshold: number): Promise<void> {
     await getPool().query(
-      'UPDATE users SET last_spending_alert_sent_at = NOW(), updated_at = NOW() WHERE id = $1',
-      [userId]
+      'UPDATE users SET last_spending_alert_sent_at = NOW(), last_spending_alert_threshold = $2, updated_at = NOW() WHERE id = $1',
+      [userId, threshold]
     );
   },
 
