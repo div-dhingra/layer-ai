@@ -4025,36 +4025,135 @@ export const MODEL_REGISTRY = {
     isAvailable: true,
     lastUpdated: '2026-03-01',
   },
-  'command-r': {
+  'command-r-08-2024': {
     type: 'chat' as const,
     provider: 'cohere' as const,
     displayName: 'Cohere Command R',
     description: 'A highly scalable, 128k context model optimized for long-context tasks such as retrieval augmented generation (RAG) and using external APIs and tools.',
     pricing: { input: 0.15, output: 0.60 },
-    contextLength: 128000,
+    contextLength: 132096,
     context: {
       input: { text: true, audio: false, image: false, video: false },
       output: { text: true, audio: false, image: false, video: false }
     },
     deprecated: false,
     isAvailable: true,
-    lastUpdated: '2026-01-25',
+    lastUpdated: '2026-03-01',
   },
-  'command-r-plus': {
+  'command-r-plus-08-2024': {
     type: 'chat' as const,
     provider: 'cohere' as const,
     displayName: 'Cohere Command R+',
-    description: 'A powerful, scalable model for enterprise-grade AI applications, featuring 128k context and high performance across complex reasoning tasks.',
+    description: 'A powerful, scalable model for enterprise-grade AI applications, featuring 132K context and high performance across complex reasoning tasks.',
     pricing: { input: 2.50, output: 10.00 },
-    contextLength: 128000,
+    contextLength: 132096,
     context: {
       input: { text: true, audio: false, image: false, video: false },
       output: { text: true, audio: false, image: false, video: false }
     },
     deprecated: false,
     isAvailable: true,
-    lastUpdated: '2026-01-25',
-  }
+    lastUpdated: '2026-03-01',
+  },
+  'command-a-03-2025': {
+    type: 'chat' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Command A',
+    description: 'A highly scalable, 288K context model optimized for long-context tasks such as retrieval augmented generation (RAG) and using external APIs and tools.',
+    pricing: { input: 2.50, output: 10.00 },
+    contextLength: 288000,
+    context: {
+      input: { text: true, audio: false, image: false, video: false },
+      output: { text: true, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
+  'command-a-reasoning-08-2025': {
+    type: 'chat' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Command A Reasoning',
+    description: 'A 111B parameter model optimized for complex, multi-step reasoning, logical analysis, and agentic workflows with high reliability.',
+    contextLength: 256000,
+    context: {
+      input: { text: true, audio: false, image: false, video: false },
+      output: { text: true, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
+  'command-a-vision-07-2025': {
+    type: 'chat' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Command A Vision',
+    description: 'An enterprise-focused multimodal model designed for understanding visual data like charts, graphs, and documents alongside text.',
+    contextLength: 128000,
+    context: {
+      input: { text: true, audio: false, image: true, video: false },
+      output: { text: true, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
+  'embed-v4.0': {
+    type: 'embeddings' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Embed v4',
+    description: 'Flagship multimodal embedding model supporting unified text and image vectors with high efficiency and 128K context.',
+    contextLength: 128000,
+    context: {
+      input: { text: true, audio: false, image: true, video: false },
+      output: { text: false, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
+  'embed-english-v3.0': {
+    type: 'embeddings' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Embed English v3',
+    description: 'Standard high-performance English-only text embedding model for semantic search and retrieval.',
+    contextLength: 512,
+    context: {
+      input: { text: true, audio: false, image: true, video: false },
+      output: { text: false, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
+  'rerank-v3.5': {
+    type: 'rerank' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Rerank 3.5',
+    description: 'Reliable workhorse reranker optimized for semantic understanding of complex business data and strict latency requirements.',
+    contextLength: 4096,
+    context: {
+      input: { text: true, audio: false, image: false, video: false },
+      output: { text: false, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
+  'rerank-v4.0-pro': {
+    type: 'rerank' as const,
+    provider: 'cohere' as const,
+    displayName: 'Cohere Rerank 4 Pro',
+    description: 'State-of-the-art semantic reranker designed for maximum precision in complex enterprise RAG and search pipelines.',
+    contextLength: 32768,
+    context: {
+      input: { text: true, audio: false, image: false, video: false },
+      output: { text: false, audio: false, image: false, video: false }
+    },
+    deprecated: false,
+    isAvailable: true,
+    lastUpdated: '2026-03-01',
+  },
 } as const;
 
 export type ModelId = keyof typeof MODEL_REGISTRY;

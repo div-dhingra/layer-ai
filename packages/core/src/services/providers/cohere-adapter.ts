@@ -589,7 +589,6 @@ export class CohereAdapter extends BaseProviderAdapter {
     const promptTokens = response.meta?.tokens?.inputTokens || 0;
     const completionTokens = response.meta?.tokens?.outputTokens || 0;
     const totalTokens = promptTokens + completionTokens;
-    const cost = this.calculateCost(model, promptTokens, completionTokens);
 
     return {
       id: response.id,
@@ -600,7 +599,6 @@ export class CohereAdapter extends BaseProviderAdapter {
         completionTokens,
         totalTokens,
       },
-      cost,
       latencyMs: Date.now() - startTime,
       usedPlatformKey,
       raw: response,
@@ -633,7 +631,6 @@ export class CohereAdapter extends BaseProviderAdapter {
     const promptTokens = response.meta?.tokens?.inputTokens || 0; 
     const completionTokens = response.meta?.tokens?.outputTokens || 0; 
     const totalTokens = promptTokens + completionTokens;
-    const cost = this.calculateCost(model, promptTokens, completionTokens);
 
     return {
       ...(response.id && { id: response.id }),
@@ -646,7 +643,6 @@ export class CohereAdapter extends BaseProviderAdapter {
         completionTokens,
         totalTokens,
       },
-      cost,
       latencyMs: Date.now() - startTime,
       usedPlatformKey,
       raw: response,
