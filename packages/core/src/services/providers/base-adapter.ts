@@ -14,6 +14,7 @@ import {
   ToolChoice,
   EncodingFormat,
   ADAPTER_HANDLED,
+  EmbedInputType,
 } from '@layer-ai/sdk';
 import type { Provider } from "../../lib/provider-constants.js";
 import { getModel } from '../../lib/registry.js';
@@ -36,6 +37,7 @@ export abstract class BaseProviderAdapter {
   protected audioMimeTypeMappings?: Record<AudioMimeType, string>;
   protected imageMimeTypeMappings?: Record<ImageMimeType, string>;
   protected encodingFormatMappings?: Record<EncodingFormat, string>;
+  protected embeddingInputTypeMappings?: Record<EmbedInputType, string>;
 
   abstract call(request: LayerRequest, userId?: string): Promise<LayerResponse>;
 
@@ -146,6 +148,14 @@ export abstract class BaseProviderAdapter {
     }
 
     return this.toolChoiceMappings[choice];
+  }
+
+  protected mapEmbeddingInputType(inputType: EmbedInputType): string | undefined {
+    if (!this.embeddingInputTypeMappings) {
+      return inputType;
+    }
+
+    return this.embeddingInputTypeMappings[inputType];
   }
 
   protected calculateCost(

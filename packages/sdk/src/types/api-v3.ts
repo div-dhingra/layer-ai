@@ -114,7 +114,7 @@ type BaseRequest = {
  * Task type determines how request data is interpreted.
  * When omitted, defaults to the gate's configured taskType.
  */
-export type TaskType = 'chat' | 'image' | 'video' | 'embeddings' | 'tts' | 'ocr';
+export type TaskType = 'chat' | 'image' | 'video' | 'embeddings' | 'tts' | 'ocr' | 'rerank';
 
 /**
  * Internal LayerRequest type with required type field (used by API after type resolution)
@@ -125,7 +125,8 @@ export type LayerRequest =
   | (BaseRequest & { type: 'video'; data: VideoGenerationRequest })
   | (BaseRequest & { type: 'embeddings'; data: EmbeddingsRequest })
   | (BaseRequest & { type: 'tts'; data: TextToSpeechRequest })
-  | (BaseRequest & { type: 'ocr'; data: OCRRequest });
+  | (BaseRequest & { type: 'ocr'; data: OCRRequest })
+  | (BaseRequest & { type: 'rerank'; data: RerankRequest });
 
 /**
  * User-facing LayerRequest type with optional type field.
@@ -137,7 +138,8 @@ export type LayerRequestInput =
   | (BaseRequest & { type?: 'video'; data: VideoGenerationRequest })
   | (BaseRequest & { type?: 'embeddings'; data: EmbeddingsRequest })
   | (BaseRequest & { type?: 'tts'; data: TextToSpeechRequest })
-  | (BaseRequest & { type?: 'ocr'; data: OCRRequest });
+  | (BaseRequest & { type?: 'ocr'; data: OCRRequest })
+  | (BaseRequest & { type?: 'rerank'; data: RerankRequest });
 
 // ====== CHAT/COMPLETION REQUEST ======
 
@@ -248,10 +250,13 @@ export interface VideoGenerationRequest {
 
 // ====== EMBEDDINGS REQUEST ======
 
+export type EmbedInputType = 'text' | 'image' | 'query' | 'document' | 'clustering' | 'classification';
+
 export interface EmbeddingsRequest {
   input: string | string[];
   dimensions?: number;
   encodingFormat?: EncodingFormat;
+  inputType?: EmbedInputType;
 }
 
 // ====== TEXT-TO-SPEECH REQUEST ======
@@ -319,6 +324,44 @@ export interface OCROutput {
   };
 }
 
+// ====== RERANK REQUEST ======
+
+export interface RerankRequest {
+  model: string; 
+  query: string; 
+  documents: string[];
+  /**
+   * The number of most relevant documents or indices to return.
+   * Must be a positive integer >= 1.
+   * @default documents.length
+   */
+  topN?: number;
+  /**
+   * The maximum number of tokens to use per document. 
+   * Long documents are automatically truncated to this value.
+   * @default 4096
+  */
+  maxTokensPerDocument?: number;
+  /**
+   * Controls how early the request is handled by the provider.
+   * 0 is highest priority.
+   * Higher numbers (up to 999) indicate lower priority.
+   * @default 0
+   */
+  priority?: number;
+};
+
+// ====== RERANK RESPONSE ======
+
+export interface RerankResult {
+  index: number;
+  relevanceScore: number; 
+} 
+
+export interface RerankOutput {
+  results: RerankResult[];
+}
+
 // ====== LAYER RESPONSE ======
 
 export interface LayerResponse {
@@ -328,8 +371,9 @@ export interface LayerResponse {
   images?: ImageOutput[];
   videos?: VideoOutput[];
   audio?: AudioOutput;
-  embeddings?: number[][];
+  embeddings?: number[][] | string[];
   ocr?: OCROutput;
+  rerank?: RerankOutput;
   toolCalls?: ToolCall[];
   model?: string;
   finishReason?: FinishReason;

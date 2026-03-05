@@ -120,6 +120,15 @@ function resolveFinalRequest(
       };
     }
 
+    case 'rerank' : {
+      // Similar to embeddings, reranking is deterministic and doesn't typically need gate-level defaults
+      // beyond model selection (already handled)
+      return {
+        ...request,
+        model: normalizeModelId(finalModel),
+      };  
+    }
+
     default: {
       // This will cause a TypeScript error if we miss a case
       const exhaustiveCheck: never = request;
@@ -305,6 +314,19 @@ router.post('/', async (req: Request, res: Response) => {
           return;
         }
         break;
+      case 'rerank':
+        if (!request.data.query || typeof request.data.query !== 'string') {
+          const msg = 'Missing or invalid required field: data.query (must be a string)';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
+          return;
+        }
+        if (!request.data.documents || !Array.isArray(request.data.documents) || request.data.documents.length === 0) {
+          const msg = 'Missing or invalid required field: data.documents (must be a non-empty array)';
+          db.logRequest({ userId, gateId: gateConfig.id, gateName: gateConfig.name, modelRequested: rawRequest.model || gateConfig.model, modelUsed: null, promptTokens: 0, completionTokens: 0, totalTokens: 0, costUsd: 0, latencyMs: Date.now() - startTime, success: false, errorMessage: msg, userAgent: req.headers['user-agent'] || null, ipAddress: req.ip || null, requestPayload: rawRequest, responsePayload: null }).catch(() => {});
+          res.status(400).json({ error: 'bad_request', message: msg });
+          return;
+        }
     }
 
     const finalRequest = resolveFinalRequest(gateConfig, request);

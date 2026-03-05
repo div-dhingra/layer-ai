@@ -8,7 +8,7 @@
 /**
  * Provider type - maps to adapter implementations
  */
-export type Provider = 'openai' | 'anthropic' | 'google' | 'mistral';
+export type Provider = 'openai' | 'anthropic' | 'google' | 'mistral' | 'cohere';
 
 /**
  * Provider constants - use these instead of string literals
@@ -18,6 +18,7 @@ export const PROVIDER = {
   ANTHROPIC: 'anthropic',
   GOOGLE: 'google',
   MISTRAL: 'mistral',
+  COHERE: 'cohere'
 } as const satisfies Record<string, Provider>;
 
 /**
